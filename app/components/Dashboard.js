@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-// import { useMatchData } from './MatchDataProvider'
+import { useMatchData } from './MatchDataProvider'
 import { useDatabase } from './DatabaseProvider'
 import styles from '../styles/Dashboard.module.css'
 import DashTileContainer from './DashTileContainer'
@@ -11,60 +11,17 @@ import RosterList from './RosterList.js'
 import Fuse from 'fuse.js'
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 import SearchIcon from '@/public/search'
-// Import sample data to test data fetching
-import matchData from '../(interactive)/dashboard/sampleData'
 
-// Extract date from match name
-const extractDateFromName = (name) => {
-  const dateRegex = /(\d{1,2})\/(\d{1,2})\/(\d{2})/
-  const matchResult = name.match(dateRegex)
-
-  if (!matchResult) return null
-
-  const [month, day, year] = matchResult.slice(1).map(Number)
-  const fullYear = year < 50 ? 2000 + year : 1900 + year
-
-  return new Date(fullYear, month - 1, day)
+const formatMatches = (matches) => {
+  return matches
+    .filter((match) => match.version === 'v1') // Filter for version 'v1'
+    .sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate)) // Sort by matchDate in descending order
 }
-
-// Format date based on type
-export const formatDate = (date, formatType) => {
-  const month = String(date.getMonth() + 1)
-  const day = String(date.getDate())
-  const year = date.getFullYear()
-
-  switch (formatType) {
-    case 'M/D/YY':
-      return `${month}/${day}/${String(year).slice(-2)}`
-    case 'M/D/YYYY':
-      return `${month}/${day}/${year}`
-    case 'MM/DD/YY':
-      return `${month.padStart(2, '0')}/${day}/${String(year).slice(-2)}`
-    case 'MM/DD/YYYY':
-      return `${month.padStart(2, '0')}/${day}/${year}`
-    default:
-      throw new Error(`Unknown format type: ${formatType}`)
-  }
-}
-
-// Format matches in order of recency
-const formatMatches = (matches) =>
-  matches
-    .filter((match) => match.clientPlayer && match.opponentPlayer)
-    .map((match) => {
-      const date = extractDateFromName(match.date)
-      return {
-        ...match,
-        date,
-        formattedDate: date ? formatDate(date, 'MM/DD/YYYY') : null
-      }
-    })
-    .sort((a, b) => (b.date && a.date ? b.date - a.date : 1))
 
 // Group matches with the same client and opponent team
 const groupMatchesByTeams = (matches) => {
   return matches.reduce((acc, match) => {
-    const key = `${match.clientTeam} vs ${match.opponentTeam}`
+    const key = `${match.teams.clientTeam} vs ${match.teams.opponentTeam} ${match.matchDate}`
     if (!acc[key]) {
       acc[key] = []
     }
@@ -74,64 +31,34 @@ const groupMatchesByTeams = (matches) => {
 }
 
 const Dashboard = () => {
-  // const { matches, error } = useMatchData(); // Using the custom hook to access match data
-  const matches = matchData // using hardcoded JSON objects
   const router = useRouter()
-  const formattedMatches = formatMatches(matchData)
+  const { matches, error } = useMatchData() // Using the custom hook to access match data
   const { logos } = useDatabase()
+
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedMatchSets, setSelectedMatchSets] = useState([])
 
-  // Group matches by date
-  const matchesByDate = formattedMatches.reduce((acc, match) => {
-    const matchDate = match.formattedDate
-    if (matchDate && !acc[matchDate]) {
-      acc[matchDate] = []
-    }
-    if (matchDate) {
-      acc[matchDate].push(match)
-    }
-    return acc
-  }, {})
-
-  // Function to find the closest past date to today
-  const getMostRecentMatch = () => {
-    const today = new Date()
-    const pastDates = Object.keys(matchesByDate)
-      .map((date) => new Date(date))
-      .filter((date) => date <= today)
-      .sort((a, b) => today - a)
-
-    return pastDates.length > 0 ? formatDate(pastDates[0], 'MM/DD/YYYY') : null
-  }
-
-  // State to manage which dates' matches are being shown
-  const [selectedDates, setSelectedDates] = useState([])
-
-  useEffect(() => {
-    const closestDate = getMostRecentMatch()
-    if (closestDate) {
-      setSelectedDates([closestDate])
-    }
-  }, [])
-
-  // Ensure that selected matches are sorted by recency after every selection
-  const sortedSelectedDates = [...selectedDates].sort(
-    (a, b) => new Date(b) - new Date(a)
-  )
+  const formattedMatches = formatMatches(matches)
 
   const handleTileClick = (videoId) => {
     router.push(`/matches/${videoId}`)
   }
 
+  console.log(formattedMatches)
   // Fuzzy search
-  const fuse = new Fuse(formattedMatches, {
-    keys: searchableProperties,
-    threshold: 0.3
-  })
+  const fuse = useMemo(
+    () =>
+      new Fuse(formattedMatches, {
+        keys: searchableProperties,
+        threshold: 0.3
+      }),
+    [formattedMatches]
+  )
 
   const filteredMatches = useMemo(() => {
     if (!searchTerm) return []
     const result = fuse.search(searchTerm).map((result) => result.item)
+    console.log(result)
     return groupMatchesByTeams(result)
   }, [searchTerm, fuse])
 
@@ -143,11 +70,11 @@ const Dashboard = () => {
     setSearchTerm('')
   }
 
-  const handleCarouselClick = (date) => {
-    setSelectedDates((prevDates) =>
-      prevDates.includes(date)
-        ? prevDates.filter((d) => d !== date)
-        : [...prevDates, date]
+  const handleCarouselClick = (item) => {
+    setSelectedMatchSets((prevSelected) =>
+      prevSelected.includes(item)
+        ? prevSelected.filter((m) => m !== item)
+        : [...prevSelected, item]
     )
   }
 
@@ -185,31 +112,28 @@ const Dashboard = () => {
       </header>
 
       <div className={styles.carousel}>
-        {Object.keys(matchesByDate).map((date, index) => (
-          <div
-            key={index}
-            className={`${styles.card} ${selectedDates.includes(date) ? styles.active : ''}`}
-            onClick={() => handleCarouselClick(date)}
-          >
-            <div className={styles.cardContent}>
+        {formattedMatches.map((match, index) => {
+          const matchKey = `${match.matchDate}#${match.teams.opponentTeam}`
+
+          return (
+            <div
+              key={index}
+              className={`${styles.card} ${selectedMatchSets.includes(matchKey) ? styles.active : ''}`}
+              onClick={() => handleCarouselClick(matchKey)}
+            >
               <img
-                src={logos[matchesByDate[date][0].opponentTeam]}
+                src={logos[match.teams.opponentTeam]}
                 alt="Team Logo"
                 className={styles.logo}
               />
-              <span className={styles.matchDate}>
-                {formatDate(new Date(date), 'M/D/YY')}
-              </span>
+              <span className={styles.matchDate}>{match.matchDate}</span>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <div className={styles.mainContent}>
         <div className={styles.matchesSection}>
-          {/* TODO: Tony integrate filter/cache changes with new search
-          take out filler console logs which were used for linting */}
-          {console.log(matches, sortedSelectedDates)}
           {searchTerm ? (
             // Render filtered matches grouped by teams
             Object.keys(filteredMatches).length > 0 ? (
@@ -228,7 +152,7 @@ const Dashboard = () => {
                       <div className={styles.matchHeader}>
                         <h3>{teamKey}</h3>
                         <span className={styles.date}>
-                          {teamMatches[0].formattedDate}
+                          {teamMatches[0].matchDate}
                         </span>
                       </div>
                       <DashTileContainer
@@ -251,23 +175,24 @@ const Dashboard = () => {
               </div>
             )
           ) : (
-            // Render filtered matches selected from carousel
-            sortedSelectedDates.map((date, index) => {
-              const singlesMatches = matchesByDate[date].filter(
-                (match) => match.singlesDoubles === 'Singles'
+            selectedMatchSets.map((matchKey, index) => {
+              const singlesMatches = formattedMatches.filter(
+                (match) =>
+                  match.singles &&
+                  matchKey === `${match.matchDate}#${match.teams.opponentTeam}`
               )
-              const doublesMatches = matchesByDate[date].filter(
-                (match) => match.singlesDoubles === 'Doubles'
+              const doublesMatches = formattedMatches.filter(
+                (match) =>
+                  !match.singles &&
+                  matchKey === `${match.matchDate}#${match.teams.opponentTeam}`
               )
-
+              const [matchDate, matchName] = matchKey.split('#')
               return (
                 <div key={index} className={styles.matchSection}>
                   <div className={styles.matchContainer}>
                     <div className={styles.matchHeader}>
-                      <h3>{`${matchesByDate[date][0].clientTeam} vs ${matchesByDate[date][0].opponentTeam}`}</h3>
-                      <span className={styles.date}>
-                        {formatDate(new Date(date), 'M/D/YYYY')}
-                      </span>
+                      <h3>{`v ${matchName}`}</h3>
+                      <span className={styles.date}>{matchDate}</span>
                     </div>
                     <DashTileContainer
                       matches={singlesMatches}
