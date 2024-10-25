@@ -19,7 +19,6 @@ export default function UploadMatchForm() {
 
   const { userProfile } = useAuth()
 
-  console.log(collections)
   useEffect(() => {
     const fetchCollectionsAndTeams = async () => {
       try {
@@ -113,28 +112,29 @@ export default function UploadMatchForm() {
         client: {
           firstName: formData.clientPlayer.split(' ')[0],
           lastName: formData.clientPlayer.split(' ')[1],
-          UTR: formData.clientUTR
+          UTR: formData.clientUTR || null
         },
         opponent: {
           firstName: formData.opponentPlayer.split(' ')[0],
           lastName: formData.opponentPlayer.split(' ')[1],
-          UTR: formData.opponentUTR
+          UTR: formData.opponentUTR || null
         }
       }
       const weather = {
-        temperature: formData.temperature,
+        temperature: formData.temperature || null,
         cloudy: formData.weather ? formData.weather.includes('Cloudy') : '',
         windy: formData.weather ? formData.weather.includes('Windy') : ''
       }
+      console.log(weather)
       const matchDetails = {
-        weather,
-        division: formData.division,
-        event: formData.event,
-        lineup: formData.lineup,
-        matchVenue: formData.matchVenue,
-        round: formData.round,
+        weather: weather || null,
+        division: formData.division || null,
+        event: formData.event || null,
+        lineup: formData.lineup || null,
+        matchVenue: formData.matchVenue || null,
+        round: formData.round || null,
         indoor: formData.court === 'Indoor',
-        surface: formData.surface
+        surface: formData.surface || null
       }
       // const sets = parseMatchScore(formData.matchScore);
       const sets = [
@@ -148,7 +148,7 @@ export default function UploadMatchForm() {
         sets,
         videoId: formData.videoID,
         pointsJson,
-        pdfFile: formData.pdfFile,
+        pdfFile: formData.pdfFile || null,
         teams,
         players,
         matchDate: formData.date,
