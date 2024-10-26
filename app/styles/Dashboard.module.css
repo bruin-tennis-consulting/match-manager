@@ -30,6 +30,31 @@
   justify-content: space-between;
 }
 
+.titleBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.buttonBox button {
+  width: 100%;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
+  background-color:#2C61AB;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.buttonBox button:hover {
+  background-color: #0056b3;
+}
+
 .mainContent {
   display: flex;
   justify-content: space-between;
