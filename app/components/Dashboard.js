@@ -14,6 +14,10 @@ import SearchIcon from '@/public/search'
 // Import sample data to test data fetching
 import matchData from '../(interactive)/dashboard/sampleData'
 
+//Import useAuth for Sign Out Button
+import { useAuth } from './AuthWrapper'
+
+
 // Extract date from match name
 const extractDateFromName = (name) => {
   const dateRegex = /(\d{1,2})\/(\d{1,2})\/(\d{2})/
@@ -80,6 +84,7 @@ const Dashboard = () => {
   const formattedMatches = formatMatches(matchData)
   const { logos } = useDatabase()
   const [searchTerm, setSearchTerm] = useState('')
+  const { authUser, userProfile, handleSignOut } = useAuth()
 
   // Group matches by date
   const matchesByDate = formattedMatches.reduce((acc, match) => {
@@ -157,7 +162,7 @@ const Dashboard = () => {
         <div className={styles.titleBar}>
           <h1>BSA | Tennis Consulting</h1>
           <div className={styles.buttonBox}>
-            <button>Sign Out</button>
+          <button onClick={handleSignOut}>Sign Out</button>
           </div>
         </div>
         <div className={styles.headerContent}>
