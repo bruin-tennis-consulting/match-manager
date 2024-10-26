@@ -4,9 +4,17 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useMatchData } from '../../components/MatchDataProvider' // Assuming the hook is located in the context folder
 
+const formatMatches = (matches) => {
+  return matches
+    .filter((match) => match.version === 'v1') // Filter for version 'v1'
+    .sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate)) // Sort by matchDate in descending order
+}
+
 export default function MatchList() {
   const { matches, updateMatch, refresh } = useMatchData()
-  const [newName, setNewName] = useState('')
+  // const [newName, setNewName] = useState('')
+
+  const formattedMatches = formatMatches(matches)
 
   const handleDelete = async (id) => {
     try {
@@ -30,46 +38,51 @@ export default function MatchList() {
     URL.revokeObjectURL(url)
   }
 
-  const handleRename = async (id) => {
-    try {
-      await updateMatch(id, { name: newName })
-    } catch (error) {
-      console.error('Error renaming match:', error)
-    }
-  }
+  // const handleRename = async (id) => {
+  //   try {
+  //     await updateMatch(id, { name: newName })
+  //   } catch (error) {
+  //     console.error('Error renaming match:', error)
+  //   }
+  // }
 
   return (
     <div>
       <h1>Match List</h1>
-      {matches.length > 0 ? (
+      {formattedMatches.length > 0 ? (
         <ul>
-          {matches.map((match) => (
-            <div key={match.id}>
-              <li>
-                <span>
-                  {match.name}
-                  <button onClick={() => handleDelete(match.id)}>Delete</button>
-                </span>
-                <span>
-                  <button
-                    onClick={() => handleDownload(match.points, match.id)}
-                  >
-                    Download JSON
-                  </button>
-                </span>
-                <br />
-                <Link href={`/tag-match/${match.id}`}>
-                  <button>Tag Match - Full</button>
-                </Link>
-                <Link href={`/timestamp-tagger?videoId=${match.videoId}`}>
-                  <button>Tag Match - Timestamp</button>
-                </Link>
-                <br />
-                <input onChange={(e) => setNewName(e.target.value)} />
-                <button onClick={() => handleRename(match.id)}>Rename</button>
-              </li>
-            </div>
-          ))}
+          {formattedMatches.map((match) => {
+            const name = `${match.players.client.firstName} ${match.players.client.lastName} ${match.teams.clientTeam} vs. ${match.players.opponent.firstName} ${match.players.opponent.lastName} ${match.teams.opponentTeam}`
+            return (
+              <div key={match.id}>
+                <li>
+                  <span>
+                    {name}
+                    <button onClick={() => handleDelete(match.id)}>
+                      Delete
+                    </button>
+                  </span>
+                  <span>
+                    <button
+                      onClick={() => handleDownload(match.pointsJson, match.id)}
+                    >
+                      Download JSON
+                    </button>
+                  </span>
+                  <br />
+                  <Link href={`/tag-match/${match.id}`}>
+                    <button>Tag Match - Full</button>
+                  </Link>
+                  <Link href={`/timestamp-tagger?videoId=${match.videoId}`}>
+                    <button>Tag Match - Timestamp</button>
+                  </Link>
+                  {/* <br />
+                  <input onChange={(e) => setNewName(e.target.value)} />
+                  <button onClick={() => handleRename(match.id)}>Rename</button> */}
+                </li>
+              </div>
+            )
+          })}
         </ul>
       ) : (
         <p>Loading...</p>
