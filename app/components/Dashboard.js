@@ -18,18 +18,6 @@ const formatMatches = (matches) => {
     .sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate)) // Sort by matchDate in descending order
 }
 
-// Group matches with the same client and opponent team
-const groupMatchesByTeams = (matches) => {
-  return matches.reduce((acc, match) => {
-    const key = `${match.teams.clientTeam} vs ${match.teams.opponentTeam} ${match.matchDate}`
-    if (!acc[key]) {
-      acc[key] = []
-    }
-    acc[key].push(match)
-    return acc
-  }, {})
-}
-
 const Dashboard = () => {
   const router = useRouter()
   const { matches, error } = useMatchData() // Using the custom hook to access match data
@@ -40,11 +28,14 @@ const Dashboard = () => {
 
   const formattedMatches = formatMatches(matches)
 
-  const handleTileClick = (videoId) => {
-    router.push(`/matches/${videoId}`)
-  }
+  // default show latest match: TODO BUG causes infinite re-rendering
+  // useEffect(() => {
+  //   if (formattedMatches.length > 0) {
+  //     const latestMatchKey = `${formattedMatches[0].matchDate}#${formattedMatches[0].teams.opponentTeam}`
+  //     setSelectedMatchSets([latestMatchKey])
+  //   }
+  // }, [formattedMatches])
 
-  console.log(formattedMatches)
   // Fuzzy search
   const fuse = useMemo(
     () =>
@@ -55,12 +46,18 @@ const Dashboard = () => {
     [formattedMatches]
   )
 
-  const filteredMatches = useMemo(() => {
+  const filteredMatchSets = useMemo(() => {
     if (!searchTerm) return []
-    const result = fuse.search(searchTerm).map((result) => result.item)
-    console.log(result)
-    return groupMatchesByTeams(result)
+    const result = fuse.search(searchTerm).map((result) => {
+      const match = result.item
+      return `${match.matchDate}#${match.teams.opponentTeam}`
+    })
+    return result
   }, [searchTerm, fuse])
+
+  const handleTileClick = (videoId) => {
+    router.push(`/matches/${videoId}`)
+  }
 
   const handleSearch = (inputValue) => {
     setSearchTerm(inputValue)
@@ -77,6 +74,8 @@ const Dashboard = () => {
         : [...prevSelected, item]
     )
   }
+
+  const displayMatchSets = searchTerm ? filteredMatchSets : selectedMatchSets
 
   return (
     <div className={styles.container}>
@@ -134,81 +133,39 @@ const Dashboard = () => {
 
       <div className={styles.mainContent}>
         <div className={styles.matchesSection}>
-          {searchTerm ? (
-            // Render filtered matches grouped by teams
-            Object.keys(filteredMatches).length > 0 ? (
-              Object.keys(filteredMatches).map((teamKey, index) => {
-                const teamMatches = filteredMatches[teamKey]
-                const singlesMatches = teamMatches.filter(
-                  (match) => match.singlesDoubles === 'Singles'
-                )
-                const doublesMatches = teamMatches.filter(
-                  (match) => match.singlesDoubles === 'Doubles'
-                )
-
-                return (
-                  <div key={index} className={styles.matchSection}>
-                    <div className={styles.matchContainer}>
-                      <div className={styles.matchHeader}>
-                        <h3>{teamKey}</h3>
-                        <span className={styles.date}>
-                          {teamMatches[0].matchDate}
-                        </span>
-                      </div>
-                      <DashTileContainer
-                        matches={singlesMatches}
-                        matchType="Singles"
-                        onTileClick={handleTileClick}
-                      />
-                      <DashTileContainer
-                        matches={doublesMatches}
-                        matchType="Doubles"
-                        onTileClick={handleTileClick}
-                      />
-                    </div>
+          {displayMatchSets.map((matchKey, index) => {
+            const singlesMatches = formattedMatches.filter(
+              (match) =>
+                match.singles &&
+                matchKey === `${match.matchDate}#${match.teams.opponentTeam}`
+            )
+            const doublesMatches = formattedMatches.filter(
+              (match) =>
+                !match.singles &&
+                matchKey === `${match.matchDate}#${match.teams.opponentTeam}`
+            )
+            const [matchDate, matchName] = matchKey.split('#')
+            return (
+              <div key={index} className={styles.matchSection}>
+                <div className={styles.matchContainer}>
+                  <div className={styles.matchHeader}>
+                    <h3>{`v ${matchName}`}</h3>
+                    <span className={styles.date}>{matchDate}</span>
                   </div>
-                )
-              })
-            ) : (
-              <div className={styles.noMatches}>
-                <p>No matches found.</p>
+                  <DashTileContainer
+                    matches={singlesMatches}
+                    matchType="Singles"
+                    onTileClick={handleTileClick}
+                  />
+                  <DashTileContainer
+                    matches={doublesMatches}
+                    matchType="Doubles"
+                    onTileClick={handleTileClick}
+                  />
+                </div>
               </div>
             )
-          ) : (
-            selectedMatchSets.map((matchKey, index) => {
-              const singlesMatches = formattedMatches.filter(
-                (match) =>
-                  match.singles &&
-                  matchKey === `${match.matchDate}#${match.teams.opponentTeam}`
-              )
-              const doublesMatches = formattedMatches.filter(
-                (match) =>
-                  !match.singles &&
-                  matchKey === `${match.matchDate}#${match.teams.opponentTeam}`
-              )
-              const [matchDate, matchName] = matchKey.split('#')
-              return (
-                <div key={index} className={styles.matchSection}>
-                  <div className={styles.matchContainer}>
-                    <div className={styles.matchHeader}>
-                      <h3>{`v ${matchName}`}</h3>
-                      <span className={styles.date}>{matchDate}</span>
-                    </div>
-                    <DashTileContainer
-                      matches={singlesMatches}
-                      matchType="Singles"
-                      onTileClick={handleTileClick}
-                    />
-                    <DashTileContainer
-                      matches={doublesMatches}
-                      matchType="Doubles"
-                      onTileClick={handleTileClick}
-                    />
-                  </div>
-                </div>
-              )
-            })
-          )}
+          })}
         </div>
 
         <div className={styles.rosterContainer}>
