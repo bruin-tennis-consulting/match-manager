@@ -17,6 +17,7 @@ export const MatchDataProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const { userProfile } = useAuth()
+  console.log(matches)
 
   const fetchMatches = useCallback(async () => {
     if (userProfile && userProfile.collections) {
@@ -54,17 +55,17 @@ export const MatchDataProvider = ({ children }) => {
   const updateMatch = useCallback(
     async (matchId, updatedData) => {
       try {
-        setMatches((prevMatches) =>
-          prevMatches.map((match) =>
-            match.id === matchId ? { ...match, ...updatedData } : match
-          )
-        )
-
         // Get the match collection reference
         const matchToUpdate = matches.find((match) => match.id === matchId)
         if (!matchToUpdate) {
           throw new Error('Match not found')
         }
+
+        setMatches((prevMatches) =>
+          prevMatches.map((match) =>
+            match.id === matchId ? { ...match, ...updatedData } : match
+          )
+        )
 
         const matchDocRef = doc(db, matchToUpdate.collection, matchId)
         await updateDoc(matchDocRef, updatedData)
@@ -75,7 +76,7 @@ export const MatchDataProvider = ({ children }) => {
         console.error('Error updating match:', err)
       }
     },
-    [fetchMatches]
+    [fetchMatches, matches]
   )
 
   const createMatch = useCallback(
@@ -103,6 +104,8 @@ export const MatchDataProvider = ({ children }) => {
 
   useEffect(() => {
     fetchMatches()
+    console.log('AFTER USEEFCT')
+    console.log(matches)
   }, [fetchMatches])
 
   return (
