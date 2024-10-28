@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMatchData } from './MatchDataProvider'
 import { useDatabase } from './DatabaseProvider'
@@ -22,6 +22,9 @@ const Dashboard = () => {
   const router = useRouter()
   const { matches, error } = useMatchData() // Using the custom hook to access match data
   const { logos } = useDatabase()
+
+  // TODO: remove this line used for linting
+  console.log(error)
 
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
