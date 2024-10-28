@@ -17,7 +17,6 @@ export const MatchDataProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const { userProfile } = useAuth()
-  console.log(matches)
 
   const fetchMatches = useCallback(async () => {
     if (userProfile && userProfile.collections) {
@@ -104,8 +103,6 @@ export const MatchDataProvider = ({ children }) => {
 
   useEffect(() => {
     fetchMatches()
-    console.log('AFTER USEEFCT')
-    console.log(matches)
   }, [fetchMatches])
 
   return (
