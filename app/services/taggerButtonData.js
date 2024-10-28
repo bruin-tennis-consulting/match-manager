@@ -346,6 +346,26 @@ export const getTaggerButtonData = (
       }
     },
     {
+      label: '0-40',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '0-40')
+        updateActiveRow(
+          'gameScore',
+          data.table[data.activeRowIndex - 1].gameScore
+        )
+        updateActiveRow(
+          'setScore',
+          data.table[data.activeRowIndex - 1].setScore
+        )
+        updateActiveRow('isPointStart', 1)
+        updateActiveRow('shotInRally', 1)
+        updateActiveRow('side', 'Ad')
+        updateActiveRow('pointStartTime', data.videoTimestamp)
+        setCurrentPage('FirstServe')
+      }
+    },
+    {
       label: '15-30',
       action: (data) => {
         addNewRow()
@@ -430,7 +450,7 @@ export const getTaggerButtonData = (
       label: '30-40',
       action: (data) => {
         addNewRow()
-        updateActiveRow('pointScore', '15-40')
+        updateActiveRow('pointScore', '30-40')
         updateActiveRow(
           'gameScore',
           data.table[data.activeRowIndex - 1].gameScore
@@ -451,7 +471,7 @@ export const getTaggerButtonData = (
       label: '40-30',
       action: (data) => {
         addNewRow()
-        updateActiveRow('pointScore', '15-40')
+        updateActiveRow('pointScore', '40-30')
         updateActiveRow(
           'gameScore',
           data.table[data.activeRowIndex - 1].gameScore
