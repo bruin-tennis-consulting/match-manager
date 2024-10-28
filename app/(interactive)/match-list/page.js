@@ -52,7 +52,7 @@ export default function MatchList() {
       {formattedMatches.length > 0 ? (
         <ul>
           {formattedMatches.map((match) => {
-            const name = `${match.players.client.firstName} ${match.players.client.lastName} ${match.teams.clientTeam} vs. ${match.players.opponent.firstName} ${match.players.opponent.lastName} ${match.teams.opponentTeam}`
+            const name = `${match.players.client.firstName} ${match.players.client.lastName} ${match.teams.clientTeam} vs. ${match.players.opponent.firstName} ${match.players.opponent.lastName} ${match.teams.opponentTeam} [${match.id}] `
             return (
               <div key={match.id}>
                 <li>

@@ -122,10 +122,9 @@ export default function UploadMatchForm() {
       }
       const weather = {
         temperature: formData.temperature || null,
-        cloudy: formData.weather ? formData.weather.includes('Cloudy') : '',
-        windy: formData.weather ? formData.weather.includes('Windy') : ''
+        cloudy: formData.weather ? formData.weather.includes('Cloudy') : null,
+        windy: formData.weather ? formData.weather.includes('Windy') : null
       }
-      console.log(weather)
       const matchDetails = {
         weather: weather || null,
         division: formData.division || null,
@@ -133,14 +132,14 @@ export default function UploadMatchForm() {
         lineup: formData.lineup || null,
         matchVenue: formData.matchVenue || null,
         round: formData.round || null,
-        indoor: formData.court === 'Indoor',
+        indoor: formData.court ? formData.court === 'Indoor' : null,
         surface: formData.surface || null
       }
       // const sets = parseMatchScore(formData.matchScore);
       const sets = [
         formData.matchScore.set1,
         formData.matchScore.set2,
-        ...(formData.matchScore.set3 ? formData.matchScore.set3 : [])
+        formData.matchScore.set3 || {}
       ]
 
       // Use the createMatch hook to upload the match

@@ -158,6 +158,7 @@ const initialSchema = {
     'clientTeam',
     'clientPlayer',
     'opponentTeam',
+    'opponentPlayer',
     'matchScore',
     'date',
     'videoID'
