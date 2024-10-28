@@ -18,8 +18,9 @@ const SignInPage = () => {
       const auth = getAuth()
       const email = `${credentials.username}@ucla.edu` // Append @ucla.edu to the username
       await signInWithEmailAndPassword(auth, email, credentials.password)
+      setError(null) // Clear any previous errors on successful sign-in
     } catch (error) {
-      setError(error.message)
+      setError('The username or password is incorrect. Please try again.')
       console.log(error.message)
     }
   }
@@ -47,6 +48,17 @@ const SignInPage = () => {
         <form onSubmit={handleSignIn}>
           <div className={styles.card}>
             <img>{/* Add logo if needed */}</img>
+            {error && (
+              <div
+                style={{
+                  color: 'red',
+                  marginBottom: '10px',
+                  textAlign: 'center' // Center the text
+                }}
+              >
+                {error}
+              </div>
+            )}
             <h2>Sign in to your account</h2>
             <div>
               <input

@@ -37,9 +37,8 @@ const MatchPage = () => {
     const selectedMatch = matches.find((match) => match.id === docId)
     if (selectedMatch) {
       setMatchData(selectedMatch)
-
       // Set initial bookmarks
-      const initialBookmarks = selectedMatch.points.filter(
+      const initialBookmarks = selectedMatch.pointsJson.filter(
         (point) => point.bookmarked
       )
       setBookmarks(initialBookmarks)
@@ -53,7 +52,7 @@ const MatchPage = () => {
   }
 
   const handleBookmark = async (point) => {
-    const updatedPoints = matchData.points.map((p) => {
+    const updatedPoints = matchData.pointsJson.map((p) => {
       if (p.Name === point.Name) {
         return { ...p, bookmarked: !p.bookmarked }
       }
@@ -105,7 +104,7 @@ const MatchPage = () => {
   }, [triggerScroll, showPDF])
 
   const returnFilteredPoints = () => {
-    let filteredPoints = matchData.points
+    let filteredPoints = matchData.pointsJson
     const filterMap = new Map()
 
     filterList.forEach((filter) => {
@@ -152,7 +151,7 @@ const MatchPage = () => {
     }
   }
 
-  const matchSetScores = matchData ? extractSetScores(matchData.points) : {}
+  const matchSetScores = matchData ? extractSetScores(matchData.pointsJson) : {}
 
   return (
     <div className={styles.container}>
@@ -269,7 +268,7 @@ const MatchPage = () => {
                   </div>
                   <div className={styles.sidecontent}>
                     <FilterList
-                      pointsData={matchData.points}
+                      pointsData={matchData.pointsJson}
                       filterList={filterList}
                       setFilterList={setFilterList}
                       showPercent={showPercent}
@@ -348,7 +347,7 @@ const MatchPage = () => {
                   : styles.toggle_buttona_inactive
               }
             >
-              Points
+              Points Played
             </button>
             {showPDF ? (
               <iframe
