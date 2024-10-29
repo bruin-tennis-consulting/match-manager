@@ -10,6 +10,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth } from '../services/initializeFirebase'
 import { getUserProfile } from '../services/userInfo'
 import SignIn from './SignIn'
+import LandingPage from './LandingPage'
 
 const AuthContext = createContext()
 
@@ -55,7 +56,7 @@ export const AuthProvider = ({ children }) => {
       <AuthContext.Provider
         value={{ authUser, userProfile: memoizedUserProfile, handleSignOut }}
       >
-        {authUser ? children : <SignIn />}
+        {authUser ? children : <LandingPage />}
       </AuthContext.Provider>
     </div>
   )

@@ -1,0 +1,39 @@
+.title {
+  margin: 0 0 1rem;
+  line-height: 1.15;
+  font-size: 3.6rem;
+}
+
+.titleBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.leftTitle {
+  font-size: 1vw;
+  padding-left: 2%;
+}
+
+.rightTitle {
+  padding-right: 2%;
+}
+
+.rightTitle button {
+  width: 100%;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
+  background-color: #2c61ab;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.rightTitle button:hover {
+  background-color: #0056b3;
+}
