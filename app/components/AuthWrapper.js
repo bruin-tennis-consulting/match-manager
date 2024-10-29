@@ -9,7 +9,6 @@ import React, {
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth } from '../services/initializeFirebase'
 import { getUserProfile } from '../services/userInfo'
-import SignIn from './SignIn'
 import LandingPage from './LandingPage'
 
 const AuthContext = createContext()
