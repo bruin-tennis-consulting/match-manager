@@ -366,6 +366,26 @@ export const getTaggerButtonData = (
       }
     },
     {
+      label: '40-0',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '40-0')
+        updateActiveRow(
+          'gameScore',
+          data.table[data.activeRowIndex - 1].gameScore
+        )
+        updateActiveRow(
+          'setScore',
+          data.table[data.activeRowIndex - 1].setScore
+        )
+        updateActiveRow('isPointStart', 1)
+        updateActiveRow('shotInRally', 1)
+        updateActiveRow('side', 'Ad')
+        updateActiveRow('pointStartTime', data.videoTimestamp)
+        setCurrentPage('FirstServe')
+      }
+    },
+    {
       label: '15-30',
       action: (data) => {
         addNewRow()
@@ -538,6 +558,12 @@ export const getTaggerButtonData = (
       }
     },
     {
+      label: 'Let',
+      action: (data) => {
+        updateActiveRow('isLet', '1')
+      }
+    },
+    {
       courtImage: 'serve',
       label: 'Select First Serve Position',
       action: (data) => {
@@ -570,7 +596,7 @@ export const getTaggerButtonData = (
               updateActiveRow('firstServeZone', 'Wide')
               if ((data.y >= 10) & (data.y <= 245)) {
                 updateActiveRow('firstServeIn', '1')
-                if (isAce === '1') {
+                if (isAce) {
                   ace(serverName)
                   setCurrentPage('PointScore')
                 } else {
@@ -784,6 +810,12 @@ export const getTaggerButtonData = (
       label: 'Ace',
       action: () => {
         isAce = true
+      }
+    },
+    {
+      label: 'Let',
+      action: (data) => {
+        updateActiveRow('isLet', '1')
       }
     },
     {
@@ -1367,6 +1399,7 @@ export const columnNames = [
   'secondServeXCoord',
   'secondServeYCoord',
   'isAce',
+  'isLet',
   'shotContactX',
   'shotContactY',
   'shotDirection',
