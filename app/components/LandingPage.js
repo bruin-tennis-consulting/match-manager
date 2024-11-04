@@ -1,30 +1,28 @@
 import Image from 'next/image'
 import { useState } from 'react'
-import { useAuth } from '../components/AuthWrapper' // Import authentication context
-import SignIn from './SignIn' // Import the SignIn component
+import { useAuth } from '../components/AuthWrapper'
+import SignIn from './SignIn'
 import styles from '../styles/LandingPage.module.css'
 
 export default function LandingPage() {
   const [showSignIn, setShowSignIn] = useState(false)
-  const { authUser, handleSignOut } = useAuth() // Get authUser and handleSignOut from Auth context
+  const { authUser } = useAuth()
 
   const handleSignIn = () => {
-    setShowSignIn(true) // Set to show SignIn component when Sign In button is clicked
+    setShowSignIn(true) // Show SignIn component when Sign In button is clicked
   }
 
   return (
     <div>
-      {!showSignIn ? ( // Only show this if SignIn is not visible
+      {!showSignIn ? (
         <>
           <div className={styles.titleBar}>
             <div className={styles.leftTitle}>
               <h1>BSA | Tennis Consulting</h1>
             </div>
             <div className={styles.rightTitle}>
-              {authUser ? (
-                <button onClick={handleSignOut}>Sign Out</button>
-              ) : (
-                <button onClick={handleSignIn}>Sign In</button> // Show this button to display SignIn
+              {!authUser && (
+                <button onClick={handleSignIn}>Sign In</button> // Show Sign In button
               )}
             </div>
           </div>
@@ -34,7 +32,7 @@ export default function LandingPage() {
             <h1>ANALYTICS</h1>
           </div>
           <div className={styles.subText}>
-            <p>Empowering Tennis Excellence </p>
+            <p>Empowering Tennis Excellence</p>
             <p>through Data-Driven Insights</p>
             <button className={styles.startButton}>Start Now</button>
           </div>
@@ -73,15 +71,15 @@ export default function LandingPage() {
             <Image
               src="/images/ucla.png"
               alt="UCLA Logo"
-              width={80} // Set width based on design needs
-              height={40} // Set height based on design needs; adjust for aspect ratio
+              width={80}
+              height={40}
               layout="intrinsic"
               objectFit="contain"
             />
           </div>
         </>
       ) : (
-        <SignIn /> // Render the SignIn form only if showSignIn is true
+        <SignIn /> // Render SignIn form if showSignIn is true
       )}
     </div>
   )
