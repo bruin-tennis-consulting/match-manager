@@ -18,7 +18,7 @@ export default function LandingPage() {
         <>
           <div className={styles.titleBar}>
             <div className={styles.leftTitle}>
-              <h1>BSA | Tennis Consulting</h1>
+              <h2>BSA | Tennis Consulting</h2>
             </div>
             <div className={styles.rightTitle}>
               {!authUser && (
@@ -79,7 +79,7 @@ export default function LandingPage() {
           </div>
         </>
       ) : (
-        <SignIn /> // Render SignIn form if showSignIn is true
+        <SignIn />
       )}
     </div>
   )
