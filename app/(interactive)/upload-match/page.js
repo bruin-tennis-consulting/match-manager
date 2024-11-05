@@ -19,7 +19,6 @@ export default function UploadMatchForm() {
 
   const { userProfile } = useAuth()
 
-  console.log(collections)
   useEffect(() => {
     const fetchCollectionsAndTeams = async () => {
       try {
@@ -74,7 +73,6 @@ export default function UploadMatchForm() {
   const updatePlayerOptions = useCallback(
     (formData) => {
       const clientPlayers = getPlayersForTeam(formData.clientTeam)
-      const opponentPlayers = getPlayersForTeam(formData.opponentTeam)
 
       setSchema((prevSchema) => ({
         ...prevSchema,
@@ -83,10 +81,6 @@ export default function UploadMatchForm() {
           clientPlayer: {
             ...prevSchema.properties.clientPlayer,
             enum: clientPlayers
-          },
-          opponentPlayer: {
-            ...prevSchema.properties.opponentPlayer,
-            enum: opponentPlayers
           }
         }
       }))
@@ -118,34 +112,34 @@ export default function UploadMatchForm() {
         client: {
           firstName: formData.clientPlayer.split(' ')[0],
           lastName: formData.clientPlayer.split(' ')[1],
-          UTR: formData.clientUTR
+          UTR: formData.clientUTR || null
         },
         opponent: {
           firstName: formData.opponentPlayer.split(' ')[0],
           lastName: formData.opponentPlayer.split(' ')[1],
-          UTR: formData.opponentUTR
+          UTR: formData.opponentUTR || null
         }
       }
       const weather = {
-        temperature: formData.temperature,
-        cloudy: formData.weather.includes('Cloudy'),
-        windy: formData.weather.includes('Windy')
+        temperature: formData.temperature || null,
+        cloudy: formData.weather ? formData.weather.includes('Cloudy') : null,
+        windy: formData.weather ? formData.weather.includes('Windy') : null
       }
       const matchDetails = {
-        weather,
-        division: formData.division,
-        event: formData.event,
-        lineup: formData.lineup,
-        matchVenue: formData.matchVenue,
-        round: formData.round,
-        indoor: formData.court === 'Indoor',
-        surface: formData.surface
+        weather: weather || null,
+        division: formData.division || null,
+        event: formData.event || null,
+        lineup: formData.lineup || null,
+        matchVenue: formData.matchVenue || null,
+        round: formData.round || null,
+        indoor: formData.court ? formData.court === 'Indoor' : null,
+        surface: formData.surface || null
       }
       // const sets = parseMatchScore(formData.matchScore);
       const sets = [
         formData.matchScore.set1,
         formData.matchScore.set2,
-        ...(formData.matchScore.set3 ? formData.matchScore.set3 : [])
+        formData.matchScore.set3 || {}
       ]
 
       // Use the createMatch hook to upload the match
@@ -153,14 +147,15 @@ export default function UploadMatchForm() {
         sets,
         videoId: formData.videoID,
         pointsJson,
-        pdfFile: formData.pdfFile,
+        pdfFile: formData.pdfFile || null,
         teams,
         players,
         matchDate: formData.date,
         singles: formData.singlesDoubles === 'Singles',
         matchDetails,
         searchableProperties,
-        version: 'v1' // Current version for new matches added
+        version: 'v1', // Current version for new matches added
+        published: true
       })
 
       alert('Match uploaded successfully!')

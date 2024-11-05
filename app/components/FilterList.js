@@ -5,6 +5,15 @@ import styles from '../styles/FilterList.module.css'
 // This file renammes columns to more human-readable names
 import nameMap from '../services/nameMap.js'
 
+const exclusiveGroups = {
+  player1ReturnFhBh: ['Forehand', 'Backhand'],
+  player1ReturnPlacement: ['Down the Line', 'Crosscourt'],
+  player1LastShotResult: ['Winner', 'Error'],
+  player1LastShotFhBh: ['Forehand', 'Backhand'],
+  player1LastShotPlacement: ['Down the Line', 'Crosscourt'],
+  side: ['Deuce', 'Ad']
+}
+
 const FilterList = ({
   pointsData,
   filterList,
@@ -50,7 +59,13 @@ const FilterList = ({
       ([filterKey, filterValue]) => filterKey === key && filterValue === value
     )
     if (!isDuplicate) {
-      setFilterList([...filterList, [key, value]])
+      const group = Object.values(exclusiveGroups).find((group) =>
+        group.includes(value)
+      )
+      const updatedFilterList = filterList.filter(
+        ([filterKey, filterValue]) => !(group && group.includes(filterValue))
+      )
+      setFilterList([...updatedFilterList, [key, value]])
     }
   }
   const removeFilter = (key, value) => {

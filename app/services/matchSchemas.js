@@ -28,8 +28,7 @@ const initialSchema = {
     },
     opponentPlayer: {
       type: 'string',
-      title: 'Opponent Player',
-      enum: []
+      title: 'Opponent Player'
     },
     opponentUTR: {
       type: 'string',
@@ -159,8 +158,10 @@ const initialSchema = {
     'clientTeam',
     'clientPlayer',
     'opponentTeam',
+    'opponentPlayer',
     'matchScore',
-    'date'
+    'date',
+    'videoID'
   ]
 }
 
