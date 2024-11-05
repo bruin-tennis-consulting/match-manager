@@ -19,7 +19,7 @@ const formatMatches = (matches) => {
 
 const Dashboard = () => {
   const router = useRouter()
-  const { matches, logos } = useData() // Using the custom hook to access match data
+  const { matches, logos } = useData()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
 

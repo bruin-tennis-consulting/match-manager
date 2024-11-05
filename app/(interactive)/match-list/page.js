@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import { useMatchData } from '../../components/MatchDataProvider' // Assuming the hook is located in the context folder
 

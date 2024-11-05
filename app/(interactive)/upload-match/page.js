@@ -19,6 +19,9 @@ export default function UploadMatchForm() {
 
   const { userProfile } = useAuth()
 
+  // TODO: remove this line used for linting
+  console.log(collections)
+
   useEffect(() => {
     const fetchCollectionsAndTeams = async () => {
       try {
