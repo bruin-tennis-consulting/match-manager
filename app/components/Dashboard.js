@@ -12,7 +12,7 @@ import Fuse from 'fuse.js'
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 import SearchIcon from '@/public/search'
 
-//for log out
+// for log out
 import { useAuth } from './AuthWrapper'
 
 const formatMatches = (matches) => {
@@ -34,8 +34,8 @@ const Dashboard = () => {
 
   const formattedMatches = formatMatches(matches)
 
-  //for log out
-  const { authUser, userProfile, handleSignOut } = useAuth()
+  // for log out
+  const { handleSignOut } = useAuth()
 
   // default show latest match: TODO BUG causes infinite re-rendering
   // useEffect(() => {
@@ -89,7 +89,7 @@ const Dashboard = () => {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-       <div className={styles.titleBar}>
+        <div className={styles.titleBar}>
           <h1>BSA | Tennis Consulting</h1>
           <div className={styles.buttonBox}>
             <button onClick={handleSignOut}>Sign Out</button>
