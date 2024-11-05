@@ -30,11 +30,15 @@ export const MatchDataProvider = ({ children }) => {
           const querySnapshot = await getDocs(colRef)
 
           querySnapshot.docs.forEach((doc) => {
-            allMatches.push({
-              id: doc.id,
-              collection: col, // Track which collection this match belongs to
-              ...doc.data()
-            })
+            const matchData = doc.data()
+            // Only add matches that are not marked as deleted
+            if (!matchData._deleted) {
+              allMatches.push({
+                id: doc.id,
+                collection: col, // Track which collection this match belongs to
+                ...matchData
+              })
+            }
           })
         }
 
@@ -50,18 +54,17 @@ export const MatchDataProvider = ({ children }) => {
   const updateMatch = useCallback(
     async (matchId, updatedData) => {
       try {
-        // Update the match data locally to reflect the changes immediately
+        // Get the match collection reference
+        const matchToUpdate = matches.find((match) => match.id === matchId)
+        if (!matchToUpdate) {
+          throw new Error('Match not found')
+        }
+
         setMatches((prevMatches) =>
           prevMatches.map((match) =>
             match.id === matchId ? { ...match, ...updatedData } : match
           )
         )
-
-        // Find the match and its collection
-        const matchToUpdate = matches.find((match) => match.id === matchId)
-        if (!matchToUpdate) {
-          throw new Error('Match not found')
-        }
 
         const matchDocRef = doc(db, matchToUpdate.collection, matchId)
         await updateDoc(matchDocRef, updatedData)
@@ -72,7 +75,7 @@ export const MatchDataProvider = ({ children }) => {
         console.error('Error updating match:', err)
       }
     },
-    [matches, fetchMatches]
+    [fetchMatches, matches]
   )
 
   const createMatch = useCallback(

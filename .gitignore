@@ -31,3 +31,7 @@ yarn-error.log*
 
 # Firebase cache
 .firebase/
+
+
+#vscode settings
+.vscode/

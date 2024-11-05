@@ -39,9 +39,8 @@ const MatchPage = () => {
     const selectedMatch = matches.find((match) => match.id === docId)
     if (selectedMatch) {
       setMatchData(selectedMatch)
-
       // Set initial bookmarks
-      const initialBookmarks = selectedMatch.points.filter(
+      const initialBookmarks = selectedMatch.pointsJson.filter(
         (point) => point.bookmarked
       )
       setBookmarks(initialBookmarks)
@@ -87,7 +86,7 @@ const MatchPage = () => {
   }
 
   const handleBookmark = async (point) => {
-    const updatedPoints = matchData.points.map((p) => {
+    const updatedPoints = matchData.pointsJson.map((p) => {
       if (p.Name === point.Name) {
         return { ...p, bookmarked: !p.bookmarked }
       }
@@ -111,30 +110,41 @@ const MatchPage = () => {
       setFilteredPoints(points)
     }
   }, [filterList, matchData])
-
-  const returnFilteredPoints = (points, filters) => {
-    let filteredPoints = points
-    const filterMap = new Map()
-
-    filters.forEach((filter) => {
-      const [key, value] = filter
-      if (filterMap.has(key)) {
-        filterMap.get(key).push(value)
-      } else {
-        filterMap.set(key, [value])
-      }
-    })
-
-    filterMap.forEach((values, key) => {
-      filteredPoints = filteredPoints.filter((point) =>
-        values.length > 1
-          ? values.includes(point[key])
-          : point[key] === values[0]
-      )
-    })
-
-    return filteredPoints
+// Effect to handle smooth scrolling when triggerScroll is true and showPDF is false
+useEffect(() => {
+  if (triggerScroll && !showPDF) {
+    if (tableRef.current) {
+      tableRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+    setTriggerScroll(false);
   }
+}, [triggerScroll, showPDF]);
+
+// Function to filter points based on the provided filters
+const returnFilteredPoints = (points = matchData.pointsJson, filters) => {
+  let filteredPoints = points; // Start with the provided points or matchData pointsJson
+  const filterMap = new Map();
+
+  // Build a map of filters
+  filters.forEach((filter) => {
+    const [key, value] = filter;
+    if (filterMap.has(key)) {
+      filterMap.get(key).push(value);
+    } else {
+      filterMap.set(key, [value]);
+    }
+  });
+
+  // Apply filtering logic based on the constructed filter map
+  filterMap.forEach((values, key) => {
+    filteredPoints = filteredPoints.filter((point) =>
+      values.length > 1 ? values.includes(point[key]) : point[key] === values[0]
+    );
+  });
+
+  return filteredPoints; // Return the filtered points
+};
+
 
   const removeFilter = (key, value) => {
     const updatedFilterList = filterList.filter(
@@ -160,7 +170,7 @@ const MatchPage = () => {
     }
   }
 
-  const matchSetScores = matchData ? extractSetScores(matchData.points) : {}
+  const matchSetScores = matchData ? extractSetScores(matchData.pointsJson) : {}
 
   return (
     <div className={styles.container}>
@@ -277,7 +287,7 @@ const MatchPage = () => {
                   </div>
                   <div className={styles.sidecontent}>
                     <FilterList
-                      pointsData={matchData.points}
+                      pointsData={matchData.pointsJson}
                       filterList={filterList}
                       setFilterList={setFilterList}
                       showPercent={showPercent}
@@ -356,7 +366,7 @@ const MatchPage = () => {
                   : styles.toggle_buttona_inactive
               }
             >
-              Points
+              Points Played
             </button>
             {showPDF ? (
               <iframe

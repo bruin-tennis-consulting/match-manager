@@ -2,6 +2,15 @@ import React, { useEffect, useState, useMemo } from 'react';
 import styles from '../styles/FilterList.module.css';
 import nameMap from '../services/nameMap.js';
 
+const exclusiveGroups = {
+  player1ReturnFhBh: ['Forehand', 'Backhand'],
+  player1ReturnPlacement: ['Down the Line', 'Crosscourt'],
+  player1LastShotResult: ['Winner', 'Error'],
+  player1LastShotFhBh: ['Forehand', 'Backhand'],
+  player1LastShotPlacement: ['Down the Line', 'Crosscourt'],
+  side: ['Deuce', 'Ad']
+}
+
 const FilterList = ({
   pointsData,
   filterList,
@@ -66,10 +75,27 @@ const FilterList = ({
   };
 
   const addFilter = (key, value) => {
-    if (!filterList.some(([filterKey, filterValue]) => filterKey === key && filterValue === value)) {
-      setFilterList((prev) => [...prev, [key, value]]);
+    // Check if the value is already in the filter list
+    const isDuplicate = filterList.some(
+        ([filterKey, filterValue]) => filterKey === key && filterValue === value
+    );
+
+    if (!isDuplicate) {
+        // Find the group associated with the filter value
+        const group = Object.values(exclusiveGroups).find((group) =>
+            group.includes(value)
+        );
+
+        // Update the filter list by removing other filters in the same exclusive group
+        const updatedFilterList = filterList.filter(
+            ([filterKey, filterValue]) => !(group && group.includes(filterValue))
+        );
+
+        // Add the new filter to the updated list
+        setFilterList([...updatedFilterList, [key, value]]);
     }
-  };
+};
+
 
   const removeFilter = (key, value) => {
     setFilterList((prev) =>
