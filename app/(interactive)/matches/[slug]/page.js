@@ -29,10 +29,18 @@ const MatchPage = () => {
   const [selectedPlayer, setSelectedPlayer] = useState(1)
   const tableRef = useRef(null)
   const iframeRef = useRef(null)
+  const [clientLogo, setClientLogo] = useState('')
+  const [opponentLogo, setOpponentLogo] = useState('')
+  const [clientTeam, setClientTeam] = useState('')
+  const [opponentTeam, setOpponentTeam] = useState('')
+
+
 
   const { matches, updateMatch } = useMatchData()
   const pathname = usePathname()
   const docId = pathname.substring(pathname.lastIndexOf('/') + 1)
+
+
 
   useEffect(() => {
     const selectedMatch = matches.find((match) => match.id === docId)
@@ -181,6 +189,7 @@ const MatchPage = () => {
                   onReady={addBorderRadius}
                 />
               </div>
+
             </div>
             <div className={styles.sidebar}>
               <div className={filterListStyles.activeFilterListContainer}>
@@ -276,6 +285,8 @@ const MatchPage = () => {
                       setFilterList={setFilterList}
                       showPercent={showPercent}
                       showCount={showCount}
+                      clientTeam={matchData.clientTeam}
+                      opponentTeam={matchData.opponentTeam}
                       selectedPlayer={selectedPlayer}
                       setSelectedPlayer={setSelectedPlayer}
                     />

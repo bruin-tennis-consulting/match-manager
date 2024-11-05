@@ -1,18 +1,74 @@
-.activeFilterListContainer {
+.selectPlayerContainer {
+    text-align: center;
+    /* margin-top: 1.5vw;
+    margin-bottom: 1.5vw; */
+  }
+  
+  .selectPlayerText {
+    font-size: 1.1em;
+    color: #333;
+    margin: 0.vw;
+    /* margin-bottom: 0.8vw; */
+  }
+  
+  .teamLogosContainer {
+    display: flex;
+    justify-content: center;
+    gap: 1.5vw;
+  }
+  
+  .logoWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .logoWrapper:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 0.5vw rgba(0, 0, 0, 0.15);
+  }
+  
+  .selectedWrapper {
+    transform: scale(1.1);
+    box-shadow: 0 0 0.8vw rgba(0, 0, 0, 0.3);
+  }
+  
+  .teamLogo {
+    width: 4vw; /* Smaller size for logos */
+    height: 4vw; /* Maintain consistent height */
+    border-radius: 50%;
+    object-fit: contain; /* Ensure entire logo fits without distortion */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .selectedLogo {
+    border: 0.2vw solid #4a90e2;
+    box-shadow: 0 0 0.5vw rgba(74, 144, 226, 0.5);
+  }
+  
+  .teamLabel {
+    margin-top: 0.4vw;
+    font-size: 0.9em;
+    color: #666;
+  }
+  
+  /* Active Filter Styles */
+  .activeFilterListContainer {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    box-sizing: border-box;
     padding: 0.5vw;
     margin-bottom: 1vw;
     background-color: #ffffff;
     border: 1px solid #eaeaea;
-    border-radius: 10px;
+    border-radius: 0.5vw;
     font-size: 1.2vw;
-}
-
-.activeFilterList {
+  }
+  
+  .activeFilterList {
     padding: 0;
     list-style-type: none;
     margin: 0;
@@ -21,90 +77,93 @@
     max-height: 5vw;
     display: flex;
     flex-wrap: wrap;
-}
-
-.activeFilterItem {
-    background-color: #fafafa; /* Slightly lighter to distinguish from hover state */
+  }
+  
+  .activeFilterItem {
+    background-color: #fafafa;
     color: #333;
-    border: 1px solid #eaeaea; /* Subtle border color */
-    border-radius: 0.25vw;
-    padding: 0.625vw 2.5vw;
-    margin: 0.5vw;
+    border: 1px solid #eaeaea;
+    border-radius: 0.3vw;
+    padding: 0.5vw 2vw;
+    margin: 0.4vw;
     cursor: pointer;
-    font-size: 1.3vw;
-    transition: all 0.2s ease-in-out; /* Smooth transition for all properties */
-}
-
-.activeFilterItem:hover {
-    background-color: #e2e2e2; /* Darker on hover for better feedback */
-    box-shadow: 0 1.6vw 3.2vw rgba(0, 0, 0, 0.1); /* Slightly more pronounced shadow */
-}
-
-.activeFilterItem.active {
-    background-color: #d1eaff; /* A light blue to indicate active status */
-    color: #0056b3; /* A darker blue to match */
-    border-color: #0056b3; /* Same dark blue for the border */
-    box-shadow: 0 0.8vw 1.6vw rgba(0, 0, 0, 0.1); /* Consistent with hover state */
-}
-
-.availableFilterList {
-    padding-left: 1vw; /* override default padding left of a ul*/
-    padding-right: 1vw;
+    font-size: 1.1vw;
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  
+  .activeFilterItem:hover {
+    background-color: #e2e2e2;
+    box-shadow: 0 0.5vw 1vw rgba(0, 0, 0, 0.1);
+  }
+  
+  .activeFilterItem.active {
+    background-color: #d1eaff;
+    color: #0056b3;
+    border-color: #0056b3;
+    box-shadow: 0 0.4vw 0.8vw rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Available Filter Styles */
+  .availableFilterList {
+    padding: 0 1vw;
     margin: 0;
-}
-
-.availableFilterItem {
-    padding: 0.8vw 1vw; /* Adjusted padding for consistency */
-    margin: 0.4vw 0; /* Adjusted margin for better layout */
-    background-color: #f9f9f9; /* Slightly different background to distinguish from active items */
-    border-radius: 0.8vw; /* Consistent rounded corners */
-    border: 0.2vw solid #eaeaea; /* Subtle border */
+  }
+  
+  .availableFilterItem {
+    padding: 0.6vw 1vw;
+    margin: 0.4vw 0;
+    background-color: #f9f9f9;
+    border-radius: 0.5vw;
+    border: 0.2vw solid #eaeaea;
     list-style-type: none;
     cursor: pointer;
-    font-size: 1.2vw;
+    font-size: 1.1vw;
     transition: background-color 0.2s ease-in-out;
-    background-color: #f0f0f0; /* A touch darker to indicate hover state */
-}
-
-.filterValuesList {
+  }
+  
+  .availableFilterItem:hover {
+    background-color: #f0f0f0;
+  }
+  
+  /* Filter Value Styles */
+  .filterValuesList {
     padding: 0;
     list-style-type: none;
-    font-size: 1.2vw;
-}
-
-.filterValueItem {
-    background-color: #f8f8f8; /* Light grey background for each item */
-    color: #333; /* Dark grey text color for contrast */
-    padding: 0.6vw 1.2vw; /* Padding inside each item */
-    margin: 0.2vw 0; /* Margin between items */
-    border-radius: 0.4vw; /* Rounded corners for the items */
-    cursor: pointer; /* Cursor changes to pointer to indicate clickability */
-    transition: background-color 0.2s ease-in-out; /* Smooth transition for hover effect */
+    font-size: 1.1vw;
+  }
+  
+  .filterValueItem {
+    background-color: #f8f8f8;
+    color: #333;
+    padding: 0.5vw 1vw;
+    margin: 0.3vw 0;
+    border-radius: 0.4vw;
+    cursor: pointer;
     display: flex;
-    font-size: 1.2vw;
     justify-content: space-between;
-}
-
-.filterValueItem:hover {
-    background-color: #e0e0e0; /* Slightly darker grey background on hover */
-}
-
-.filterValueItem.active {
-    background-color: #d0e0f0; /* Different background color for active state */
-    color: #104070; /* Darker color for the text */
-    font-weight: bold; /* Make the active item text bold */
-    border-left: 0.4vw solid #007bff; /* Blue border for active item */
-    padding-left: 0.8vw; /* Adjust padding to accommodate the border */
-}
-
-.optionsList {
-    padding: 0;
+    transition: background-color 0.2s ease-in-out;
+  }
+  
+  .filterValueItem:hover {
+    background-color: #e0e0e0;
+  }
+  
+  .filterValueItem.active {
+    background-color: #d0e0f0;
+    color: #104070;
+    font-weight: bold;
+    border-left: 0.4vw solid #007bff;
+    padding-left: 0.8vw;
+  }
+  
+  /* Options List */
+  .optionsList {
+    padding: 1vw;
     list-style-type: none;
     margin: 0;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     font-size: 1.1vw;
-    padding: 1vw;
-
-}
+  }
+  

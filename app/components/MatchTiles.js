@@ -63,24 +63,21 @@ const MatchTiles = ({
   const [opponentLogo, setOpponentLogo] = useState('')
 
   useEffect(() => {
-    const fetchLogos = async () => {
-      try {
-        const allTeams = await getTeams()
-        const clientLogoURL = allTeams.find(
-          (team) => team.name === clientTeam
-        ).logoUrl
-        const opponentLogoURL = allTeams.find(
-          (team) => team.name === opponentTeam
-        ).logoUrl
-        setClientLogo(clientLogoURL)
-        setOpponentLogo(opponentLogoURL)
-      } catch (error) {
-        console.error('Error fetching data:', error)
-      }
+    if (clientTeam && opponentTeam) {
+      const fetchLogos = async () => {
+        try {
+          const allTeams = await getTeams();
+          const clientLogoURL = allTeams.find(team => team.name === clientTeam)?.logoUrl || '';
+          const opponentLogoURL = allTeams.find(team => team.name === opponentTeam)?.logoUrl || '';
+          setClientLogo(clientLogoURL);
+          setOpponentLogo(opponentLogoURL);
+        } catch (error) {
+          console.error('Error fetching logos:', error);
+        }
+      };
+      fetchLogos();
     }
-
-    fetchLogos()
-  }, [clientTeam, opponentTeam])
+  }, [clientTeam, opponentTeam]);
 
   return (
     <div className={styles.matchTilesContainer}>
