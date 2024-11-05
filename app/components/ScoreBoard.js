@@ -45,7 +45,7 @@ const ScoreBoard = ({
                       {score.score}
                       <sup
                         style={{
-                          position: 'absolute',
+                          position: 'absolute', 
                           fontSize: '0.6em',
                           top: '0.1em',
                           right: '0em',

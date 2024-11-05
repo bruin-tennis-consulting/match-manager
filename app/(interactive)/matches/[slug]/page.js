@@ -11,9 +11,10 @@ import PointsList from '../../../components/PointsList'
 import ScoreBoard from '../../../components/ScoreBoard'
 import MatchTiles from '@/app/components/MatchTiles'
 import { useMatchData } from '@/app/components/MatchDataProvider'
-import extractSetScores from '@/app/services/extractSetScores'
+//import extractSetScores from '@/app/services/extractSetScores' * deleteted on Nov 3rd by SK *
 import ExtendedList from '../../../components/ExtendedList'
 import nameMap from '@/app/services/nameMap'
+import { matchesMiddleware } from 'next/dist/shared/lib/router/router'
 
 const MatchPage = () => {
   const [matchData, setMatchData] = useState()
@@ -32,6 +33,8 @@ const MatchPage = () => {
   const { matches, updateMatch } = useMatchData()
   const pathname = usePathname()
   const docId = pathname.substring(pathname.lastIndexOf('/') + 1)
+
+  console.log(matches)
 
   useEffect(() => {
     const selectedMatch = matches.find((match) => match.id === docId)
@@ -151,7 +154,11 @@ const MatchPage = () => {
     }
   }
 
-  const matchSetScores = matchData ? extractSetScores(matchData.pointsJson) : {}
+ // const matchSetScores = matchData ? extractSetScores(matchData.pointsJson) : {} Nov-3rd  by sk
+  //const matchSetScores = matchData ? extractSetScores(matchData.pointsJson) : {}
+
+  const matchSetScores =  
+  
 
   return (
     <div className={styles.container}>
@@ -323,6 +330,7 @@ const MatchPage = () => {
                 <ScoreBoard
                   names={matchData.name}
                   playData={playingPoint}
+                  
                   {...matchSetScores}
                 />
               </div>
