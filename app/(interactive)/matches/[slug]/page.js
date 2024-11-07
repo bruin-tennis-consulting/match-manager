@@ -15,6 +15,8 @@ import extractSetScores from '@/app/services/extractSetScores'
 import ExtendedList from '../../../components/ExtendedList'
 import nameMap from '@/app/services/nameMap'
 
+console.log(match)
+
 const MatchPage = () => {
   const [matchData, setMatchData] = useState()
   const [filterList, setFilterList] = useState([])
