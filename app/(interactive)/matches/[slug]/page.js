@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 
 import filterListStyles from '../../../styles/FilterList.module.css'
@@ -18,6 +18,7 @@ import nameMap from '@/app/services/nameMap'
 const MatchPage = () => {
   const [matchData, setMatchData] = useState()
   const [filterList, setFilterList] = useState([])
+  const [filteredPoints, setFilteredPoints] = useState([])
   const [videoObject, setVideoObject] = useState(null)
   const [showPercent, setShowPercent] = useState(false)
   const [showCount, setShowCount] = useState(false)
@@ -33,6 +34,7 @@ const MatchPage = () => {
   const pathname = usePathname()
   const docId = pathname.substring(pathname.lastIndexOf('/') + 1)
 
+  // Fetch the selected match on mount
   useEffect(() => {
     const selectedMatch = matches.find((match) => match.id === docId)
     if (selectedMatch) {
@@ -44,6 +46,38 @@ const MatchPage = () => {
       setBookmarks(initialBookmarks)
     }
   }, [matches, docId])
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialFilters = [];
+  
+    // Extract filter values from the URL
+    urlParams.forEach((value, key) => {
+      initialFilters.push([key, value]);
+    });
+  
+    if (initialFilters.length > 0) {
+      setFilterList(initialFilters);
+    }
+  }, [setFilterList]);
+  
+  // Another useEffect to update the URL when filterList changes
+  useEffect(() => {
+    const urlParams = new URLSearchParams();
+  
+    // Add each filter from filterList to the URL
+    filterList.forEach(([key, value]) => {
+      urlParams.append(key, value);
+    });
+  
+    // Update the URL with the new query string
+    window.history.replaceState(
+      {},
+      '',
+      `${window.location.pathname}?${urlParams.toString()}`
+    );
+  }, [filterList]);
+  
 
   const handleJumpToTime = (time) => {
     if (videoObject && videoObject.seekTo) {
@@ -69,63 +103,48 @@ const MatchPage = () => {
     }
   }
 
+  // Update the filtered points whenever filterList or matchData changes
   useEffect(() => {
     if (matchData) {
-      const points = returnFilteredPoints()
-      const sortedPoints = [...points].sort((a, b) => b.Position - a.Position)
-
-      const updateScoreboardWithTime = (time) => {
-        const currentPoint = sortedPoints.find(
-          (point) => point.Position <= time
-        )
-        if (currentPoint) {
-          setPlayingPoint(currentPoint)
-        }
-      }
-
-      const intervalId = setInterval(() => {
-        if (videoObject && videoObject.getCurrentTime) {
-          const currentTime = videoObject.getCurrentTime() * 1000
-          updateScoreboardWithTime(currentTime)
-        }
-      }, 200)
-
-      return () => clearInterval(intervalId)
+      const points = returnFilteredPoints(matchData.points, filterList)
+      setFilteredPoints(points)
     }
-  }, [videoObject, matchData])
-
-  useEffect(() => {
-    if (triggerScroll && !showPDF) {
-      if (tableRef.current) {
-        tableRef.current.scrollIntoView({ behavior: 'smooth' })
-      }
-      setTriggerScroll(false)
+  }, [filterList, matchData])
+// Effect to handle smooth scrolling when triggerScroll is true and showPDF is false
+useEffect(() => {
+  if (triggerScroll && !showPDF) {
+    if (tableRef.current) {
+      tableRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [triggerScroll, showPDF])
-
-  const returnFilteredPoints = () => {
-    let filteredPoints = matchData.pointsJson
-    const filterMap = new Map()
-
-    filterList.forEach((filter) => {
-      const [key, value] = filter
-      if (filterMap.has(key)) {
-        filterMap.get(key).push(value)
-      } else {
-        filterMap.set(key, [value])
-      }
-    })
-
-    filterMap.forEach((values, key) => {
-      filteredPoints = filteredPoints.filter((point) =>
-        values.length > 1
-          ? values.includes(point[key])
-          : point[key] === values[0]
-      )
-    })
-
-    return filteredPoints
+    setTriggerScroll(false);
   }
+}, [triggerScroll, showPDF]);
+
+// Function to filter points based on the provided filters
+const returnFilteredPoints = (points = matchData.pointsJson, filters) => {
+  let filteredPoints = points; // Start with the provided points or matchData pointsJson
+  const filterMap = new Map();
+
+  // Build a map of filters
+  filters.forEach((filter) => {
+    const [key, value] = filter;
+    if (filterMap.has(key)) {
+      filterMap.get(key).push(value);
+    } else {
+      filterMap.set(key, [value]);
+    }
+  });
+
+  // Apply filtering logic based on the constructed filter map
+  filterMap.forEach((values, key) => {
+    filteredPoints = filteredPoints.filter((point) =>
+      values.length > 1 ? values.includes(point[key]) : point[key] === values[0]
+    );
+  });
+
+  return filteredPoints; // Return the filtered points
+};
+
 
   const removeFilter = (key, value) => {
     const updatedFilterList = filterList.filter(
@@ -281,7 +300,7 @@ const MatchPage = () => {
                 <div className={styles.sidebox}>
                   <div className={styles.sidecontent}>
                     <PointsList
-                      pointsData={returnFilteredPoints()}
+                      pointsData={filteredPoints}
                       onPointSelect={handleJumpToTime}
                       onBookmark={handleBookmark}
                       clientTeam={matchData.clientTeam}
@@ -359,7 +378,7 @@ const MatchPage = () => {
             ) : (
               <div ref={tableRef} className={styles.ExtendedList}>
                 <ExtendedList
-                  pointsData={returnFilteredPoints()}
+                  pointsData={filteredPoints}
                   clientTeam={matchData.clientTeam}
                   opponentTeam={matchData.opponentTeam}
                   onPointSelect={handleJumpToTime}
