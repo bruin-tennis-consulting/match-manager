@@ -2,11 +2,19 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { useMatchData } from '../../components/MatchDataProvider' // Assuming the hook is located in the context folder
+import { useData } from '../../components/DataProvider' // Assuming the hook is located in the context folder
+
+const formatMatches = (matches) => {
+  return matches
+    .filter((match) => match.version === 'v1') // Filter for version 'v1'
+    .sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate)) // Sort by matchDate in descending order
+}
 
 export default function MatchList() {
-  const { matches, updateMatch, refresh } = useMatchData()
-  const [newName, setNewName] = useState('')
+  const { matches, updateMatch, refresh } = useData()
+  // const [newName, setNewName] = useState('')
+
+  const formattedMatches = formatMatches(matches)
 
   const handleDelete = async (id) => {
     try {
