@@ -10,7 +10,7 @@ import FilterList from '../../../components/FilterList'
 import PointsList from '../../../components/PointsList'
 import ScoreBoard from '../../../components/ScoreBoard'
 import MatchTiles from '@/app/components/MatchTiles'
-import { useMatchData } from '@/app/components/MatchDataProvider'
+import { useData } from '@/app/components/DataProvider'
 import extractSetScores from '@/app/services/extractSetScores'
 import ExtendedList from '../../../components/ExtendedList'
 import nameMap from '@/app/services/nameMap'
@@ -29,7 +29,7 @@ const MatchPage = () => {
   const tableRef = useRef(null)
   const iframeRef = useRef(null)
 
-  const { matches, updateMatch } = useMatchData()
+  const { matches, updateMatch } = useData()
   const pathname = usePathname()
   const docId = pathname.substring(pathname.lastIndexOf('/') + 1)
 
