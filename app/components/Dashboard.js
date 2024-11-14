@@ -2,8 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { useMatchData } from './MatchDataProvider'
-import { useDatabase } from './DatabaseProvider'
+import { useData } from './DataProvider'
 import styles from '../styles/Dashboard.module.css'
 import DashTileContainer from './DashTileContainer'
 // import getTeams from '@/app/services/getTeams.js'
@@ -23,12 +22,7 @@ const formatMatches = (matches) => {
 
 const Dashboard = () => {
   const router = useRouter()
-  const { matches, error } = useMatchData() // Using the custom hook to access match data
-  const { logos } = useDatabase()
-
-  // TODO: remove this line used for linting
-  console.log(error)
-
+  const { matches, logos } = useData()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
 
