@@ -1,3 +1,5 @@
+@import url('https://api.fontshare.com/css?f[]=clash-display@100,300,400,500&display=swap');
+
 html,
 body {
   padding: 0;
@@ -18,6 +20,16 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+h1 {
+  font-family: 'Clash Display', sans-serif;
+}
+
+h2,
+p,
+button {
+  font-family: 'DM Sans', sans-serif;
 }
 
 a {

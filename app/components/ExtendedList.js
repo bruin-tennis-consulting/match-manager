@@ -20,6 +20,7 @@ const ExtendedList = ({
     const fetchLogos = async () => {
       try {
         const allTeams = await getTeams()
+        console.log(allTeams)
         const clientLogoURL = allTeams.find(
           (team) => team.name === clientTeam
         ).logoUrl
