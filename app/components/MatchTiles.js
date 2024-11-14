@@ -15,40 +15,12 @@ const calculateWinner = (player1, player2) => {
   return player1Total > player2Total
 }
 
-// Retrieve Match Date
-const extractDateFromString = (inputString) => {
-  const regexSlash = /\b(\d{1,2}\/\d{1,2}\/\d{2,4})\b/g
-  const regexDash = /\b(\d{1,2}-\d{1,2}-?\d{0,4})\b/g
-  const regex = new RegExp(`${regexSlash.source}|${regexDash.source}`, 'g')
-  const matches = inputString.match(regex)
-  if (matches) {
-    const firstMatch = matches[0]
-    const dateParts = firstMatch.includes('/')
-      ? firstMatch.split('/')
-      : firstMatch.split('-')
-    const month = parseInt(dateParts[0])
-    const day = parseInt(dateParts[1])
-    let year = parseInt(dateParts[2])
-    if (year < 100) {
-      year += 2000 // Adjust for two-digit year format
-    }
-
-    const dateObject = new Date(year, month - 1, day)
-    return dateObject.toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    })
-  } else {
-    return null
-  }
-}
-
 const MatchTiles = ({
   matchName,
   clientTeam,
   opponentTeam,
   matchDetails,
+  date,
   player1Name,
   player2Name,
   player1FinalScores,
@@ -193,7 +165,7 @@ const MatchTiles = ({
           <div className={styles.containerTitle}>Match Information</div>
           <div className={styles.containerInfo}>{matchDetails}</div>
           <div className={styles.containerInfo}>
-            {extractDateFromString(matchName)}
+            {date}
           </div>
         </div>
       )}
