@@ -6,10 +6,13 @@ import { useData } from './DataProvider'
 import styles from '../styles/Dashboard.module.css'
 import DashTileContainer from './DashTileContainer'
 // import getTeams from '@/app/services/getTeams.js'
-import RosterList from './RosterList.js'
+// import RosterList from './RosterList.js'
 import Fuse from 'fuse.js'
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 import SearchIcon from '@/public/search'
+
+// for log out
+import { useAuth } from './AuthWrapper'
 
 const formatMatches = (matches) => {
   return matches
@@ -24,6 +27,9 @@ const Dashboard = () => {
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
 
   const formattedMatches = formatMatches(matches)
+
+  // for log out
+  const { handleSignOut } = useAuth()
 
   // default show latest match: TODO BUG causes infinite re-rendering
   // useEffect(() => {
@@ -77,7 +83,12 @@ const Dashboard = () => {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1>BSA | Tennis Consulting</h1>
+        <div className={styles.titleBar}>
+          <h1>BSA | Tennis Consulting</h1>
+          <div className={styles.buttonBox}>
+            <button onClick={handleSignOut}>Sign Out</button>
+          </div>
+        </div>
         <div className={styles.headerContent}>
           <h2>Dashboard</h2>
           <div className={styles.searchContainer}>
@@ -166,7 +177,8 @@ const Dashboard = () => {
         </div>
 
         <div className={styles.rosterContainer}>
-          <RosterList />
+          {/* <RosterList /> */}
+          <p>Roster being fixed ...</p>
         </div>
       </div>
     </div>
