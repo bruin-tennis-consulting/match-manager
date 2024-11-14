@@ -11,7 +11,7 @@ import {
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage' // Import storage functions
 import { db, storage } from '../services/initializeFirebase.js' // Ensure storage is exported from initializeFirebase.js
-import { useMatchData } from '../components/MatchDataProvider.js' // Import the hook
+import { useData } from '../components/DataProvider.js' // Import the hook
 
 async function useUploadMatch(
   sets,
@@ -26,7 +26,7 @@ async function useUploadMatch(
   collectionName
 ) {
   // Use the createMatch function from the useMatchData hook
-  const { createMatch } = useMatchData()
+  const { createMatch } = useData()
   if (
     !sets ||
     !videoId ||
