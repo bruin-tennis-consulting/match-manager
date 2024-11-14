@@ -14,8 +14,6 @@ import { useData } from '@/app/components/DataProvider'
 import ExtendedList from '../../../components/ExtendedList'
 import nameMap from '@/app/services/nameMap'
 
-console.log(match)
-
 const MatchPage = () => {
   const [matchData, setMatchData] = useState()
   const [filterList, setFilterList] = useState([])
