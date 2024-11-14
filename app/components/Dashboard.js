@@ -40,17 +40,16 @@ const Dashboard = () => {
   // }, [formattedMatches])
 
   // Fuzzy search
-  const fuse = useMemo(
-    () =>
-      new Fuse(formattedMatches, {
-        keys: searchableProperties,
-        threshold: 0.3
-      }),
-    [formattedMatches]
-  )
+  const fuse = useMemo(() => {
+    if (!formattedMatches.length) return null
+    return new Fuse(formattedMatches, {
+      keys: searchableProperties,
+      threshold: 0.3
+    })
+  }, [formattedMatches])
 
   const filteredMatchSets = useMemo(() => {
-    if (!searchTerm) return []
+    if (!searchTerm || !fuse) return []
     const result = fuse.search(searchTerm).map((result) => {
       const match = result.item
       return `${match.matchDate}#${match.teams.opponentTeam}`
