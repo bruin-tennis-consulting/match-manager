@@ -34,7 +34,6 @@ const MatchPage = () => {
 
   useEffect(() => {
     const selectedMatch = matches.find((match) => match.id === docId)
-    console.log(selectedMatch)
     if (selectedMatch) {
       setMatchData(selectedMatch)
       // Set initial bookmarks
