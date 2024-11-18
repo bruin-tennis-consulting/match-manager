@@ -68,11 +68,18 @@
 
 .matchTileContainer {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+
   width: 100%;
   gap: 10px;
   box-sizing: border-box;
   margin-bottom: 10px;
+}
+.matchTileContainer--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.matchTileContainer--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .matchSection h3 {
