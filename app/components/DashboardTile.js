@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import styles from '../styles/DashboardTile.module.css'
-import { useDatabase } from './DatabaseProvider'
+import { useData } from './DataProvider'
 
 // Calculate winner of match
 const calculateWinner = (player1, player2) => {
@@ -27,7 +27,7 @@ const DashboardTile = ({
   isUnfinished,
   isTagged
 }) => {
-  const { logos, loading } = useDatabase()
+  const { logos, loading } = useData()
   const [clientLogo, setClientLogo] = useState(null)
   const [opponentLogo, setOpponentLogo] = useState(null)
 

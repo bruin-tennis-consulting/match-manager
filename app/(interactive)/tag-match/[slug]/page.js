@@ -8,13 +8,13 @@ import {
 } from '../../../services/taggerButtonData.js'
 import styles from '../../../styles/TagMatch.module.css'
 import { usePathname } from 'next/navigation'
-import { useMatchData } from '@/app/components/MatchDataProvider'
+import { useData } from '@/app/components/DataProvider'
 import TennisCourtSVG from '@/app/components/TennisCourtSVG'
 
 export default function TagMatch() {
   const pathname = usePathname()
   const matchId = pathname.substring(pathname.lastIndexOf('/') + 1)
-  const { matches, updateMatch, refresh } = useMatchData()
+  const { matches, updateMatch, refresh } = useData()
   const match = matches.find((m) => m.id === matchId)
 
   const [videoObject, setVideoObject] = useState(null)

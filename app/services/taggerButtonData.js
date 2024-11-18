@@ -1377,6 +1377,7 @@ export const getTaggerButtonData = (
 })
 
 export const columnNames = [
+  // changed to desired order
   'pointScore',
   'gameScore',
   'setScore',
@@ -1399,7 +1400,6 @@ export const columnNames = [
   'secondServeXCoord',
   'secondServeYCoord',
   'isAce',
-  'isLet',
   'shotContactX',
   'shotContactY',
   'shotDirection',

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import Form from '@rjsf/core'
 import validator from '@rjsf/validator-ajv8'
-import { useMatchData } from '../../components/MatchDataProvider.js'
+import { useData } from '../../components/DataProvider.js'
 import { useAuth } from '../../components/AuthWrapper.js'
 import getTeams from '@/app/services/getTeams.js'
 import styles from '../../styles/Upload.module.css'
@@ -11,7 +11,7 @@ import { initialSchema, uiSchema } from '@/app/services/matchSchemas.js'
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 
 export default function UploadMatchForm() {
-  const { createMatch } = useMatchData() // Use the createMatch hook
+  const { createMatch } = useData() // Use the createMatch hook
   const [schema, setSchema] = useState(initialSchema)
   const [teams, setTeams] = useState([])
   const [collections, setCollections] = useState([])

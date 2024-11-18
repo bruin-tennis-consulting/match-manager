@@ -10,8 +10,7 @@ import FilterList from '../../../components/FilterList'
 import PointsList from '../../../components/PointsList'
 import ScoreBoard from '../../../components/ScoreBoard'
 import MatchTiles from '@/app/components/MatchTiles'
-import { useMatchData } from '@/app/components/MatchDataProvider'
-import extractSetScores from '@/app/services/extractSetScores'
+import { useData } from '@/app/components/DataProvider'
 import ExtendedList from '../../../components/ExtendedList'
 import nameMap from '@/app/services/nameMap'
 
@@ -29,7 +28,7 @@ const MatchPage = () => {
   const tableRef = useRef(null)
   const iframeRef = useRef(null)
 
-  const { matches, updateMatch } = useMatchData()
+  const { matches, updateMatch } = useData()
   const pathname = usePathname()
   const docId = pathname.substring(pathname.lastIndexOf('/') + 1)
 
@@ -151,18 +150,70 @@ const MatchPage = () => {
     }
   }
 
-  const matchSetScores = matchData ? extractSetScores(matchData.pointsJson) : {}
+  const getMatchScores = (pointsJson) => {
+    if (!pointsJson || !pointsJson.length) return []
+
+    // Group points by set and get the last point of each set
+    return (
+      Object.values(
+        pointsJson.reduce((acc, point) => {
+          if (
+            !acc[point.setNum] ||
+            point.Position > acc[point.setNum].Position
+          ) {
+            acc[point.setNum] = point
+          }
+          return acc
+        }, {})
+      )
+        // Sort by set number
+        .sort((a, b) => a.setNum - b.setNum)
+        // Map to score arrays, filtering out 0-0 scores
+        .map((point) => {
+          if (!point.gameScore || point.gameScore === '0-0') return null
+          return point.gameScore.split('-').map(Number)
+        })
+        .filter(Boolean)
+    )
+  }
+
+  // Usage in your component:
+  const matchScores = matchData ? getMatchScores(matchData.pointsJson) : []
 
   return (
     <div className={styles.container}>
       {matchData && (
         <>
           <MatchTiles
-            matchName={matchData.name}
-            clientTeam={matchData.clientTeam}
-            opponentTeam={matchData.opponentTeam}
-            matchDetails={matchData.matchDetails}
-            {...matchSetScores}
+            matchName={matchData.matchDetails.event}
+            clientTeam={matchData.teams.clientTeam}
+            opponentTeam={matchData.teams.opponentTeam}
+            matchDetails={matchData.matchDetails.event} // This needs to be updated in MatchTiles.js
+            date={matchData.matchDetails.date}
+            player1Name={
+              matchData.players.client.firstName +
+              ' ' +
+              matchData.players.client.lastName
+            }
+            player2Name={
+              matchData.players.opponent.firstName +
+              ' ' +
+              matchData.players.opponent.lastName
+            }
+            player1FinalScores={matchScores.map((scores) => ({
+              score: scores[0]
+            }))}
+            player2FinalScores={matchScores.map((scores) => ({
+              score: scores[1]
+            }))}
+            player1TieScores={matchData.pointsJson.map(
+              (point) => point.player1TiebreakScore
+            )}
+            player2TieScores={matchData.pointsJson.map(
+              (point) => point.player2TiebreakScore
+            )}
+            isUnfinished={matchData.matchDetails.status === 'unfinished'}
+            displaySections={{ score: true, info: true, matchup: true }}
           />
           <div className={styles.headerRow}>
             <div className={styles.titleContainer}>
@@ -284,8 +335,8 @@ const MatchPage = () => {
                       pointsData={returnFilteredPoints()}
                       onPointSelect={handleJumpToTime}
                       onBookmark={handleBookmark}
-                      clientTeam={matchData.clientTeam}
-                      opponentTeam={matchData.opponentTeam}
+                      clientTeam={matchData.teams.clientTeam}
+                      opponentTeam={matchData.teams.opponentTeam}
                     />
                   </div>
                   <div style={{ padding: '0.5vw', paddingLeft: '5vw' }}>
@@ -305,8 +356,8 @@ const MatchPage = () => {
                       pointsData={bookmarks}
                       onPointSelect={handleJumpToTime}
                       onBookmark={handleBookmark}
-                      clientTeam={matchData.clientTeam}
-                      opponentTeam={matchData.opponentTeam}
+                      clientTeam={matchData.teams.clientTeam}
+                      opponentTeam={matchData.teams.opponentTeam}
                     />
                   </div>
                   <div style={{ padding: '0.5vw', paddingLeft: '5vw' }}>
@@ -323,7 +374,30 @@ const MatchPage = () => {
                 <ScoreBoard
                   names={matchData.name}
                   playData={playingPoint}
-                  {...matchSetScores}
+                  player1Name={
+                    matchData.players.client.firstName +
+                    ' ' +
+                    matchData.players.client.lastName
+                  }
+                  player2Name={
+                    matchData.players.opponent.firstName +
+                    ' ' +
+                    matchData.players.opponent.lastName
+                  }
+                  player1FinalScores={matchScores.map((scores) => ({
+                    score: scores[0]
+                  }))}
+                  player2FinalScores={matchScores.map((scores) => ({
+                    score: scores[1]
+                  }))}
+                  player1TieScores={matchData.pointsJson.map(
+                    (point) => point.player1TiebreakScore
+                  )}
+                  player2TieScores={matchData.pointsJson.map(
+                    (point) => point.player2TiebreakScore
+                  )}
+                  isUnfinished={matchData.matchDetails.status === 'unfinished'}
+                  displaySections={{ score: true, info: true, matchup: true }}
                 />
               </div>
             </div>
@@ -360,8 +434,8 @@ const MatchPage = () => {
               <div ref={tableRef} className={styles.ExtendedList}>
                 <ExtendedList
                   pointsData={returnFilteredPoints()}
-                  clientTeam={matchData.clientTeam}
-                  opponentTeam={matchData.opponentTeam}
+                  clientTeam={matchData.teams.clientTeam}
+                  opponentTeam={matchData.teams.opponentTeam}
                   onPointSelect={handleJumpToTime}
                   iframe={iframeRef}
                 />

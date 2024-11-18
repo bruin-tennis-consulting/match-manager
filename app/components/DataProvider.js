@@ -9,13 +9,24 @@ import React, {
 import { collection, getDocs, doc, updateDoc, addDoc } from 'firebase/firestore'
 import { db } from '../services/initializeFirebase.js'
 import { useAuth } from './AuthWrapper.js'
+import getTeams from '../services/getTeams.js'
 
-const MatchDataContext = createContext()
+const DataContext = createContext()
 
-export const MatchDataProvider = ({ children }) => {
+export const DataProvider = ({ children }) => {
+  // For Match Data
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  // For Logos
+  const [logos, setLogos] = useState(() => {
+    const storedLogos = localStorage.getItem('teamLogos')
+    return storedLogos ? JSON.parse(storedLogos) : {}
+  })
+  const [logosLoading, setLogosLoading] = useState(!Object.keys(logos).length)
+  const [logosError, setLogosError] = useState(null)
+
   const { userProfile } = useAuth()
 
   const fetchMatches = useCallback(async () => {
@@ -101,38 +112,69 @@ export const MatchDataProvider = ({ children }) => {
     [fetchMatches]
   )
 
+  const fetchLogos = useCallback(async () => {
+    const storedLogos = localStorage.getItem('teamLogos')
+    if (storedLogos) {
+      setLogos(JSON.parse(storedLogos))
+      setLogosLoading(false)
+      return
+    }
+
+    setLogosLoading(true)
+    setLogosError(null)
+
+    try {
+      const teams = await getTeams()
+      const logosMap = teams.reduce((acc, team) => {
+        acc[team.name] = team.logoUrl
+        return acc
+      }, {})
+
+      setLogos(logosMap)
+      localStorage.setItem('teamLogos', JSON.stringify(logosMap))
+    } catch (err) {
+      setLogosError(err)
+      console.error('Error fetching team logos:', err)
+    } finally {
+      setLogosLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     fetchMatches()
-  }, [fetchMatches])
+    fetchLogos()
+  }, [fetchMatches, fetchLogos])
 
   return (
-    <MatchDataContext.Provider
+    <DataContext.Provider
       value={{
         matches,
-        loading,
-        error,
+        logos,
+        loading: loading || logosLoading,
+        error: error || logosError,
         refresh: fetchMatches,
         updateMatch,
         createMatch
       }}
     >
       {children}
-    </MatchDataContext.Provider>
+    </DataContext.Provider>
   )
 }
 
-export const useMatchData = () => {
-  const context = useContext(MatchDataContext)
+export const useData = () => {
+  const context = useContext(DataContext)
 
   if (!context) {
-    throw new Error('useMatchData must be used within a MatchDataProvider')
+    throw new Error('useData must be used within a MatchDataProvider')
   }
 
-  const { matches, loading, error, refresh, updateMatch, createMatch } = context
+  const { matches, logos, loading, error, refresh, updateMatch, createMatch } =
+    context
 
   useEffect(() => {
     refresh()
   }, [refresh])
 
-  return { matches, loading, error, refresh, updateMatch, createMatch }
+  return { matches, logos, loading, error, refresh, updateMatch, createMatch }
 }
