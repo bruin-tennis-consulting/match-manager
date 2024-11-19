@@ -69,8 +69,6 @@ const ProfilePage = () => {
             photoUrl: targetPlayer.photo
           }
           setPlayerData(playerInfo)
-        } else {
-          console.warn('Player not found')
         }
       } catch (error) {
         console.error('Error retrieving player details:', error)
@@ -89,8 +87,8 @@ const ProfilePage = () => {
       <div className={styles.profileContainer}>
         <PlayerProfileHeader playerData={playerDataTemp} />
       </div>
-      <h1>Statistics</h1>
-      <h1>Matches</h1>
+      <h1 className={styles.sectionHeader}>Statistics</h1>
+      <h1 className={styles.sectionHeader}>Matches</h1>
       <div className={styles.matchesContainer}>
         {formattedMatches && formattedMatches.length > 0 ? (
           <DashTileContainer

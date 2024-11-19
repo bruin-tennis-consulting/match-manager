@@ -1,10 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
 .container {
-  padding: 20px;
   margin: 0 auto;
   padding: 0 70px;
-  font-family: 'Roboto', sans-serif !important;
+  font-family: 'Roboto', sans-serif;
 }
 
 .header {
@@ -21,10 +20,15 @@
 
 .profileContainer {
   font-size: 1.18vw;
+  padding-bottom: 20px;
 }
 
 .matchesContainer {
   margin-bottom: 20px;
+}
+
+.sectionHeader {
+  font-family: 'Roboto', sans-serif;
 }
 
 /*REVIEW THIS*/
