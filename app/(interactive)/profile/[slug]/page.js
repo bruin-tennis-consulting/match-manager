@@ -1,9 +1,16 @@
+'use client'
+
+import { React, useEffect, useState } from 'react'
 import PlayerProfileHeader from '@/app/components/PlayerProfileHeader'
-import React from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import { useData } from '@/app/components/DataProvider'
 import styles from '../../../styles/Profile.module.css'
 import DashTileContainer from '@/app/components/DashTileContainer'
 
-const playerData = {
+import { db } from '@/app/services/initializeFirebase'
+import { collection, getDocs } from 'firebase/firestore'
+
+const playerDataTemp = {
   name: 'Govind Nanda',
   class: 'Senior',
   height: "5'10",
@@ -15,24 +22,89 @@ const playerData = {
   doubleWins: 25
 }
 
-const profilePage = () => {
+const ProfilePage = () => {
+  const router = useRouter()
+  const { matches } = useData()
+  const pathname = usePathname()
+  const player = pathname.substring(pathname.lastIndexOf('/') + 1)
+  const [playerData, setPlayerData] = useState([])
+
+  const formatMatches = (matches) => {
+    return (
+      matches
+        .filter((match) => match.version === 'v1') // Filter for version 'v1'
+        /* .filter(
+          (match) => match.players.client.firstName === player.split('-')[0]
+        ) // Filter for player */
+        .filter((match) => match.players.client.firstName === 'Rudy') // Filter for player
+        .sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate))
+    ) // Sort by matchDate in descending order
+  }
+
+  const formattedMatches = formatMatches(matches)
+
+  // Fetch Player data
+  useEffect(() => {
+    const fetchPlayer = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'teams'))
+        const teamsData = querySnapshot.docs.map((doc) => doc.data())
+        const mensTeam = teamsData.find((team) => team.name === 'UCLA (M)') // Need to set this to dependent on auth?
+        const [firstName, lastName] = player.split('-')
+        const targetPlayer = mensTeam.players.find(
+          (player) =>
+            player.firstName.toLowerCase() === firstName.toLowerCase() &&
+            player.lastName.toLowerCase() === lastName.toLowerCase()
+        )
+
+        if (targetPlayer) {
+          const playerInfo = {
+            firstName: targetPlayer.firstName,
+            lastName: targetPlayer.lastName,
+            bio: targetPlayer.bio,
+            height: targetPlayer.height,
+            age: targetPlayer.age,
+            largePhotoUrl: targetPlayer.largePhoto,
+            stats: targetPlayer.stats,
+            photoUrl: targetPlayer.photo
+          }
+          setPlayerData(playerInfo)
+        } else {
+          console.warn('Player not found')
+        }
+      } catch (error) {
+        console.error('Error retrieving player details:', error)
+      }
+    }
+    fetchPlayer()
+  }, [player, playerData])
+
+  const handleTileClick = (videoId) => {
+    router.push(`/matches/${videoId}`)
+  }
+
   return (
     <div className={styles.container}>
       <h2 className={styles.header}>BSA | Tennis Consulting</h2>
       <div className={styles.profileContainer}>
-        <PlayerProfileHeader playerData={playerData} />
+        <PlayerProfileHeader playerData={playerDataTemp} />
       </div>
+      <h1>Statistics</h1>
       <h1>Matches</h1>
-      <div className={styles.matchGroup}>
-        <h3>Singles</h3>
+      <div className={styles.matchesContainer}>
+        {formattedMatches && formattedMatches.length > 0 ? (
+          <DashTileContainer
+            matches={formattedMatches}
+            matchType="Singles"
+            onTileClick={handleTileClick}
+            cols={4}
+          />
+        ) : (
+          'loading...'
+        )}
       </div>
-      <DashTileContainer
-        matches={singlesMatches}
-        matchType="Singles"
-        onTileClick={handleTileClick}
-      />
     </div>
   )
 }
 
-export default profilePage
+export default ProfilePage

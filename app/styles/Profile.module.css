@@ -4,7 +4,7 @@
   padding: 20px;
   margin: 0 auto;
   padding: 0 70px;
-  font-family: 'Roboto';
+  font-family: 'Roboto', sans-serif !important;
 }
 
 .header {
@@ -21,6 +21,10 @@
 
 .profileContainer {
   font-size: 1.18vw;
+}
+
+.matchesContainer {
+  margin-bottom: 20px;
 }
 
 /*REVIEW THIS*/
