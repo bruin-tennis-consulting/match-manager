@@ -89,35 +89,39 @@ export const DataProvider = ({ children }) => {
     [fetchMatches, matches]
   )
 
-  const createMatch = useCallback(
-    async (collectionName, newMatchData) => {
-      try {
-        const newMatch = {
-          id: 'temp-id',
-          collection: collectionName,
-          ...newMatchData
-        }
-
-        setMatches((prevMatches) => [...prevMatches, newMatch])
-
-        const colRef = collection(db, collectionName)
-        await addDoc(colRef, newMatchData)
-
-        await fetchMatches()
-      } catch (err) {
-        setError(err)
-        console.error('Error creating new match:', err)
+  const createMatch = useCallback(async (collectionName, newMatchData) => {
+    try {
+      const newMatch = {
+        id: 'temp-id',
+        collection: collectionName,
+        ...newMatchData
       }
-    },
-    [fetchMatches]
-  )
+      setMatches((prevMatches) => [...prevMatches, newMatch])
+
+      // Actual Firestore addition
+      const colRef = collection(db, collectionName)
+      await addDoc(colRef, newMatchData)
+      await fetchMatches()
+    } catch (err) {
+      setError(err)
+      console.error('Error creating new match:', err)
+    }
+  }, [])
 
   const fetchLogos = useCallback(async () => {
+    // Cache expiry time, currently 24 hours
+    const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000
     const storedLogos = localStorage.getItem('teamLogos')
-    if (storedLogos) {
-      setLogos(JSON.parse(storedLogos))
-      setLogosLoading(false)
-      return
+    const storedTimeStamp = localStorage.getItem('teamLogosTimestamp')
+
+    if (storedLogos && storedTimeStamp) {
+      // check if cache expired
+      const cacheAge = Date.now() - parseInt(storedTimeStamp, 10)
+      if (cacheAge < CACHE_EXPIRY_MS) {
+        setLogos(JSON.parse(storedLogos))
+        setLogosLoading(false)
+        return
+      }
     }
 
     setLogosLoading(true)
@@ -132,6 +136,7 @@ export const DataProvider = ({ children }) => {
 
       setLogos(logosMap)
       localStorage.setItem('teamLogos', JSON.stringify(logosMap))
+      localStorage.setItem('teamLogosTimestamp', Date.now().toString())
     } catch (err) {
       setLogosError(err)
       console.error('Error fetching team logos:', err)
@@ -172,9 +177,6 @@ export const useData = () => {
   const { matches, logos, loading, error, refresh, updateMatch, createMatch } =
     context
 
-  useEffect(() => {
-    refresh()
-  }, [refresh])
-
+  // Optionally keep `refresh` available for manual use in components
   return { matches, logos, loading, error, refresh, updateMatch, createMatch }
 }
