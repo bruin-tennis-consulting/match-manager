@@ -109,18 +109,18 @@ export const DataProvider = ({ children }) => {
   }, [])
 
   const fetchLogos = useCallback(async () => {
-    //Cache expiry time, currently 24 hours
-    const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000; 
+    // Cache expiry time, currently 24 hours
+    const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000
     const storedLogos = localStorage.getItem('teamLogos')
-    const storedTimeStamp = localStorage.getItem('teamLogosTimestamp');
+    const storedTimeStamp = localStorage.getItem('teamLogosTimestamp')
 
     if (storedLogos && storedTimeStamp) {
       // check if cache expired
-      const cacheAge = Date.now() - parseInt(storedTimeStamp, 10);
+      const cacheAge = Date.now() - parseInt(storedTimeStamp, 10)
       if (cacheAge < CACHE_EXPIRY_MS) {
-        setLogos(JSON.parse(storedLogos));
-        setLogosLoading(false);
-        return;
+        setLogos(JSON.parse(storedLogos))
+        setLogosLoading(false)
+        return
       }
     }
 
@@ -136,7 +136,7 @@ export const DataProvider = ({ children }) => {
 
       setLogos(logosMap)
       localStorage.setItem('teamLogos', JSON.stringify(logosMap))
-      localStorage.setItem('teamLogosTimestamp', Date.now().toString());
+      localStorage.setItem('teamLogosTimestamp', Date.now().toString())
     } catch (err) {
       setLogosError(err)
       console.error('Error fetching team logos:', err)
