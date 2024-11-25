@@ -25,7 +25,7 @@ const RosterList = () => {
     }
 
     fetchTeams()
-  }, [mensRoster])
+  }, [])
 
   return (
     // entire container
