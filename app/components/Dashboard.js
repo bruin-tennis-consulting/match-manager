@@ -6,7 +6,7 @@ import { useData } from './DataProvider'
 import styles from '../styles/Dashboard.module.css'
 import DashTileContainer from './DashTileContainer'
 // import getTeams from '@/app/services/getTeams.js'
-// import RosterList from './RosterList.js'
+import RosterList from './RosterList.js'
 import Fuse from 'fuse.js'
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 import SearchIcon from '@/public/search'
@@ -40,17 +40,16 @@ const Dashboard = () => {
   // }, [formattedMatches])
 
   // Fuzzy search
-  const fuse = useMemo(
-    () =>
-      new Fuse(formattedMatches, {
-        keys: searchableProperties,
-        threshold: 0.3
-      }),
-    [formattedMatches]
-  )
+  const fuse = useMemo(() => {
+    if (!formattedMatches.length) return null
+    return new Fuse(formattedMatches, {
+      keys: searchableProperties,
+      threshold: 0.3
+    })
+  }, [formattedMatches])
 
   const filteredMatchSets = useMemo(() => {
-    if (!searchTerm) return []
+    if (!searchTerm || !fuse) return []
     const result = fuse.search(searchTerm).map((result) => {
       const match = result.item
       return `${match.matchDate}#${match.teams.opponentTeam}`
@@ -177,8 +176,8 @@ const Dashboard = () => {
         </div>
 
         <div className={styles.rosterContainer}>
-          {/* <RosterList /> */}
-          <p>Roster being fixed ...</p>
+          {<RosterList />}
+          {/* <p>Roster being fixed ...</p> */}
         </div>
       </div>
     </div>
