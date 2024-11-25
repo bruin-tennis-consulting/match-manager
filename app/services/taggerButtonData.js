@@ -222,7 +222,7 @@ export const getTaggerButtonData = (
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Deuce')
         updateActiveRow('pointStartTime', data.videoTimestamp)
-        setCurrentPage('FirstServe')
+        setCurrentPage('ServerLocation')
       }
     },
     {
@@ -230,19 +230,24 @@ export const getTaggerButtonData = (
       action: (data) => {
         addNewRow()
         updateActiveRow('pointScore', '0-15')
-        updateActiveRow(
-          'gameScore',
-          data.table[data.activeRowIndex - 1].gameScore
-        )
-        updateActiveRow(
-          'setScore',
-          data.table[data.activeRowIndex - 1].setScore
-        )
+        if (data.activeRowIndex > 1) {
+          updateActiveRow(
+            'gameScore',
+            data.table[data.activeRowIndex - 1].gameScore
+          )
+          updateActiveRow(
+            'setScore',
+            data.table[data.activeRowIndex - 1].setScore
+          )
+        } else {
+          updateActiveRow('gameScore', '0-0')
+          updateActiveRow('setScore', '0-0')
+        }
         updateActiveRow('isPointStart', 1)
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Ad')
         updateActiveRow('pointStartTime', data.videoTimestamp)
-        setCurrentPage('FirstServe')
+        setCurrentPage('ServerLocation')
       }
     },
     {
@@ -250,19 +255,24 @@ export const getTaggerButtonData = (
       action: (data) => {
         addNewRow()
         updateActiveRow('pointScore', '15-0')
-        updateActiveRow(
-          'gameScore',
-          data.table[data.activeRowIndex - 1].gameScore
-        )
-        updateActiveRow(
-          'setScore',
-          data.table[data.activeRowIndex - 1].setScore
-        )
+        if (data.activeRowIndex > 1) {
+          updateActiveRow(
+            'gameScore',
+            data.table[data.activeRowIndex - 1].gameScore
+          )
+          updateActiveRow(
+            'setScore',
+            data.table[data.activeRowIndex - 1].setScore
+          )
+        } else {
+          updateActiveRow('gameScore', '0-0')
+          updateActiveRow('setScore', '0-0')
+        }
         updateActiveRow('isPointStart', 1)
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Ad')
         updateActiveRow('pointStartTime', data.videoTimestamp)
-        setCurrentPage('FirstServe')
+        setCurrentPage('ServerLocation')
       }
     },
     {
@@ -270,19 +280,24 @@ export const getTaggerButtonData = (
       action: (data) => {
         addNewRow()
         updateActiveRow('pointScore', '15-15')
-        updateActiveRow(
-          'gameScore',
-          data.table[data.activeRowIndex - 1].gameScore
-        )
-        updateActiveRow(
-          'setScore',
-          data.table[data.activeRowIndex - 1].setScore
-        )
+        if (data.activeRowIndex > 1) {
+          updateActiveRow(
+            'gameScore',
+            data.table[data.activeRowIndex - 1].gameScore
+          )
+          updateActiveRow(
+            'setScore',
+            data.table[data.activeRowIndex - 1].setScore
+          )
+        } else {
+          updateActiveRow('gameScore', '0-0')
+          updateActiveRow('setScore', '0-0')
+        }
         updateActiveRow('isPointStart', 1)
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Deuce')
         updateActiveRow('pointStartTime', data.videoTimestamp)
-        setCurrentPage('FirstServe')
+        setCurrentPage('ServerLocation')
       }
     },
     {
@@ -290,19 +305,24 @@ export const getTaggerButtonData = (
       action: (data) => {
         addNewRow()
         updateActiveRow('pointScore', '30-0')
-        updateActiveRow(
-          'gameScore',
-          data.table[data.activeRowIndex - 1].gameScore
-        )
-        updateActiveRow(
-          'setScore',
-          data.table[data.activeRowIndex - 1].setScore
-        )
+        if (data.activeRowIndex > 1) {
+          updateActiveRow(
+            'gameScore',
+            data.table[data.activeRowIndex - 1].gameScore
+          )
+          updateActiveRow(
+            'setScore',
+            data.table[data.activeRowIndex - 1].setScore
+          )
+        } else {
+          updateActiveRow('gameScore', '0-0')
+          updateActiveRow('setScore', '0-0')
+        }
         updateActiveRow('isPointStart', 1)
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Deuce')
         updateActiveRow('pointStartTime', data.videoTimestamp)
-        setCurrentPage('FirstServe')
+        setCurrentPage('ServerLocation')
       }
     },
     {
@@ -310,19 +330,24 @@ export const getTaggerButtonData = (
       action: (data) => {
         addNewRow()
         updateActiveRow('pointScore', '0-30')
-        updateActiveRow(
-          'gameScore',
-          data.table[data.activeRowIndex - 1].gameScore
-        )
-        updateActiveRow(
-          'setScore',
-          data.table[data.activeRowIndex - 1].setScore
-        )
+        if (data.activeRowIndex > 1) {
+          updateActiveRow(
+            'gameScore',
+            data.table[data.activeRowIndex - 1].gameScore
+          )
+          updateActiveRow(
+            'setScore',
+            data.table[data.activeRowIndex - 1].setScore
+          )
+        } else {
+          updateActiveRow('gameScore', '0-0')
+          updateActiveRow('setScore', '0-0')
+        }
         updateActiveRow('isPointStart', 1)
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Deuce')
         updateActiveRow('pointStartTime', data.videoTimestamp)
-        setCurrentPage('FirstServe')
+        setCurrentPage('ServerLocation')
       }
     },
     {
@@ -330,19 +355,24 @@ export const getTaggerButtonData = (
       action: (data) => {
         addNewRow()
         updateActiveRow('pointScore', '30-15')
-        updateActiveRow(
-          'gameScore',
-          data.table[data.activeRowIndex - 1].gameScore
-        )
-        updateActiveRow(
-          'setScore',
-          data.table[data.activeRowIndex - 1].setScore
-        )
+        if (data.activeRowIndex > 1) {
+          updateActiveRow(
+            'gameScore',
+            data.table[data.activeRowIndex - 1].gameScore
+          )
+          updateActiveRow(
+            'setScore',
+            data.table[data.activeRowIndex - 1].setScore
+          )
+        } else {
+          updateActiveRow('gameScore', '0-0')
+          updateActiveRow('setScore', '0-0')
+        }
         updateActiveRow('isPointStart', 1)
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Ad')
         updateActiveRow('pointStartTime', data.videoTimestamp)
-        setCurrentPage('FirstServe')
+        setCurrentPage('ServerLocation')
       }
     },
     {
@@ -350,19 +380,24 @@ export const getTaggerButtonData = (
       action: (data) => {
         addNewRow()
         updateActiveRow('pointScore', '0-40')
-        updateActiveRow(
-          'gameScore',
-          data.table[data.activeRowIndex - 1].gameScore
-        )
-        updateActiveRow(
-          'setScore',
-          data.table[data.activeRowIndex - 1].setScore
-        )
+        if (data.activeRowIndex > 1) {
+          updateActiveRow(
+            'gameScore',
+            data.table[data.activeRowIndex - 1].gameScore
+          )
+          updateActiveRow(
+            'setScore',
+            data.table[data.activeRowIndex - 1].setScore
+          )
+        } else {
+          updateActiveRow('gameScore', '0-0')
+          updateActiveRow('setScore', '0-0')
+        }
         updateActiveRow('isPointStart', 1)
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Ad')
         updateActiveRow('pointStartTime', data.videoTimestamp)
-        setCurrentPage('FirstServe')
+        setCurrentPage('ServerLocation')
       }
     },
     {
@@ -370,19 +405,24 @@ export const getTaggerButtonData = (
       action: (data) => {
         addNewRow()
         updateActiveRow('pointScore', '40-0')
-        updateActiveRow(
-          'gameScore',
-          data.table[data.activeRowIndex - 1].gameScore
-        )
-        updateActiveRow(
-          'setScore',
-          data.table[data.activeRowIndex - 1].setScore
-        )
+        if (data.activeRowIndex > 1) {
+          updateActiveRow(
+            'gameScore',
+            data.table[data.activeRowIndex - 1].gameScore
+          )
+          updateActiveRow(
+            'setScore',
+            data.table[data.activeRowIndex - 1].setScore
+          )
+        } else {
+          updateActiveRow('gameScore', '0-0')
+          updateActiveRow('setScore', '0-0')
+        }
         updateActiveRow('isPointStart', 1)
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Ad')
         updateActiveRow('pointStartTime', data.videoTimestamp)
-        setCurrentPage('FirstServe')
+        setCurrentPage('ServerLocation')
       }
     },
     {
@@ -390,19 +430,24 @@ export const getTaggerButtonData = (
       action: (data) => {
         addNewRow()
         updateActiveRow('pointScore', '15-30')
-        updateActiveRow(
-          'gameScore',
-          data.table[data.activeRowIndex - 1].gameScore
-        )
-        updateActiveRow(
-          'setScore',
-          data.table[data.activeRowIndex - 1].setScore
-        )
+        if (data.activeRowIndex > 1) {
+          updateActiveRow(
+            'gameScore',
+            data.table[data.activeRowIndex - 1].gameScore
+          )
+          updateActiveRow(
+            'setScore',
+            data.table[data.activeRowIndex - 1].setScore
+          )
+        } else {
+          updateActiveRow('gameScore', '0-0')
+          updateActiveRow('setScore', '0-0')
+        }
         updateActiveRow('isPointStart', 1)
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Ad')
         updateActiveRow('pointStartTime', data.videoTimestamp)
-        setCurrentPage('FirstServe')
+        setCurrentPage('ServerLocation')
       }
     },
     {
@@ -410,19 +455,24 @@ export const getTaggerButtonData = (
       action: (data) => {
         addNewRow()
         updateActiveRow('pointScore', '30-30')
-        updateActiveRow(
-          'gameScore',
-          data.table[data.activeRowIndex - 1].gameScore
-        )
-        updateActiveRow(
-          'setScore',
-          data.table[data.activeRowIndex - 1].setScore
-        )
+        if (data.activeRowIndex > 1) {
+          updateActiveRow(
+            'gameScore',
+            data.table[data.activeRowIndex - 1].gameScore
+          )
+          updateActiveRow(
+            'setScore',
+            data.table[data.activeRowIndex - 1].setScore
+          )
+        } else {
+          updateActiveRow('gameScore', '0-0')
+          updateActiveRow('setScore', '0-0')
+        }
         updateActiveRow('isPointStart', 1)
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Deuce')
         updateActiveRow('pointStartTime', data.videoTimestamp)
-        setCurrentPage('FirstServe')
+        setCurrentPage('ServerLocation')
       }
     },
     {
@@ -430,19 +480,24 @@ export const getTaggerButtonData = (
       action: (data) => {
         addNewRow()
         updateActiveRow('pointScore', '40-15')
-        updateActiveRow(
-          'gameScore',
-          data.table[data.activeRowIndex - 1].gameScore
-        )
-        updateActiveRow(
-          'setScore',
-          data.table[data.activeRowIndex - 1].setScore
-        )
+        if (data.activeRowIndex > 1) {
+          updateActiveRow(
+            'gameScore',
+            data.table[data.activeRowIndex - 1].gameScore
+          )
+          updateActiveRow(
+            'setScore',
+            data.table[data.activeRowIndex - 1].setScore
+          )
+        } else {
+          updateActiveRow('gameScore', '0-0')
+          updateActiveRow('setScore', '0-0')
+        }
         updateActiveRow('isPointStart', 1)
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Deuce')
         updateActiveRow('pointStartTime', data.videoTimestamp)
-        setCurrentPage('FirstServe')
+        setCurrentPage('ServerLocation')
       }
     },
     {
@@ -450,20 +505,25 @@ export const getTaggerButtonData = (
       action: (data) => {
         addNewRow()
         updateActiveRow('pointScore', '15-40')
-        updateActiveRow(
-          'gameScore',
-          data.table[data.activeRowIndex - 1].gameScore
-        )
-        updateActiveRow(
-          'setScore',
-          data.table[data.activeRowIndex - 1].setScore
-        )
+        if (data.activeRowIndex > 1) {
+          updateActiveRow(
+            'gameScore',
+            data.table[data.activeRowIndex - 1].gameScore
+          )
+          updateActiveRow(
+            'setScore',
+            data.table[data.activeRowIndex - 1].setScore
+          )
+        } else {
+          updateActiveRow('gameScore', '0-0')
+          updateActiveRow('setScore', '0-0')
+        }
         updateActiveRow('isPointStart', 1)
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Deuce')
         updateActiveRow('isBreakPoint', 1)
         updateActiveRow('pointStartTime', data.videoTimestamp)
-        setCurrentPage('FirstServe')
+        setCurrentPage('ServerLocation')
       }
     },
     {
@@ -471,20 +531,25 @@ export const getTaggerButtonData = (
       action: (data) => {
         addNewRow()
         updateActiveRow('pointScore', '30-40')
-        updateActiveRow(
-          'gameScore',
-          data.table[data.activeRowIndex - 1].gameScore
-        )
-        updateActiveRow(
-          'setScore',
-          data.table[data.activeRowIndex - 1].setScore
-        )
+        if (data.activeRowIndex > 1) {
+          updateActiveRow(
+            'gameScore',
+            data.table[data.activeRowIndex - 1].gameScore
+          )
+          updateActiveRow(
+            'setScore',
+            data.table[data.activeRowIndex - 1].setScore
+          )
+        } else {
+          updateActiveRow('gameScore', '0-0')
+          updateActiveRow('setScore', '0-0')
+        }
         updateActiveRow('isPointStart', 1)
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Ad')
         updateActiveRow('isBreakPoint', 1)
         updateActiveRow('pointStartTime', data.videoTimestamp)
-        setCurrentPage('FirstServe')
+        setCurrentPage('ServerLocation')
       }
     },
     {
@@ -492,19 +557,24 @@ export const getTaggerButtonData = (
       action: (data) => {
         addNewRow()
         updateActiveRow('pointScore', '40-30')
-        updateActiveRow(
-          'gameScore',
-          data.table[data.activeRowIndex - 1].gameScore
-        )
-        updateActiveRow(
-          'setScore',
-          data.table[data.activeRowIndex - 1].setScore
-        )
+        if (data.activeRowIndex > 1) {
+          updateActiveRow(
+            'gameScore',
+            data.table[data.activeRowIndex - 1].gameScore
+          )
+          updateActiveRow(
+            'setScore',
+            data.table[data.activeRowIndex - 1].setScore
+          )
+        } else {
+          updateActiveRow('gameScore', '0-0')
+          updateActiveRow('setScore', '0-0')
+        }
         updateActiveRow('isPointStart', 1)
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Ad')
         updateActiveRow('pointStartTime', data.videoTimestamp)
-        setCurrentPage('FirstServe')
+        setCurrentPage('ServerLocation')
       }
     },
     {
@@ -512,20 +582,25 @@ export const getTaggerButtonData = (
       action: (data) => {
         addNewRow()
         updateActiveRow('pointScore', '40-40')
-        updateActiveRow(
-          'gameScore',
-          data.table[data.activeRowIndex - 1].gameScore
-        )
-        updateActiveRow(
-          'setScore',
-          data.table[data.activeRowIndex - 1].setScore
-        )
+        if (data.activeRowIndex > 1) {
+          updateActiveRow(
+            'gameScore',
+            data.table[data.activeRowIndex - 1].gameScore
+          )
+          updateActiveRow(
+            'setScore',
+            data.table[data.activeRowIndex - 1].setScore
+          )
+        } else {
+          updateActiveRow('gameScore', '0-0')
+          updateActiveRow('setScore', '0-0')
+        }
         updateActiveRow('isPointStart', 1)
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Ad')
         updateActiveRow('isBreakPoint', 1)
         updateActiveRow('pointStartTime', data.videoTimestamp)
-        setCurrentPage('FirstServe')
+        setCurrentPage('ServerLocation')
       }
     },
     {
@@ -533,19 +608,44 @@ export const getTaggerButtonData = (
       action: (data) => {
         addNewRow()
         updateActiveRow('pointScore', '40-40')
-        updateActiveRow(
-          'gameScore',
-          data.table[data.activeRowIndex - 1].gameScore
-        )
-        updateActiveRow(
-          'setScore',
-          data.table[data.activeRowIndex - 1].setScore
-        )
+        if (data.activeRowIndex > 1) {
+          updateActiveRow(
+            'gameScore',
+            data.table[data.activeRowIndex - 1].gameScore
+          )
+          updateActiveRow(
+            'setScore',
+            data.table[data.activeRowIndex - 1].setScore
+          )
+        } else {
+          updateActiveRow('gameScore', '0-0')
+          updateActiveRow('setScore', '0-0')
+        }
         updateActiveRow('isPointStart', 1)
         updateActiveRow('shotInRally', 1)
         updateActiveRow('side', 'Deuce')
         updateActiveRow('isBreakPoint', 1)
         updateActiveRow('pointStartTime', data.videoTimestamp)
+        setCurrentPage('ServerLocation')
+      }
+    }
+  ],
+  ServerLocation: [
+    {
+      courtImage: true,
+      label: 'Select Server Location',
+      action: (data) => {
+        updateActiveRow('serverStartLocation', data.x)
+        setCurrentPage('ReturnerLocation')
+      }
+    }
+  ],
+  ReturnerLocation: [
+    {
+      courtImage: true,
+      label: 'Select Returner Location',
+      action: (data) => {
+        updateActiveRow('returnerStartLocation', data.x)
         setCurrentPage('FirstServe')
       }
     }
@@ -1223,6 +1323,12 @@ export const getTaggerButtonData = (
       }
     },
     {
+      label: 'Unforced Error',
+      action: () => {
+        updateActiveRow('isUnforcedError', '1')
+      }
+    },
+    {
       courtImage: true,
       label: 'Select Shot Result Location',
       action: (data) => {
@@ -1391,6 +1497,8 @@ export const columnNames = [
   'side',
   'serverName',
   'serverFarNear',
+  'serverStartLocation',
+  'returnerStartLocation',
   'firstServeIn',
   'firstServeZone',
   'firstServeXCoord',
@@ -1420,6 +1528,7 @@ export const columnNames = [
   'isErrorWideL',
   'isErrorNet',
   'isErrorLong',
+  'isUnforcedError',
   'clientTeam',
   'Date',
   'Division',
