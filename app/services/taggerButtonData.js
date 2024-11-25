@@ -34,8 +34,6 @@ Additional Properties of 'data':
 
 let serverScore = 0
 let returnerScore = 0
-// const player1SetScore = 0
-// const player2SetScore = 0
 let player1GameScore = 0
 let player2GameScore = 0
 let isAce = false
