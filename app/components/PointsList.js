@@ -57,7 +57,6 @@ const PointsList = ({
         </thead>
         <tbody>
           {pointsData.map((point, index) => {
-            console.log(point)
             // const { set, gameScore, pointScore, serverName } = parsePointData(point.Name || '');
             return (
               <tr

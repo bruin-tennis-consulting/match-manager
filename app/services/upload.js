@@ -11,71 +11,6 @@ import {
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage' // Import storage functions
 import { db, storage } from '../services/initializeFirebase.js' // Ensure storage is exported from initializeFirebase.js
-import { useMatchData } from '../components/MatchDataProvider.js' // Import the hook
-
-async function useUploadMatch(
-  sets,
-  videoId,
-  pointsJson,
-  pdfFile,
-  teams,
-  players,
-  matchDate,
-  singles,
-  matchDetails,
-  collectionName
-) {
-  // Use the createMatch function from the useMatchData hook
-  const { createMatch } = useMatchData()
-  if (
-    !sets ||
-    !videoId ||
-    !teams ||
-    !players ||
-    !matchDate ||
-    !singles ||
-    !matchDetails ||
-    !collectionName
-  ) {
-    console.error('All fields are required.')
-    return // Exit the function if any field is empty
-  }
-
-  try {
-    let pdfUrl = null
-    if (pdfFile) {
-      // First, upload the PDF to Firebase Storage
-      const pdfRef = ref(storage, `match-pdfs/${pdfFile.name}`)
-      const snapshot = await uploadBytes(pdfRef, pdfFile)
-      pdfUrl = await getDownloadURL(snapshot.ref)
-    }
-
-    // untagged matches
-    let published = true
-    if (pointsJson === null) published = false
-
-    // matchName: P1 T1 vs. P2 T2
-    const matchName = `${players.client.firstName} ${players.client.lastName} ${teams.clientTeam} vs. ${players.opponent.firstName} ${players.opponent.lastName} ${teams.opponentTeam}`
-
-    await createMatch(collectionName, {
-      name: matchName,
-      videoId,
-      sets,
-      pdfUrl,
-      matchDate,
-      teams,
-      players,
-      published,
-      singles,
-      matchDetails,
-      points: pointsJson || []
-    })
-
-    console.log('Match Document uploaded successfully.')
-  } catch (e) {
-    console.error('Error uploading Match Document: ', e)
-  }
-}
 
 async function uploadTeam(teamName, logoFile) {
   if (!teamName || !logoFile) {
@@ -179,4 +114,4 @@ async function uploadPlayer(
   }
 }
 
-export { useUploadMatch, uploadTeam, uploadPlayer }
+export { uploadTeam, uploadPlayer }
