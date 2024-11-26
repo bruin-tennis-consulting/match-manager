@@ -1,8 +1,10 @@
+// timestamp-tagger/page.js
 'use client'
 
 import React, { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import VideoPlayer from '../../components/VideoPlayer'
+import TennisCourtSVG from '@/app/components/TennisCourtSVG' // Import TennisCourtSVG
 import styles from '../../styles/Tagging.module.css'
 
 const TagTable = ({
@@ -11,6 +13,8 @@ const TagTable = ({
   handleStartTimeChange,
   handleEndTimeChange,
   handlePlayerWonChange,
+  handleXChange,
+  handleYChange,
   handleRemoveTime
 }) => {
   return (
@@ -35,6 +39,24 @@ const TagTable = ({
           type="text"
           value={pair[2]}
           onChange={(event) => handlePlayerWonChange(index, event.target.value)}
+        />
+      </td>
+      <td>
+        <input
+          type="number"
+          value={pair[3]}
+          onChange={(event) => handleXChange(index, event.target.value)}
+          placeholder="X"
+          style={{ width: '60px', marginRight: '5px' }}
+        />
+      </td>
+      <td>
+        <input
+          type="number"
+          value={pair[4]}
+          onChange={(event) => handleYChange(index, event.target.value)}
+          placeholder="Y"
+          style={{ width: '60px', marginRight: '5px' }}
         />
       </td>
       <td>
@@ -133,7 +155,7 @@ export default function TagMatch() {
         const newTimestamp = Math.round(videoObject.getCurrentTime() * 1000)
         if (!timeList.some((pair) => pair[1] === 0)) {
           setTimeList((timeList) =>
-            [...timeList, [newTimestamp, 0, '']].sort(
+            [...timeList, [newTimestamp, 0, '', 0, 0]].sort(
               (pair1, pair2) => pair1[0] - pair2[0]
             )
           )
@@ -145,7 +167,7 @@ export default function TagMatch() {
         setTimeList((timeList) =>
           timeList.map((pair) =>
             pair[1] === 0 && newTimestamp >= pair[0]
-              ? [pair[0], newTimestamp, 'Player 1']
+              ? [pair[0], newTimestamp, 'Player 1', pair[3], pair[4]]
               : pair
           )
         )
@@ -155,7 +177,7 @@ export default function TagMatch() {
         setTimeList((timeList) =>
           timeList.map((pair) =>
             pair[1] === 0 && newTimestamp >= pair[0]
-              ? [pair[0], newTimestamp, 'Player 2']
+              ? [pair[0], newTimestamp, 'Player 2', pair[3], pair[4]]
               : pair
           )
         )
@@ -181,7 +203,9 @@ export default function TagMatch() {
     updatedTimeList[index] = [
       parseInt(value),
       updatedTimeList[index][1],
-      updatedTimeList[index][2]
+      updatedTimeList[index][2],
+      updatedTimeList[index][3],
+      updatedTimeList[index][4]
     ]
     setTimeList(updatedTimeList)
   }
@@ -191,7 +215,9 @@ export default function TagMatch() {
     updatedTimeList[index] = [
       updatedTimeList[index][0],
       parseInt(value),
-      updatedTimeList[index][2]
+      updatedTimeList[index][2],
+      updatedTimeList[index][3],
+      updatedTimeList[index][4]
     ]
     setTimeList(updatedTimeList)
   }
@@ -201,8 +227,22 @@ export default function TagMatch() {
     updatedTimeList[index] = [
       updatedTimeList[index][0],
       updatedTimeList[index][1],
-      value
+      value,
+      updatedTimeList[index][3],
+      updatedTimeList[index][4]
     ]
+    setTimeList(updatedTimeList)
+  }
+
+  const handleXChange = (index, value) => {
+    const updatedTimeList = [...timeList]
+    updatedTimeList[index][3] = parseInt(value) || 0
+    setTimeList(updatedTimeList)
+  }
+
+  const handleYChange = (index, value) => {
+    const updatedTimeList = [...timeList]
+    updatedTimeList[index][4] = parseInt(value) || 0
     setTimeList(updatedTimeList)
   }
 
@@ -230,9 +270,10 @@ export default function TagMatch() {
 
   const handleDownload = () => {
     const csvData = [
-      'Index,Start Time,End Time,Point Winner',
+      'Index,Start Time,End Time,Point Winner,X,Y',
       ...timeList.map(
-        (pair, index) => `${index + 1},${pair[0]},${pair[1]},${pair[2]}`
+        (pair, index) =>
+          `${index + 1},${pair[0]},${pair[1]},${pair[2]},${pair[3]},${pair[4]}`
       )
     ].join('\n')
     const blob = new Blob([csvData], { type: 'text/csv' })
@@ -246,8 +287,11 @@ export default function TagMatch() {
 
   const handleCopyColumns = () => {
     const columns = [
-      'Index,Start Time,End Time',
-      ...timeList.map((pair, index) => `${index + 1},${pair[0]},${pair[1]}`)
+      'Index,Start Time,End Time,Point Winner,X,Y',
+      ...timeList.map(
+        (pair, index) =>
+          `${index + 1},${pair[0]},${pair[1]},${pair[2]},${pair[3]},${pair[4]}`
+      )
     ].join('\n')
     navigator.clipboard.writeText(columns)
   }
@@ -276,6 +320,39 @@ export default function TagMatch() {
     }
   }, [videoObject])
 
+  // Handle clicks on the Tennis Court SVG
+  const handleCourtClick = (event) => {
+    if (!videoObject) return
+
+    const rect = event.currentTarget.getBoundingClientRect()
+    const widthOfCourt = rect.width
+    const heightOfCourt = rect.height
+
+    // Assuming the court width in inches is 432 (36 feet)
+    const courtWidthInInches = 432
+    const courtHeightInInches = 780 // 65 feet (common tennis court length)
+
+    // Calculate the scale ratios
+    const xRatio = courtWidthInInches / widthOfCourt
+    const yRatio = courtHeightInInches / heightOfCourt
+
+    // Calculate click position relative to the SVG container
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+
+    // Convert to inches
+    const xInches = Math.round(x * xRatio)
+    const yInches = Math.round(y * yRatio)
+
+    const currentTimestamp = Math.round(videoObject.getCurrentTime() * 1000)
+
+    // Add a new timestamp with coordinates
+    setTimeList((prevList) => [
+      ...prevList,
+      [currentTimestamp, 0, '', xInches, yInches]
+    ].sort((a, b) => a[0] - b[0]))
+  }
+
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <div className={styles.container}>
@@ -298,8 +375,14 @@ export default function TagMatch() {
               onChange={handleVideoIdChange}
               ref={inputRef}
             />
-            <button onClick={handleDownload}>Download JSON</button>
+            <button onClick={handleDownload}>Download CSV</button>
             <button onClick={handleCopyColumns}>Copy Columns</button>
+          </div>
+          <div style={{ marginLeft: '20px' }}>
+            <TennisCourtSVG
+              className={styles.courtImage}
+              handleImageClick={handleCourtClick}
+            />
           </div>
           <div>
             <table className={styles.table}>
@@ -367,12 +450,14 @@ export default function TagMatch() {
               <th>Start Time</th>
               <th>End Time</th>
               <th>Point Winner</th>
+              <th>X (inches)</th>
+              <th>Y (inches)</th>
               <th>Remove</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td colSpan="4">Current Timestamp</td>
+              <td colSpan="7">Current Timestamp</td>
             </tr>
             {timeList.length !== 0 &&
               timeList.map((pair, index) => {
@@ -385,6 +470,8 @@ export default function TagMatch() {
                       handleStartTimeChange={handleStartTimeChange}
                       handleEndTimeChange={handleEndTimeChange}
                       handlePlayerWonChange={handlePlayerWonChange}
+                      handleXChange={handleXChange}
+                      handleYChange={handleYChange}
                       handleRemoveTime={handleRemoveTime}
                     />
                   )
@@ -393,7 +480,7 @@ export default function TagMatch() {
           </tbody>
           <tbody>
             <tr>
-              <td colSpan="4">All Timestamps</td>
+              <td colSpan="7">All Timestamps</td>
             </tr>
             {timeList.map((pair, index) => (
               <TagTable
@@ -403,6 +490,8 @@ export default function TagMatch() {
                 handleStartTimeChange={handleStartTimeChange}
                 handleEndTimeChange={handleEndTimeChange}
                 handlePlayerWonChange={handlePlayerWonChange}
+                handleXChange={handleXChange}
+                handleYChange={handleYChange}
                 handleRemoveTime={handleRemoveTime}
               />
             ))}
