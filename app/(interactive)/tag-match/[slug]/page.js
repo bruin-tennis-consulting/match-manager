@@ -5,7 +5,9 @@ import VideoPlayer from '../../../components/VideoPlayer'
 import {
   getTaggerButtonData,
   columnNames
-} from '../../../services/taggerButtonData.js'
+} from '../../../taggers/taggerButtonData.js'
+import { getTaggerButtonDataAd, columnNamesAd } from '../../../taggers/taggerButtonDataAd.js'
+import { getTaggerButtonDataUpdated, columnNamesUpdated } from '../../../taggers/taggerButtonDataUpdated.js'
 import styles from '../../../styles/TagMatch.module.css'
 import { usePathname } from 'next/navigation'
 import { useMatchData } from '@/app/components/MatchDataProvider'
@@ -35,6 +37,40 @@ export default function TagMatch() {
   const [popUp, setPopUp] = useState([])
   const [isVisible, setIsVisible] = useState(true)
   const FRAMERATE = 30
+
+  const [selectedTagger, setSelectedTagger] = useState('Default')
+  const [buttonData, setButtonData] = useState([])
+  const [currentColumnNames, setCurrentColumnNames] = useState(columnNames)
+
+  // Load button data and column names based on selected tagger
+  useEffect(() => {
+    switch (selectedTagger) {
+      case 'Ad':
+        setButtonData(getTaggerButtonDataAd(updateActiveRow, addNewRowAndSync, setCurrentPage, {
+          serverName,
+          serverFarNear,
+          tiebreak
+        }))
+        setCurrentColumnNames(columnNamesAd)
+        break
+      case 'Updated':
+        setButtonData(getTaggerButtonDataUpdated(updateActiveRow, addNewRowAndSync, setCurrentPage, {
+          serverName,
+          serverFarNear,
+          tiebreak
+        }))
+        setCurrentColumnNames(columnNamesUpdated)
+        break
+      default:
+        setButtonData(getTaggerButtonData(updateActiveRow, addNewRowAndSync, setCurrentPage, {
+          serverName,
+          serverFarNear,
+          tiebreak
+        }))
+        setCurrentColumnNames(columnNames)
+        break
+    }
+  }, [selectedTagger, serverName, serverFarNear, tiebreak])
 
   useEffect(() => {
     if (match && initialLoad) {
@@ -133,6 +169,7 @@ export default function TagMatch() {
   }
 
   const convertToCSV = (data) => {
+    if (data.length === 0) return ''
     const headers = Object.keys(data[0])
     const rows = data.map((obj) =>
       headers.map((fieldName) => JSON.stringify(obj[fieldName])).join(',')
@@ -179,7 +216,7 @@ export default function TagMatch() {
       let newTimestamp = getVideoTimestamp()
 
       // Create a new row object with the required structure
-      const newRow = columnNames.reduce((acc, columnName) => {
+      const newRow = currentColumnNames.reduce((acc, columnName) => {
         // Check if a row already exists with the new timestamp
         let existingRow = tableState.rows.find(
           (row) => row.pointStartTime === newTimestamp
@@ -255,10 +292,10 @@ export default function TagMatch() {
     await refresh()
 
     // Find and return the match data after refresh
-    const match = matches.find((m) => m.id === matchId)
+    const refreshedMatch = matches.find((m) => m.id === matchId)
 
-    if (match) {
-      return match
+    if (refreshedMatch) {
+      return refreshedMatch
     } else {
       throw new Error(`Match with ID ${matchId} not found.`)
     }
@@ -285,17 +322,13 @@ export default function TagMatch() {
       // Filter out duplicates based on pointStartTime, keeping the last occurrence
       const uniqueRows = combinedRows.reduceRight(
         (acc, row) => {
-          acc.pointStartTimes.add(row.pointStartTime)
-          if (
-            acc.pointStartTimes.has(row.pointStartTime) &&
-            !acc.added.has(row.pointStartTime)
-          ) {
+          if (!acc.pointStartTimes.has(row.pointStartTime)) {
             acc.rows.unshift(row) // Add the row to the beginning to maintain order
-            acc.added.add(row.pointStartTime)
+            acc.pointStartTimes.add(row.pointStartTime)
           }
           return acc
         },
-        { rows: [], pointStartTimes: new Set(), added: new Set() }
+        { rows: [], pointStartTimes: new Set() }
       ).rows
 
       // If any rows have a value of undefined, set it to an empty string
@@ -357,12 +390,10 @@ export default function TagMatch() {
 
   const sortTable = () => {
     setTableState((oldTableState) => {
-      return {
-        ...oldTableState,
-        rows: oldTableState.rows.sort(
-          (a, b) => a.pointStartTime - b.pointStartTime
-        )
-      }
+      const sortedRows = [...oldTableState.rows].sort(
+        (a, b) => a.pointStartTime - b.pointStartTime
+      )
+      return { ...oldTableState, rows: sortedRows }
     })
   }
 
@@ -373,39 +404,25 @@ export default function TagMatch() {
     const lastState = taggerHistory[taggerHistory.length - 1]
 
     // Update the current state to the last state from the history
-    setTableState((oldTableState) => {
-      return { ...oldTableState, rows: lastState.table }
-    })
+    setTableState((oldTableState) => ({
+      ...oldTableState,
+      rows: lastState.table,
+      activeRowIndex: lastState.activeRowIndex
+    }))
     setCurrentPage(lastState.page)
-    setTableState((oldTableState) => {
-      return { ...oldTableState, activeRowIndex: lastState.activeRowIndex }
-    })
 
     // Remove the last state from the history
     setTaggerHistory(taggerHistory.slice(0, -1))
   }
 
-  // This pulls the button data from the taggerButtonData.js file
-  const buttonData = getTaggerButtonData(
-    updateActiveRow,
-    addNewRowAndSync,
-    setCurrentPage,
-    {
-      serverName,
-      serverFarNear,
-      tiebreak
-    }
-  )
-
+  // Function to handle image click on the tennis court SVG
   const handleImageClick = (event) => {
     const courtWidthInInches = 432 // The court is 36 feet wide, or 432 inches
-    // const courtHeightInInches = 936; // The court is 78 feet long, or 936 inches
 
     // The current SVG has the actual in width of the court as 360 out of 600 total
     // The height is 780 out of 1080 total
     // This makes the ratio 0.6 for width and 0.7222 for height
     const xRatio = 0.6
-    // const yRatio = 0.7222;
 
     // Get the bounding rectangle of the SVG container
     const rect = event.currentTarget.getBoundingClientRect()
@@ -435,8 +452,74 @@ export default function TagMatch() {
     return { x: xInches, y: yInches }
   }
 
+  // Function to generate button data based on current tagger selection
+  // This ensures that buttonData is always up-to-date with the current tagger
+  // and avoids duplication in the render method
+  const renderButtons = () => {
+    return buttonData[currentPage]?.map((button, index) => {
+      return button.courtImage ? (
+        <div key={index}>
+          <p>{button.label}</p>
+          <TennisCourtSVG
+            className={styles.courtImage}
+            courtType={button.courtImage}
+            handleImageClick={(event) => {
+              setPopUp([])
+              saveToHistory()
+              const { x, y } = handleImageClick(event)
+              const data = {
+                ...matchMetadata,
+                x,
+                y,
+                table: tableState.rows,
+                activeRowIndex: tableState.activeRowIndex,
+                videoTimestamp: getVideoTimestamp()
+              }
+              button.action(data)
+            }}
+          />
+        </div>
+      ) : (
+        <button
+          className={styles.customButton}
+          key={index}
+          onClick={() => {
+            setPopUp([])
+            saveToHistory()
+            const data = {
+              ...matchMetadata,
+              table: tableState.rows,
+              activeRowIndex: tableState.activeRowIndex,
+              videoTimestamp: getVideoTimestamp()
+            }
+            button.action(data)
+          }}
+        >
+          {button.label}
+        </button>
+      )
+    })
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', padding: '1rem' }}>
+      {/* Dropdown for selecting Tagger Type */}
+      <div style={{ marginBottom: '1rem' }}>
+        <label htmlFor="taggerSelect" style={{ marginRight: '0.5rem' }}>
+          Select Tagger Type:
+        </label>
+        <select
+          id="taggerSelect"
+          value={selectedTagger}
+          onChange={(e) => setSelectedTagger(e.target.value)}
+        >
+          <option value="Default">Default</option>
+          <option value="Ad">Ad</option>
+          <option value="Updated">Updated</option>
+        </select>
+      </div>
+
+      {/* Ensure that the rest of the components are rendered after the tagger selection */}
       <div
         style={{
           display: 'flex',
@@ -445,6 +528,7 @@ export default function TagMatch() {
           gap: '1rem'
         }}
       >
+        {/* Video and Control Buttons */}
         <div
           style={{
             display: 'flex',
@@ -454,67 +538,31 @@ export default function TagMatch() {
           }}
         >
           <VideoPlayer videoId={videoId} setVideoObject={setVideoObject} />
-          <button onClick={handleDownload}>Download CSV</button>
-          <button onClick={handleCopy}>Copy Columns</button>
-          <button onClick={undoLastAction}>Undo</button>
-          <button onClick={togglePublish}>
-            {isPublished ? 'Unpublish' : 'Publish'}
-          </button>
-          <button onClick={() => setIsVisible(!isVisible)}>
-            {isVisible ? 'Hide Last Command' : 'Show Last Commmand'}
-          </button>
-        </div>
-        <div>
-          <p>{currentPage}</p>
-          <div className={styles.buttonDataControl}>
-            {buttonData[currentPage].map((button, index) => {
-              return button.courtImage ? (
-                <div key={index}>
-                  <p>{button.label}</p>
-                  <TennisCourtSVG
-                    className={styles.courtImage}
-                    courtType={button.courtImage}
-                    handleImageClick={(event) => {
-                      setPopUp([])
-                      saveToHistory()
-                      const { x, y } = handleImageClick(event)
-                      const data = {
-                        ...matchMetadata,
-                        x,
-                        y,
-                        table: tableState.rows,
-                        activeRowIndex: tableState.activeRowIndex,
-                        videoTimestamp: getVideoTimestamp()
-                      }
-                      button.action(data)
-                    }}
-                  />
-                </div>
-              ) : (
-                <button
-                  className={styles.customButton}
-                  key={index}
-                  onClick={() => {
-                    setPopUp([])
-                    saveToHistory()
-                    const data = {
-                      ...matchMetadata,
-                      table: tableState.rows,
-                      activeRowIndex: tableState.activeRowIndex,
-                      videoTimestamp: getVideoTimestamp()
-                    }
-                    button.action(data)
-                  }}
-                >
-                  {button.label}
-                </button>
-              )
-            })}
+          <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <button onClick={handleDownload}>Download CSV</button>
+            <button onClick={handleCopy}>Copy Columns</button>
+            <button onClick={undoLastAction}>Undo</button>
+            <button onClick={togglePublish}>
+              {isPublished ? 'Unpublish' : 'Publish'}
+            </button>
+            <button onClick={() => setIsVisible(!isVisible)}>
+              {isVisible ? 'Hide Last Command' : 'Show Last Command'}
+            </button>
           </div>
         </div>
+
+        {/* Tagger Buttons */}
+        <div>
+          <p><strong>Current Page:</strong> {currentPage}</p>
+          <div className={styles.buttonDataControl}>
+            {renderButtons()}
+          </div>
+        </div>
+
+        {/* Server and Tiebreak Controls */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
-            <p>Current Server: {serverName}</p>
+            <p><strong>Current Server:</strong> {serverName}</p>
             <button
               onClick={() => {
                 setServerName((prevName) =>
@@ -527,7 +575,7 @@ export default function TagMatch() {
           </div>
 
           <div>
-            <p>Current Side: {serverFarNear}</p>
+            <p><strong>Current Side:</strong> {serverFarNear}</p>
             <button
               onClick={() => {
                 setServerFarNear((prevSide) =>
@@ -540,7 +588,7 @@ export default function TagMatch() {
           </div>
 
           <div>
-            <p>Tiebreak: {tiebreak.toString()}</p>
+            <p><strong>Tiebreak:</strong> {tiebreak.toString()}</p>
             <button
               onClick={() => {
                 setTiebreak(!tiebreak)
@@ -561,48 +609,51 @@ export default function TagMatch() {
         </div>
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th key={'delete_button'}>Delete</th>
-            {columnNames.map((columnName, index) => (
-              <th key={index}>{columnName}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {tableState.rows.map((row, rowIndex) => (
-            <tr key={rowIndex}>
-              <td key={'delete_button_row'}>
-                <button onClick={() => deleteRowAndSync(rowIndex)}>
-                  <i className="fa fa-trash" aria-hidden="true">
-                    X
-                  </i>
-                </button>
-              </td>
-              {columnNames.map((columnName, colIndex) => (
-                <td key={colIndex}>
-                  <input
-                    type="text"
-                    value={row[columnName] || ''}
-                    onChange={(event) => {
-                      saveToHistory() // Save the current state to history first
-                      changeRowValue(rowIndex, columnName, event.target.value) // Then handle the change
-                    }}
-                    // If the current row is the one being edited, highlight it
-                    style={{
-                      backgroundColor:
-                        tableState.activeRowIndex === rowIndex
-                          ? 'yellow'
-                          : 'white'
-                    }}
-                  />
-                </td>
+      {/* Points Table */}
+      <div style={{ marginTop: '2rem', overflowX: 'auto' }}>
+        <table className={styles.pointsTable}>
+          <thead>
+            <tr>
+              <th key={'delete_button'}>Delete</th>
+              {currentColumnNames.map((columnName, index) => (
+                <th key={index}>{columnName}</th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {tableState.rows.map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                <td key={`delete_button_row_${rowIndex}`}>
+                  <button onClick={() => deleteRowAndSync(rowIndex)}>
+                    <i className="fa fa-trash" aria-hidden="true">
+                      X
+                    </i>
+                  </button>
+                </td>
+                {currentColumnNames.map((columnName, colIndex) => (
+                  <td key={colIndex}>
+                    <input
+                      type="text"
+                      value={row[columnName] || ''}
+                      onChange={(event) => {
+                        saveToHistory() // Save the current state to history first
+                        changeRowValue(rowIndex, columnName, event.target.value) // Then handle the change
+                      }}
+                      // If the current row is the one being edited, highlight it
+                      style={{
+                        backgroundColor:
+                          tableState.activeRowIndex === rowIndex
+                            ? 'yellow'
+                            : 'white'
+                      }}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
