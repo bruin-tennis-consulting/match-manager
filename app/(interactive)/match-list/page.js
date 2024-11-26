@@ -13,6 +13,7 @@ const formatMatches = (matches) => {
 export default function MatchList() {
   const { matches, updateMatch, refresh } = useData()
   // const [newName, setNewName] = useState('')
+  console.log("you are here")
 
   const formattedMatches = formatMatches(matches)
 

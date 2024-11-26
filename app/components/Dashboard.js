@@ -16,6 +16,7 @@ import { useAuth } from './AuthWrapper'
 
 const formatMatches = (matches) => {
   return matches
+    .filter((match) => match.published) // Filter for published matches
     .filter((match) => match.version === 'v1') // Filter for version 'v1'
     .sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate)) // Sort by matchDate in descending order
 }
