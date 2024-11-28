@@ -10,18 +10,6 @@ import DashTileContainer from '@/app/components/DashTileContainer'
 import { db } from '@/app/services/initializeFirebase'
 import { collection, getDocs } from 'firebase/firestore'
 
-const playerDataTemp = {
-  name: 'Govind Nanda',
-  class: 'Junior',
-  height: "5'10",
-  age: 22,
-  pictureUrl: 'https://example.com/profile.jpg',
-  bio: 'Govind Nanda utilized an additional year of eligibility granted by the NCAA due to COVID-19 and had a strong tennis season. He achieved a 12-10 singles record (10-8 in dual matches) and a 19-5 doubles mark (17-4 in dual matches), leading his team in dual-match doubles wins. Nanda also contributed to his team’s success with five singles wins against nationally-ranked players and was named to the Athletic Director’s Honor Roll for Fall 2023.',
-  overallWins: 50,
-  singleWins: 25,
-  doubleWins: 25
-}
-
 const ProfilePage = () => {
   const router = useRouter()
   const { matches } = useData()
@@ -30,15 +18,15 @@ const ProfilePage = () => {
   const [playerData, setPlayerData] = useState()
 
   const formatMatches = (matches) => {
-    return (
-      matches
-        .filter((match) => match.version === 'v1') // Filter for version 'v1'
-        /* .filter(
-          (match) => match.players.client.firstName === player.split('-')[0]
-        ) // Filter for player */
-        .filter((match) => match.players.client.firstName === 'Rudy') // Filter for player
-        .sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate))
-    ) // Sort by matchDate in descending order
+    return matches
+      .filter((match) => match.version === 'v1') // Filter for version 'v1'
+      .filter(
+        (match) =>
+          match.players.client.firstName ===
+          player.split('-')[0].replace(/^./, (char) => char.toUpperCase())
+      )
+      .sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate))
+    // Sort by matchDate in descending order
   }
 
   const formattedMatches = formatMatches(matches)
@@ -58,9 +46,7 @@ const ProfilePage = () => {
         )
 
         if (targetPlayer) {
-          console.log('Player found:', targetPlayer)
-          setPlayerData((prevData) => ({
-            ...prevData,
+          setPlayerData({
             name: `${targetPlayer.firstName} ${targetPlayer.lastName}`,
             bio: targetPlayer.bio, // Use temp bio if missing
             height: targetPlayer.height,
@@ -70,18 +56,7 @@ const ProfilePage = () => {
             overallWins: targetPlayer.stats?.overallWins,
             singleWins: targetPlayer.stats?.singleWins,
             doubleWins: targetPlayer.stats?.doubleWins
-          }))
-          /* const playerInfo = {
-            firstName: targetPlayer.firstName,
-            lastName: targetPlayer.lastName,
-            bio: targetPlayer.bio,
-            height: targetPlayer.height,
-            age: targetPlayer.age,
-            largePhotoUrl: targetPlayer.largePhoto,
-            stats: targetPlayer.stats,
-            photoUrl: targetPlayer.photo
-          }
-          setPlayerData(playerInfo) */
+          })
         }
       } catch (error) {
         console.error('Error retrieving player details:', error)
