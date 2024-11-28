@@ -12,7 +12,7 @@ import { collection, getDocs } from 'firebase/firestore'
 
 const playerDataTemp = {
   name: 'Govind Nanda',
-  class: 'Senior',
+  class: 'Junior',
   height: "5'10",
   age: 22,
   pictureUrl: 'https://example.com/profile.jpg',
@@ -27,7 +27,7 @@ const ProfilePage = () => {
   const { matches } = useData()
   const pathname = usePathname()
   const player = pathname.substring(pathname.lastIndexOf('/') + 1)
-  const [playerData, setPlayerData] = useState([])
+  const [playerData, setPlayerData] = useState()
 
   const formatMatches = (matches) => {
     return (
@@ -58,7 +58,20 @@ const ProfilePage = () => {
         )
 
         if (targetPlayer) {
-          const playerInfo = {
+          console.log('Player found:', targetPlayer)
+          setPlayerData((prevData) => ({
+            ...prevData,
+            name: `${targetPlayer.firstName} ${targetPlayer.lastName}`,
+            bio: targetPlayer.bio, // Use temp bio if missing
+            height: targetPlayer.height,
+            class: targetPlayer.class,
+            age: targetPlayer.age,
+            pictureUrl: targetPlayer.largePhoto,
+            overallWins: targetPlayer.stats?.overallWins,
+            singleWins: targetPlayer.stats?.singleWins,
+            doubleWins: targetPlayer.stats?.doubleWins
+          }))
+          /* const playerInfo = {
             firstName: targetPlayer.firstName,
             lastName: targetPlayer.lastName,
             bio: targetPlayer.bio,
@@ -68,14 +81,14 @@ const ProfilePage = () => {
             stats: targetPlayer.stats,
             photoUrl: targetPlayer.photo
           }
-          setPlayerData(playerInfo)
+          setPlayerData(playerInfo) */
         }
       } catch (error) {
         console.error('Error retrieving player details:', error)
       }
     }
     fetchPlayer()
-  }, [player, playerData])
+  }, [player])
 
   const handleTileClick = (videoId) => {
     router.push(`/matches/${videoId}`)
@@ -85,20 +98,20 @@ const ProfilePage = () => {
     <div className={styles.container}>
       <h2 className={styles.header}>BSA | Tennis Consulting</h2>
       <div className={styles.profileContainer}>
-        <PlayerProfileHeader playerData={playerDataTemp} />
+        {playerData && playerData.name && (
+          <PlayerProfileHeader playerData={playerData} />
+        )}
       </div>
       <h1 className={styles.sectionHeader}>Statistics</h1>
       <h1 className={styles.sectionHeader}>Matches</h1>
       <div className={styles.matchesContainer}>
-        {formattedMatches && formattedMatches.length > 0 ? (
+        {formattedMatches && formattedMatches.length > 0 && (
           <DashTileContainer
             matches={formattedMatches}
             matchType="Singles"
             onTileClick={handleTileClick}
             cols={4}
           />
-        ) : (
-          'loading...'
         )}
       </div>
     </div>

@@ -25,14 +25,17 @@
 
 .matchesContainer {
   margin-bottom: 20px;
+  overflow: hidden; /* NOTE: this is requied because overflow bug in dashbaord tile where width = 85vw */
 }
 
 .sectionHeader {
   font-family: 'Roboto', sans-serif;
 }
 
-/*REVIEW THIS*/
-@media (max-width: 768px) {
+@media (max-width: 600px) {
+  .container {
+    padding: 0 40px;
+  }
   .profileContainer {
     height: auto; /* Let content dictate height on smaller screens */
   }

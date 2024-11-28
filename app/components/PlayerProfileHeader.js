@@ -1,7 +1,7 @@
 import React from 'react'
 import Image from 'next/image'
 import styles from '../styles/PlayerProfileHeader.module.css' // Assuming you have CSS module for styling
-import govinImage from './govin.png'
+import govinImage from '../../public/images/govin.png'
 import StatBox from './StatBox'
 
 const PlayerProfileHeader = ({ playerData }) => {
@@ -26,7 +26,11 @@ const PlayerProfileHeader = ({ playerData }) => {
           {/* Win Counters */}
           <div className={styles.filterContainer}>
             <p className={styles.filterText}>Filter</p>
-            <img src="/StatFilter.svg" alt="Icon" width="24" height="24" />
+            <img
+              src="/StatFilter.svg"
+              alt="Icon"
+              className={styles.StatFilter}
+            />
           </div>
           <div className={styles.statBoxes}>
             <StatBox
@@ -42,7 +46,7 @@ const PlayerProfileHeader = ({ playerData }) => {
       {/* Profile Picture */}
       <div className={styles.profilePictureContainer}>
         <Image
-          src={govinImage}
+          src={playerData.pictureUrl || govinImage}
           alt={`${playerData.name}'s profile`}
           className={styles.profilePicture}
         />

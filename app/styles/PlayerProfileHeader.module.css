@@ -60,10 +60,11 @@
   padding: 10px;
   display: flex;
   flex-direction: row;
+  align-items: center;
 }
 .filterText {
   color: #2774ae;
-  font-size: 20px;
+  font-size: 1.18em;
   font-style: normal;
   font-weight: 500;
   line-height: normal;
@@ -74,4 +75,48 @@
   display: flex;
   justify-content: space-between;
   gap: 20px;
+}
+.StatFilter {
+  align-items: center;
+  height: 1.8em;
+  width: 1.8em;
+}
+
+@media (max-width: 600px) {
+  .profileHeader {
+    flex-direction: column;
+  }
+
+  .profileInfo {
+    padding-top: 20px;
+    max-width: 100%;
+  }
+
+  .profilePictureContainer {
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  .profilePicture {
+    max-width: 50%;
+    height: auto;
+  }
+
+  .playerName {
+    font-size: 5em;
+    letter-spacing: 3px;
+  }
+
+  .playerDetails {
+    font-size: 2.5em;
+    padding-left: 0;
+    margin: 5px 0px;
+  }
+  .playerBio {
+    font-size: 2.2em;
+    margin-top: 10px;
+  }
+  .profileStats {
+    font-size: 1.9em;
+  }
 }
