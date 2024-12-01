@@ -1,0 +1,43 @@
+.container {
+  padding: 10px;
+  margin: 0 auto;
+  padding-left: 40px;
+  padding-right: 40px;
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+}
+
+.header {
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+.titleBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.titleBar h1 {
+  font-size: 20px;
+  font-weight: 550;
+}
+
+.buttonBox button {
+  width: 100%;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
+  background-color: #2c61ab;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.buttonBox button:hover {
+  background-color: #0056b3;
+}

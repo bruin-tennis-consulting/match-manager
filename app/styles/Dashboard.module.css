@@ -20,7 +20,8 @@
 .header h2 {
   font-size: 50px;
   font-weight: 600;
-  margin-bottom: 20px;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 .headerContent {
@@ -221,7 +222,9 @@
 .searchContainer {
   position: relative;
   width: 25vw;
-  margin-top: 70px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .searchInput {

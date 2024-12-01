@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import Fuse from 'fuse.js'
 
 import { useData } from '@/app/DataProvider'
-import { useAuth } from '@/app/AuthWrapper'
 import styles from '@/app/styles/Dashboard.module.css'
 
 import DashTileContainer from '@/app/components/DashTileContainer'
@@ -28,9 +27,6 @@ const Dashboard = () => {
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
 
   const formattedMatches = formatMatches(matches)
-
-  // for log out
-  const { handleSignOut } = useAuth()
 
   // default show latest match: TODO BUG causes infinite re-rendering
   // useEffect(() => {
@@ -83,12 +79,6 @@ const Dashboard = () => {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <div className={styles.titleBar}>
-          <h1>BSA | Tennis Consulting</h1>
-          <div className={styles.buttonBox}>
-            <button onClick={handleSignOut}>Sign Out</button>
-          </div>
-        </div>
         <div className={styles.headerContent}>
           <h2>Dashboard</h2>
           <div className={styles.searchContainer}>

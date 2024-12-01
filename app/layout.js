@@ -1,4 +1,4 @@
-import Toolbar from '@/app/components/Toolbar'
+import Navbar from '@/app/components/Navbar'
 import Footer from '@/app/components/Footer'
 import { AuthProvider } from '@/app/AuthWrapper'
 import { DataProvider } from '@/app/DataProvider'
@@ -16,9 +16,9 @@ export default function RootLayout({ children }) {
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body>
-        <Toolbar />
         <div style={{ width: '100%' }}>
           <AuthProvider>
+            <Navbar />
             <DataProvider>{children}</DataProvider>
           </AuthProvider>
         </div>
