@@ -7,9 +7,10 @@ import React, {
   useContext
 } from 'react'
 import { collection, getDocs, doc, updateDoc, addDoc } from 'firebase/firestore'
-import { db } from '../services/initializeFirebase.js'
-import { useAuth } from './AuthWrapper.js'
-import getTeams from '../services/getTeams.js'
+
+import { db } from '@/app/services/initializeFirebase.js'
+import { useAuth } from '@/app/AuthWrapper.js'
+import getTeams from '@/app/services/getTeams.js'
 
 const DataContext = createContext()
 

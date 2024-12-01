@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import styles from '../styles/DashboardTile.module.css'
-import { useData } from './DataProvider'
+
+import styles from '@/app/styles/DashboardTile.module.css'
+
+import { useData } from '@/app/DataProvider'
 
 // Calculate winner of match
 const calculateWinner = (player1, player2) => {

@@ -2,17 +2,18 @@
 
 import React, { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { useData } from './DataProvider'
-import styles from '../styles/Dashboard.module.css'
-import DashTileContainer from './DashTileContainer'
-// import getTeams from '@/app/services/getTeams.js'
-import RosterList from './RosterList.js'
 import Fuse from 'fuse.js'
+
+import { useData } from '@/app/DataProvider'
+import { useAuth } from '@/app/AuthWrapper'
+import styles from '@/app/styles/Dashboard.module.css'
+
+import DashTileContainer from '@/app/components/DashTileContainer'
+// import getTeams from '@/app/services/getTeams.js'
+import RosterList from '@/app/components/RosterList.js'
+
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 import SearchIcon from '@/public/search'
-
-// for log out
-import { useAuth } from './AuthWrapper'
 
 const formatMatches = (matches) => {
   return matches
