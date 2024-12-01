@@ -1,8 +1,7 @@
-// components/SignIn.js
 import React, { useState } from 'react'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
-import styles from '../styles/SignIn.module.css'
-import { useAuth } from './AuthWrapper'
+import styles from '@/app/styles/SignIn.module.css'
+import { useAuth } from '@/app/AuthWrapper'
 
 const SignInPage = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' })

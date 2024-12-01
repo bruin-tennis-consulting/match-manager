@@ -1,8 +1,9 @@
 import Image from 'next/image'
 import { useState } from 'react'
-import { useAuth } from '../components/AuthWrapper'
-import SignIn from './SignIn'
-import styles from '../styles/LandingPage.module.css'
+
+import { useAuth } from '@/app/AuthWrapper'
+import SignIn from '@/app/components/SignIn'
+import styles from '@/app/styles/LandingPage.module.css'
 
 export default function LandingPage() {
   const [showSignIn, setShowSignIn] = useState(false)

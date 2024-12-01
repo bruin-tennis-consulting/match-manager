@@ -1,6 +1,6 @@
 import React from 'react'
-import DashboardTile from './DashboardTile'
-import styles from '../styles/Dashboard.module.css'
+import DashboardTile from '@/app/components/DashboardTile'
+import styles from '@/app/styles/Dashboard.module.css'
 
 const DashTileContainer = ({ matches, matchType, onTileClick, cols = 3 }) => {
   const columnClass = `matchTileContainer--${cols}`

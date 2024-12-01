@@ -10,7 +10,7 @@
   font-weight: bold;
 }
 
-.scoreboard th, 
+.scoreboard th,
 .scoreboard td {
   text-align: left;
   font-size: 1.5vw;
@@ -28,12 +28,11 @@
 
 .table {
   border-collapse: collapse;
-
 }
 
 .pointScore {
   font-weight: bold;
-  color: #8BB8E8;
+  color: #8bb8e8;
   font-size: 1.5vw;
 }
 
@@ -43,7 +42,7 @@
 }
 
 .bullet {
-  color: #8BB8E8;
+  color: #8bb8e8;
   font-weight: bolder;
   font-size: 1.5vw;
 }

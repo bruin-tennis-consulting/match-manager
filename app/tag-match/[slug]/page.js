@@ -1,15 +1,18 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import VideoPlayer from '../../../components/VideoPlayer'
+import { usePathname } from 'next/navigation'
+
 import {
   getTaggerButtonData,
   columnNames
-} from '../../../services/taggerButtonData.js'
-import styles from '../../../styles/TagMatch.module.css'
-import { usePathname } from 'next/navigation'
+} from '@/app/services/taggerButtonData.js'
+
+import VideoPlayer from '@/app/components/VideoPlayer'
 import { useData } from '@/app/components/DataProvider'
 import TennisCourtSVG from '@/app/components/TennisCourtSVG'
+
+import styles from '@/app/styles/TagMatch.module.css'
 
 export default function TagMatch() {
   const pathname = usePathname()

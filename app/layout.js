@@ -1,7 +1,7 @@
-import Toolbar from './components/Toolbar'
-import Footer from './components/Footer'
-import { AuthProvider } from './components/AuthWrapper'
-import { DataProvider } from './components/DataProvider'
+import Toolbar from '@/app/components/Toolbar'
+import Footer from '@/app/components/Footer'
+import { AuthProvider } from '@/app/AuthWrapper'
+import { DataProvider } from '@/app/DataProvider'
 
 export const metadata = {
   title: 'Tennis Video Viewer',

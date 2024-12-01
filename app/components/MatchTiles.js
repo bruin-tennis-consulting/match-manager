@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import styles from '../styles/MatchTiles.module.css'
+
+import styles from '@/app/styles/MatchTiles.module.css'
 import getTeams from '@/app/services/getTeams.js'
 
 // Calculate winner of match

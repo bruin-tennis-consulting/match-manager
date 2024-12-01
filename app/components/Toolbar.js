@@ -2,8 +2,7 @@
 import React from 'react'
 import Link from 'next/link'
 
-import styles from '../styles/Toolbar.module.css'
-import '../styles/global.css'
+import styles from '@/app/styles/Toolbar.module.css'
 
 const Toolbar = () => {
   // const [user, setUser] = useState(null)

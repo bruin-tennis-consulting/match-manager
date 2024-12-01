@@ -1,11 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import DashboardMatch from './DashboardMatch.js'
-import { db } from '../services/initializeFirebase.js'
-import transformData from '../services/transformData.js'
+import DashboardMatch from '@/app/components/DashboardMatch.js'
+import { db } from '@/app/services/initializeFirebase.js'
+import transformData from '@/app/services/transformData.js'
 // import MatchTiles from './MatchTiles.js'
-// import extractSetScores from '../services/extractSetScores.js'
 import { getDocs, collection } from 'firebase/firestore'
 
 const groupByDate = (matches) => {

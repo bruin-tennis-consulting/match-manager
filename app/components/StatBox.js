@@ -1,4 +1,4 @@
-import styles from '../styles/StatBox.module.css'
+import styles from '@/app/styles/StatBox.module.css'
 
 const StatBox = ({ stat, statNum }) => {
   return (

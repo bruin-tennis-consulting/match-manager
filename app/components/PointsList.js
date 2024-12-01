@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import styles from '../styles/PointsList.module.css'
+import styles from '@/app/styles/PointsList.module.css'
 import getTeams from '@/app/services/getTeams.js'
 
 const PointsList = ({

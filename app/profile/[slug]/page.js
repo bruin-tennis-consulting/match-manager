@@ -1,14 +1,16 @@
 'use client'
 
 import { React, useEffect, useState } from 'react'
-import PlayerProfileHeader from '@/app/components/PlayerProfileHeader'
 import { useRouter, usePathname } from 'next/navigation'
-import { useData } from '@/app/components/DataProvider'
-import styles from '../../../styles/Profile.module.css'
-import DashTileContainer from '@/app/components/DashTileContainer'
+import { collection, getDocs } from 'firebase/firestore'
 
 import { db } from '@/app/services/initializeFirebase'
-import { collection, getDocs } from 'firebase/firestore'
+
+import PlayerProfileHeader from '@/app/components/PlayerProfileHeader'
+import { useData } from '@/app/components/DataProvider'
+import DashTileContainer from '@/app/components/DashTileContainer'
+
+import styles from '@app/styles/Profile.module.css'
 
 const ProfilePage = () => {
   const router = useRouter()
