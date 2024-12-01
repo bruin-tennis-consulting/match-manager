@@ -1,0 +1,122 @@
+.profileHeader {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+}
+
+.playerName {
+  font-size: 3.5em;
+  font-weight: 800;
+  margin: 0px;
+  letter-spacing: 7px;
+  line-height: normal;
+  font-style: normal;
+  font-family: 'Roboto';
+}
+
+.profileInfo {
+  padding-top: 70px;
+  max-width: 55%;
+  flex-shrink: 1;
+}
+
+.playerDetails {
+  margin-top: 10px;
+  font-size: 1.1em;
+  padding-left: 9px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+  letter-spacing: 2px;
+}
+
+.profilePictureContainer {
+  flex-shrink: 1;
+  width: 44%;
+  height: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.profilePicture {
+  height: 100%;
+  width: auto;
+}
+
+.playerBio {
+  margin-top: 40px;
+  font-size: 1.16em;
+  text-align: left;
+  line-height: 1.65;
+  letter-spacing: 1.75px;
+}
+.profileStats {
+  padding-right: 15px;
+}
+
+.filterContainer {
+  padding: 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.filterText {
+  color: #2774ae;
+  font-size: 1.18em;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  letter-spacing: 2px;
+  margin-right: 5px;
+}
+.statBoxes {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+.StatFilter {
+  align-items: center;
+  height: 1.8em;
+  width: 1.8em;
+}
+
+@media (max-width: 600px) {
+  .profileHeader {
+    flex-direction: column;
+  }
+
+  .profileInfo {
+    padding-top: 20px;
+    max-width: 100%;
+  }
+
+  .profilePictureContainer {
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  .profilePicture {
+    max-width: 50%;
+    height: auto;
+  }
+
+  .playerName {
+    font-size: 5em;
+    letter-spacing: 3px;
+  }
+
+  .playerDetails {
+    font-size: 2.5em;
+    padding-left: 0;
+    margin: 5px 0px;
+  }
+  .playerBio {
+    font-size: 2.2em;
+    margin-top: 10px;
+  }
+  .profileStats {
+    font-size: 1.9em;
+  }
+}

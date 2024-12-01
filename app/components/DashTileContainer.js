@@ -2,7 +2,8 @@ import React from 'react'
 import DashboardTile from './DashboardTile'
 import styles from '../styles/Dashboard.module.css'
 
-const DashTileContainer = ({ matches, matchType, onTileClick }) => {
+const DashTileContainer = ({ matches, matchType, onTileClick, cols = 3 }) => {
+  const columnClass = `matchTileContainer--${cols}`
   return (
     <>
       {matches.length > 0 && (
@@ -10,7 +11,9 @@ const DashTileContainer = ({ matches, matchType, onTileClick }) => {
           <div className={styles.matchTypeHeader}>
             <h4>{matchType}</h4>
           </div>
-          <div className={styles.matchTileContainer}>
+          <div
+            className={`${styles.matchTileContainer} ${styles[columnClass]}`}
+          >
             {matches.map((match, idx) => (
               <div
                 key={idx}
