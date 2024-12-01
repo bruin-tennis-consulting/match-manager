@@ -229,24 +229,15 @@ export default function TagMatch() {
   }
 
   const saveToHistory = () => {
-    setTaggerHistory((taggerHistory) => {
-      // Add the new state to the history
-      const updatedHistory = [
-        ...taggerHistory,
-        {
-          table: tableState.rows,
-          page: currentPage,
-          activeRowIndex: tableState.activeRowIndex
-        }
-      ]
-
-      // Check if the history exceeds the maximum length
-      if (updatedHistory.length > 30) {
-        // Remove the oldest entry (at the beginning of the array)
-        return updatedHistory.slice(-30)
+    setTaggerHistory((prevHistory) => {
+      // Create a deepy copy of the current state using JSON parse/stringify
+      const newHistoryEntry = {
+        table: JSON.parse(JSON.stringify(tableState.rows)),
+        page: currentPage,
+        activeRowIndex: tableState.activeRowIndex,
+        popUp
       }
-
-      return updatedHistory
+      return [...prevHistory, newHistoryEntry].slice(-30)
     })
   }
 
@@ -369,20 +360,17 @@ export default function TagMatch() {
   const undoLastAction = () => {
     if (taggerHistory.length === 0) return
 
-    // Get the last state from the history
+    // Get the last state and restore it
     const lastState = taggerHistory[taggerHistory.length - 1]
-
-    // Update the current state to the last state from the history
-    setTableState((oldTableState) => {
-      return { ...oldTableState, rows: lastState.table }
+    setTableState({
+      rows: JSON.parse(JSON.stringify(lastState.table)),
+      activeRowIndex: lastState.activeRowIndex
     })
     setCurrentPage(lastState.page)
-    setTableState((oldTableState) => {
-      return { ...oldTableState, activeRowIndex: lastState.activeRowIndex }
-    })
+    setPopUp(lastState.popUp)
 
-    // Remove the last state from the history
-    setTaggerHistory(taggerHistory.slice(0, -1))
+    // Remove the used state from history
+    setTaggerHistory((prev) => prev.slice(0, -1))
   }
 
   // This pulls the button data from the taggerButtonData.js file
