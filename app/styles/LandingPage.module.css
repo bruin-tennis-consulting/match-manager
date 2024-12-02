@@ -76,6 +76,10 @@
   background-color: #0056b3;
 }
 
+.parentContainer {
+  padding-bottom: 250px;
+}
+
 .imageContainer {
   position: absolute;
   top: 50%;

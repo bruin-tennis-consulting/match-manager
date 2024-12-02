@@ -1,11 +1,8 @@
 'use client'
-import React from 'react'
-// import Link from 'next/link'
-
 import { useAuth } from '@/app/AuthWrapper'
-
 import styles from '@/app/styles/Navbar.module.css'
 
+// Navbar is wrapped by Auth: show this when signed in
 const Navbar = () => {
   const { handleSignOut } = useAuth()
 
