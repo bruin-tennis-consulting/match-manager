@@ -8,8 +8,8 @@ import getTeams from '@/app/services/getTeams.js'
 import { initialSchema, uiSchema } from '@/app/services/matchSchemas.js'
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 
-import { useData } from '@/app/components/DataProvider.js'
-import { useAuth } from '@/app/components/AuthWrapper.js'
+import { useData } from '@/app/DataProvider.js'
+import { useAuth } from '@/app/AuthWrapper.js'
 
 import styles from '@/app/styles/Upload.module.css'
 
