@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { useData } from '@app/DataProvider'
+import { useData } from '@/app/DataProvider'
 
 const formatMatches = (matches) => {
   return matches

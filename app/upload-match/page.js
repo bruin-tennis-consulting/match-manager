@@ -161,7 +161,7 @@ export default function UploadMatchForm() {
         matchDetails,
         searchableProperties,
         version: 'v1', // Current version for new matches added
-        published: true
+        published: false
       })
 
       alert('Match uploaded successfully!')

@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 
+import { useData } from '@/app/DataProvider'
 import {
   getTaggerButtonData,
   columnNames
 } from '@/app/services/taggerButtonData.js'
 
 import VideoPlayer from '@/app/components/VideoPlayer'
-import { useData } from '@/app/components/DataProvider'
 import TennisCourtSVG from '@/public/TennisCourtSVG'
 
 import styles from '@/app/styles/TagMatch.module.css'

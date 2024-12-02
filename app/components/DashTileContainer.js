@@ -39,7 +39,7 @@ const DashTileContainer = ({ matches, matchType, onTileClick, cols = 3 }) => {
                     set ? set.opponentTiebreak : null
                   )}
                   isUnfinished={false}
-                  isTagged={match.isTagged}
+                  isTagged={match.published}
                 />
               </div>
             ))}

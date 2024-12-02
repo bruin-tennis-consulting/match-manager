@@ -25,8 +25,9 @@ const Dashboard = () => {
   const { matches, logos } = useData()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
-
+  console.log(matches)
   const formattedMatches = formatMatches(matches)
+  console.log(formattedMatches)
 
   // default show latest match: TODO BUG causes infinite re-rendering
   // useEffect(() => {
