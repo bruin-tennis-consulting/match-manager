@@ -61,11 +61,11 @@ const MatchPage = () => {
       return p
     })
 
-    setMatchData((prev) => ({ ...prev, points: updatedPoints }))
+    setMatchData((prev) => ({ ...prev, pointsJson: updatedPoints }))
     setBookmarks(updatedPoints.filter((p) => p.bookmarked))
 
     try {
-      await updateMatch(docId, { points: updatedPoints })
+      await updateMatch(docId, { pointsJson: updatedPoints })
     } catch (error) {
       console.error('Error updating bookmarks:', error)
     }
