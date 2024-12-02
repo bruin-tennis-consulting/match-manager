@@ -2,7 +2,7 @@ import React from 'react'
 import Image from 'next/image'
 
 import styles from '@/app/styles/PlayerProfileHeader.module.css' // Assuming you have CSS module for styling
-import govinImage from '@/app/public/images/govin.png'
+import govinImage from '@/public/images/govin.png'
 import StatBox from '@/app/components/StatBox'
 
 const PlayerProfileHeader = ({ playerData }) => {

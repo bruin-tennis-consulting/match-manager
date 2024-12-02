@@ -4,13 +4,13 @@ import { React, useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { collection, getDocs } from 'firebase/firestore'
 
+import { useData } from '@/app/DataProvider'
 import { db } from '@/app/services/initializeFirebase'
 
 import PlayerProfileHeader from '@/app/components/PlayerProfileHeader'
-import { useData } from '@/app/components/DataProvider'
 import DashTileContainer from '@/app/components/DashTileContainer'
 
-import styles from '@app/styles/Profile.module.css'
+import styles from '@/app/styles/Profile.module.css'
 
 const ProfilePage = () => {
   const router = useRouter()
@@ -73,7 +73,6 @@ const ProfilePage = () => {
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.header}>BSA | Tennis Consulting</h2>
       <div className={styles.profileContainer}>
         {playerData && playerData.name && (
           <PlayerProfileHeader playerData={playerData} />

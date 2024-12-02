@@ -1,7 +1,6 @@
 .container {
   margin: 0 auto;
   padding: 0 70px;
-  font-family: 'Roboto', sans-serif;
 }
 
 .header {
@@ -24,10 +23,6 @@
 .matchesContainer {
   margin-bottom: 20px;
   overflow: hidden; /* NOTE: this is requied because overflow bug in dashbaord tile where width = 85vw */
-}
-
-.sectionHeader {
-  font-family: 'Roboto', sans-serif;
 }
 
 @media (max-width: 600px) {

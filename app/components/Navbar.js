@@ -1,4 +1,6 @@
 'use client'
+import Link from 'next/link'
+
 import { useAuth } from '@/app/AuthWrapper'
 import styles from '@/app/styles/Navbar.module.css'
 
@@ -10,7 +12,11 @@ const Navbar = () => {
     <div className={styles.container}>
       <header className={styles.header}>
         <div className={styles.titleBar}>
-          <h1>BSA | Tennis Consulting</h1>
+          <h1>
+            <Link href="/" className={styles.noUnderline}>
+              BSA | Tennis Consulting
+            </Link>
+          </h1>
           <div className={styles.buttonBox}>
             <button onClick={handleSignOut}>Sign Out</button>
           </div>

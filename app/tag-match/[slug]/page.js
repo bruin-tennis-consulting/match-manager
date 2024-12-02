@@ -10,7 +10,7 @@ import {
 
 import VideoPlayer from '@/app/components/VideoPlayer'
 import { useData } from '@/app/components/DataProvider'
-import TennisCourtSVG from '@/app/components/TennisCourtSVG'
+import TennisCourtSVG from '@/public/TennisCourtSVG'
 
 import styles from '@/app/styles/TagMatch.module.css'
 

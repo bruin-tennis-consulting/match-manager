@@ -132,11 +132,15 @@ body {
   flex-direction: column;
 }
 
-h1 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: 'Clash Display', sans-serif;
 }
 
-h2,
 p,
 button {
   font-family: 'DM Sans', sans-serif;
