@@ -1,5 +1,5 @@
 import React from 'react'
-import styles from '../styles/Scoreboard.module.css'
+import styles from '@/app/styles/Scoreboard.module.css'
 
 const ScoreBoard = ({
   playData,

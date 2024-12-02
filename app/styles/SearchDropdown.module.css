@@ -1,18 +1,22 @@
 .searchDropdown {
-    color: black;
+  color: black;
 }
 
 .loader {
-    margin: auto;
-    border: 5px solid #EAF0F6;
-    border-radius: 50%;
-    border-top: 5px solid #000000;
-    width: 30px;
-    height: 30px;
-    animation: spinner 4s linear infinite;
+  margin: auto;
+  border: 5px solid #eaf0f6;
+  border-radius: 50%;
+  border-top: 5px solid #000000;
+  width: 30px;
+  height: 30px;
+  animation: spinner 4s linear infinite;
+}
+
+@keyframes spinner {
+  0% {
+    transform: rotate(0deg);
   }
-  
-  @keyframes spinner {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+  100% {
+    transform: rotate(360deg);
   }
+}

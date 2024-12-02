@@ -9,7 +9,10 @@
 }
 
 .playerSchoolImg {
-  max-width: min(3.7vw, calc(4vw * 16 / 9)); /* Limit the max-width based on aspect ratio and 4vw height */
+  max-width: min(
+    3.7vw,
+    calc(4vw * 16 / 9)
+  ); /* Limit the max-width based on aspect ratio and 4vw height */
   height: 4vw; /* Set the desired height */
   padding-left: 0.6vw;
   display: flex;
@@ -18,7 +21,7 @@
   overflow: hidden; /* Ensure the image doesn't overflow the container */
 }
 
-.imgcontainer{
+.imgcontainer {
   padding-left: 1vw;
   display: flex;
 }
@@ -28,7 +31,11 @@
   padding: 0.205vw; /* Adjust padding using viewport units */
   text-align: center;
   border-bottom: 0.1vw solid #ddd; /* Adjust border width using viewport units */
-  font-size: clamp(0.95vw, 1.15vw, 1.75vw); /* Adjust font size with minimum, preferred, and maximum values using clamp() */
+  font-size: clamp(
+    0.95vw,
+    1.15vw,
+    1.75vw
+  ); /* Adjust font size with minimum, preferred, and maximum values using clamp() */
   color: #333; /* Text color */
 }
 
@@ -57,7 +64,7 @@
   border-bottom: 0.313vw solid #b0b0b0; /* Adjust border width using viewport units */
   font-weight: 400;
   font-size: 1.3vw; /* Adjust font size using viewport units */
-  line-height: 1.0vw;
+  line-height: 1vw;
   border-radius: 0.25vw; /* Adjust border radius using viewport units */
 }
 

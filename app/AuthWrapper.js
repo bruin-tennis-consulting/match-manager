@@ -7,9 +7,10 @@ import React, {
   useMemo
 } from 'react'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
-import { auth } from '../services/initializeFirebase'
-import { getUserProfile } from '../services/userInfo'
-import LandingPage from './LandingPage'
+
+import { auth } from '@/app/services/initializeFirebase'
+import { getUserProfile } from '@/app/services/userInfo'
+import LandingPage from '@/app/components/LandingPage'
 
 const AuthContext = createContext()
 

@@ -1,5 +1,5 @@
-import styles from '../styles/Footer.module.css'
-import '../styles/global.css'
+import styles from '@/app/styles/Footer.module.css'
+import '@/app/styles/globals.css'
 
 const Footer = () => {
   return (

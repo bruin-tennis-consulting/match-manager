@@ -3,12 +3,15 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import Form from '@rjsf/core'
 import validator from '@rjsf/validator-ajv8'
-import { useData } from '../../components/DataProvider.js'
-import { useAuth } from '../../components/AuthWrapper.js'
+
 import getTeams from '@/app/services/getTeams.js'
-import styles from '../../styles/Upload.module.css'
 import { initialSchema, uiSchema } from '@/app/services/matchSchemas.js'
 import { searchableProperties } from '@/app/services/searchableProperties.js'
+
+import { useData } from '@/app/components/DataProvider.js'
+import { useAuth } from '@/app/components/AuthWrapper.js'
+
+import styles from '@/app/styles/Upload.module.css'
 
 export default function UploadMatchForm() {
   const { createMatch } = useData() // Use the createMatch hook
@@ -158,7 +161,7 @@ export default function UploadMatchForm() {
         matchDetails,
         searchableProperties,
         version: 'v1', // Current version for new matches added
-        published: true
+        published: false
       })
 
       alert('Match uploaded successfully!')

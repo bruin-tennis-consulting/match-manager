@@ -3,16 +3,19 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 
-import filterListStyles from '../../../styles/FilterList.module.css'
-import styles from '../../../styles/Match.module.css'
-import VideoPlayer from '../../../components/VideoPlayer'
-import FilterList from '../../../components/FilterList'
-import PointsList from '../../../components/PointsList'
-import ScoreBoard from '../../../components/ScoreBoard'
-import MatchTiles from '@/app/components/MatchTiles'
-import { useData } from '@/app/components/DataProvider'
-import ExtendedList from '../../../components/ExtendedList'
+import { useData } from '@/app/DataProvider'
+
 import nameMap from '@/app/services/nameMap'
+
+import filterListStyles from '@/app/styles/FilterList.module.css'
+import styles from '@/app/styles/Match.module.css'
+
+import VideoPlayer from '@/app/components/VideoPlayer'
+import FilterList from '@/app/components/FilterList'
+import PointsList from '@/app/components/PointsList'
+import ScoreBoard from '@/app/components/ScoreBoard'
+import MatchTiles from '@/app/components/MatchTiles'
+import ExtendedList from '@/app/components/ExtendedList'
 
 const MatchPage = () => {
   const [matchData, setMatchData] = useState()
@@ -58,11 +61,11 @@ const MatchPage = () => {
       return p
     })
 
-    setMatchData((prev) => ({ ...prev, points: updatedPoints }))
+    setMatchData((prev) => ({ ...prev, pointsJson: updatedPoints }))
     setBookmarks(updatedPoints.filter((p) => p.bookmarked))
 
     try {
-      await updateMatch(docId, { points: updatedPoints })
+      await updateMatch(docId, { pointsJson: updatedPoints })
     } catch (error) {
       console.error('Error updating bookmarks:', error)
     }

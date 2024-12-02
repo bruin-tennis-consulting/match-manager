@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { useData } from '../../components/DataProvider' // Assuming the hook is located in the context folder
+import { useData } from '@/app/DataProvider'
 
 const formatMatches = (matches) => {
   return matches

@@ -1,9 +1,8 @@
-// components/FilterList.js
-
 import React, { useEffect, useState } from 'react'
-import styles from '../styles/FilterList.module.css'
-// This file renammes columns to more human-readable names
-import nameMap from '../services/nameMap.js'
+
+import styles from '@/app/styles/FilterList.module.css'
+// This file renames columns to more human-readable names
+import nameMap from '@/app/services/nameMap.js'
 
 const exclusiveGroups = {
   player1ReturnFhBh: ['Forehand', 'Backhand'],
