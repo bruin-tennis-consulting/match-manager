@@ -7,8 +7,9 @@ import React, {
   useContext
 } from 'react'
 import { collection, getDocs, doc, updateDoc, addDoc } from 'firebase/firestore'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
-import { db } from '@/app/services/initializeFirebase.js'
+import { db, storage } from '@/app/services/initializeFirebase.js'
 import { useAuth } from '@/app/AuthWrapper.js'
 import getTeams from '@/app/services/getTeams.js'
 
@@ -92,6 +93,24 @@ export const DataProvider = ({ children }) => {
 
   const createMatch = useCallback(async (collectionName, newMatchData) => {
     try {
+      console.log(newMatchData.pdfFile)
+      let pdfUrl = null
+      if (newMatchData.pdfFile) {
+        // First, upload the PDF to Firebase Storage
+        const pdfRef = ref(storage, `match-pdfs/${newMatchData.pdfFile.name}`)
+        // const metadata = {
+        //   contentType: 'application/pdf'
+        // }
+
+        const snapshot = await uploadBytes(
+          pdfRef,
+          newMatchData.pdfFile
+          // metadata
+        )
+        pdfUrl = await getDownloadURL(snapshot.ref)
+      }
+      newMatchData.pdfFile = pdfUrl
+
       const newMatch = {
         id: 'temp-id',
         collection: collectionName,

@@ -148,9 +148,13 @@ const initialSchema = {
       format: 'data-url'
     },
     pdfFile: {
-      type: 'string',
+      type: 'object',
       title: 'PDF File',
-      format: 'data-url'
+      properties: {
+        file: {
+          type: 'string'
+        }
+      }
     }
   },
   required: [
@@ -170,31 +174,51 @@ const uiSchema = {
     'ui:widget': 'file'
   },
   pdfFile: {
-    'ui:widget': 'file'
+    file: {
+      'ui:widget': 'file'
+    }
   },
   matchScore: {
     set1: {
       clientTiebreak: {
-        'ui:widget': 'updown'
+        'ui:widget': 'text',
+        'ui:options': {
+          inputType: 'number'
+        }
       },
       opponentTiebreak: {
-        'ui:widget': 'updown'
+        'ui:widget': 'text',
+        'ui:options': {
+          inputType: 'number'
+        }
       }
     },
     set2: {
       clientTiebreak: {
-        'ui:widget': 'updown'
+        'ui:widget': 'text',
+        'ui:options': {
+          inputType: 'number'
+        }
       },
       opponentTiebreak: {
-        'ui:widget': 'updown'
+        'ui:widget': 'text',
+        'ui:options': {
+          inputType: 'number'
+        }
       }
     },
     set3: {
       clientTiebreak: {
-        'ui:widget': 'updown'
+        'ui:widget': 'text',
+        'ui:options': {
+          inputType: 'number'
+        }
       },
       opponentTiebreak: {
-        'ui:widget': 'updown'
+        'ui:widget': 'text',
+        'ui:options': {
+          inputType: 'number'
+        }
       }
     }
   }

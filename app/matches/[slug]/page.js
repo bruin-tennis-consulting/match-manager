@@ -429,7 +429,7 @@ const MatchPage = () => {
             {showPDF ? (
               <iframe
                 className={styles.pdfView}
-                src={matchData.pdfUrl}
+                src={matchData.pdfFile}
                 width="90%"
                 height="1550"
               />

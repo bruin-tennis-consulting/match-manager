@@ -101,6 +101,7 @@ export default function UploadMatchForm() {
 
   const handleSubmit = async ({ formData }) => {
     try {
+      let published = true
       const pointsJson = formData.jsonFile
         ? JSON.parse(atob(formData.jsonFile.split(',')[1]))
         : []
@@ -109,6 +110,7 @@ export default function UploadMatchForm() {
           "You're currently uploading an UNTAGGED match. Proceed?"
         )
         if (!result) throw new Error('Upload cancelled by user.')
+        published = false
       }
       const teams = {
         clientTeam: formData.clientTeam,
@@ -161,7 +163,7 @@ export default function UploadMatchForm() {
         matchDetails,
         searchableProperties,
         version: 'v1', // Current version for new matches added
-        published: false
+        published
       })
 
       alert('Match uploaded successfully!')
