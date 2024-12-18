@@ -39,6 +39,14 @@ const initialSchema = {
       title: 'Date',
       format: 'date'
     },
+    unfinished: {
+      type: 'boolean',
+      title: 'Unfinished'
+    },
+    duel: {
+      type: 'boolean',
+      title: 'Duel'
+    },
     matchScore: {
       type: 'object',
       title: 'Match Score',

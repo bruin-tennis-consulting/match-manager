@@ -142,7 +142,9 @@ export default function UploadMatchForm() {
         matchVenue: formData.matchVenue || null,
         round: formData.round || null,
         indoor: formData.court ? formData.court === 'Indoor' : null,
-        surface: formData.surface || null
+        surface: formData.surface || null,
+        unfinished: formData.unfinished || false,
+        duel: formData.duel || false
       }
       // const sets = parseMatchScore(formData.matchScore);
       const sets = [
@@ -156,7 +158,7 @@ export default function UploadMatchForm() {
         sets,
         videoId: formData.videoID,
         pointsJson,
-        pdfFile: dataURItoBlob(formData.pdfFile) || null,
+        pdfFile: formData.pdfFile ? dataURItoBlob(formData.pdfFile) : null,
         teams,
         players,
         matchDate: formData.date,
