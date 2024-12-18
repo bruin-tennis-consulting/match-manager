@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import Form from '@rjsf/core'
 import validator from '@rjsf/validator-ajv8'
+import { dataURItoBlob } from '@rjsf/utils'
 
 import getTeams from '@/app/services/getTeams.js'
 import { initialSchema, uiSchema } from '@/app/services/matchSchemas.js'
@@ -155,7 +156,7 @@ export default function UploadMatchForm() {
         sets,
         videoId: formData.videoID,
         pointsJson,
-        pdfFile: formData.pdfFile || null,
+        pdfFile: dataURItoBlob(formData.pdfFile) || null,
         teams,
         players,
         matchDate: formData.date,

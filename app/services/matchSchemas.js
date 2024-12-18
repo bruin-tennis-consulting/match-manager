@@ -148,13 +148,9 @@ const initialSchema = {
       format: 'data-url'
     },
     pdfFile: {
-      type: 'object',
-      title: 'PDF File',
-      properties: {
-        file: {
-          type: 'string'
-        }
-      }
+      type: 'string',
+      title: 'PDF File'
+      // format: 'data-url'
     }
   },
   required: [
@@ -174,9 +170,7 @@ const uiSchema = {
     'ui:widget': 'file'
   },
   pdfFile: {
-    file: {
-      'ui:widget': 'file'
-    }
+    'ui:widget': 'file'
   },
   matchScore: {
     set1: {

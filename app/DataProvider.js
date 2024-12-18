@@ -93,22 +93,21 @@ export const DataProvider = ({ children }) => {
 
   const createMatch = useCallback(async (collectionName, newMatchData) => {
     try {
-      console.log(newMatchData.pdfFile)
       let pdfUrl = null
       if (newMatchData.pdfFile) {
-        // First, upload the PDF to Firebase Storage
         const pdfRef = ref(storage, `match-pdfs/${newMatchData.pdfFile.name}`)
-        // const metadata = {
-        //   contentType: 'application/pdf'
-        // }
+        const metadata = {
+          contentType: 'application/pdf'
+        }
 
         const snapshot = await uploadBytes(
           pdfRef,
-          newMatchData.pdfFile
-          // metadata
+          newMatchData.pdfFile.blob,
+          metadata
         )
         pdfUrl = await getDownloadURL(snapshot.ref)
       }
+      console.log(pdfUrl)
       newMatchData.pdfFile = pdfUrl
 
       const newMatch = {

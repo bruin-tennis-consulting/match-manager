@@ -75,7 +75,16 @@ const Dashboard = () => {
     )
   }
 
-  const displayMatchSets = searchTerm ? filteredMatchSets : selectedMatchSets
+  // A: Search Results
+  // B: Carousel Results
+  // Default: All
+  const displayMatchSets = useMemo(() => {
+    if (searchTerm) return filteredMatchSets
+    if (selectedMatchSets.length > 0) return selectedMatchSets
+    return formattedMatches.map(
+      (match) => `${match.matchDate}#${match.teams.opponentTeam}`
+    )
+  }, [searchTerm, filteredMatchSets, selectedMatchSets, formattedMatches])
 
   return (
     <div className={styles.container}>
