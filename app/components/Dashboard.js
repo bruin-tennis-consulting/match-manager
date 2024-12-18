@@ -29,14 +29,6 @@ const Dashboard = () => {
   const formattedMatches = formatMatches(matches)
   console.log(formattedMatches)
 
-  // default show latest match: TODO BUG causes infinite re-rendering
-  // useEffect(() => {
-  //   if (formattedMatches.length > 0) {
-  //     const latestMatchKey = `${formattedMatches[0].matchDate}#${formattedMatches[0].teams.opponentTeam}`
-  //     setSelectedMatchSets([latestMatchKey])
-  //   }
-  // }, [formattedMatches])
-
   // Fuzzy search
   const fuse = useMemo(() => {
     if (!formattedMatches.length) return null
@@ -81,9 +73,17 @@ const Dashboard = () => {
   const displayMatchSets = useMemo(() => {
     if (searchTerm) return filteredMatchSets
     if (selectedMatchSets.length > 0) return selectedMatchSets
-    return formattedMatches.map(
-      (match) => `${match.matchDate}#${match.teams.opponentTeam}`
-    )
+
+    // fetch all, arr(set(matches))
+    return [
+      ...new Set(
+        formattedMatches.map((match) =>
+          match.matchDetails.duel
+            ? `${match.matchDate}#${match.teams.opponentTeam}`
+            : `_#${match.matchDetails.event}`
+        )
+      )
+    ]
   }, [searchTerm, filteredMatchSets, selectedMatchSets, formattedMatches])
 
   return (
@@ -120,7 +120,11 @@ const Dashboard = () => {
 
       <div className={styles.carousel}>
         {formattedMatches.map((match, index) => {
-          const matchKey = `${match.matchDate}#${match.teams.opponentTeam}`
+          let matchKey = `${match.matchDate}#${match.teams.opponentTeam}`
+          if (!match.matchDetails.duel) {
+            console.log('EVENT')
+            matchKey = `_#${match.matchDetails.event}`
+          }
 
           return (
             <div
@@ -145,19 +149,28 @@ const Dashboard = () => {
             const singlesMatches = formattedMatches.filter(
               (match) =>
                 match.singles &&
-                matchKey === `${match.matchDate}#${match.teams.opponentTeam}`
+                ((match.matchDetails.duel &&
+                  matchKey ===
+                    `${match.matchDate}#${match.teams.opponentTeam}`) ||
+                  (!match.matchDetails.duel &&
+                    matchKey === `_#${match.matchDetails.event}`))
             )
             const doublesMatches = formattedMatches.filter(
               (match) =>
                 !match.singles &&
-                matchKey === `${match.matchDate}#${match.teams.opponentTeam}`
+                ((match.matchDetails.duel &&
+                  matchKey ===
+                    `${match.matchDate}#${match.teams.opponentTeam}`) ||
+                  (!match.matchDetails.duel &&
+                    matchKey === `_#${match.matchDetails.event}`))
             )
+            console.log(matchKey)
             const [matchDate, matchName] = matchKey.split('#')
             return (
               <div key={index} className={styles.matchSection}>
                 <div className={styles.matchContainer}>
                   <div className={styles.matchHeader}>
-                    <h3>{`v ${matchName}`}</h3>
+                    <h3>{matchName}</h3>
                     <span className={styles.date}>{matchDate}</span>
                   </div>
                   <DashTileContainer
