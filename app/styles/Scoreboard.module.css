@@ -10,6 +10,7 @@
   font-weight: bold;
 }
 
+
 .scoreboard th, 
 .scoreboard td {
   text-align: left;
@@ -28,7 +29,6 @@
 
 .table {
   border-collapse: collapse;
-
 }
 
 .pointScore {
@@ -46,4 +46,8 @@
   color: #8BB8E8;
   font-weight: bolder;
   font-size: 1.5vw;
+}
+
+.currentSetOpacity {
+  opacity: 0.4;
 }
