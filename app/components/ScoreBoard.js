@@ -24,11 +24,11 @@ const ScoreBoard = ({
 
   const [localPlayData, setLocalPlayData] = useState(playData);
 
-  useEffect(() => {
+  useEffect(() => {   //smooth transition effect when scores change
     if (playData) {
       const timeout = setTimeout(() => {
         setLocalPlayData(playData);
-      }, 500);
+      }, 100);
       return () => clearTimeout(timeout);
     }
   }, [playData]);
