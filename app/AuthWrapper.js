@@ -11,7 +11,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth } from '@/app/services/initializeFirebase'
 import { getUserProfile } from '@/app/services/userInfo'
 import LandingPage from '@/app/components/LandingPage'
-
+import Loading from './components/Loading'
 const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
@@ -37,7 +37,11 @@ export const AuthProvider = ({ children }) => {
   const memoizedUserProfile = useMemo(() => userProfile, [userProfile])
 
   if (loading) {
-    return <div>Loading...</div>
+    return (
+      <div>
+        <Loading />
+      </div>
+    )
   }
 
   const handleSignOut = () => {
