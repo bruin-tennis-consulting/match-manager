@@ -1,12 +1,12 @@
 .container {
-    /* min-height: 100vh; */
-    display: flex;
-    flex-direction: row;
-    padding-top: 5rem;
-    justify-content: center;
-    align-items: center;
+  /* min-height: 100vh; */
+  display: flex;
+  flex-direction: row;
+  padding-top: 5rem;
+  justify-content: center;
+  align-items: center;
 }
-  
+
 .title {
   text-align: center;
   margin: 0 0 1rem;
@@ -17,13 +17,13 @@
 .container > div {
   margin: 0 24px; /* Adjust the value as needed */
 }
-  
-.form{
+
+.form {
   display: flex;
   flex-direction: column;
 }
 
 .form label select,
-.form label input{
+.form label input {
   margin-left: 0.5rem; /* Adjust the margin-left as needed */
 }

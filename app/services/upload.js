@@ -14,7 +14,7 @@ import { db, storage } from '../services/initializeFirebase.js' // Ensure storag
 
 async function uploadTeam(teamName, logoFile) {
   if (!teamName || !logoFile) {
-    console.error('All fields are required.')
+    console.error('All fields are required!')
     return // Exit the function if any field is empty
   }
 
@@ -54,9 +54,14 @@ async function uploadTeam(teamName, logoFile) {
 async function uploadPlayer(
   playerFirstName,
   playerLastName,
+  teamName,
   playerHand,
-  playerPhoto,
-  teamName
+  playerBio,
+  playerHeight,
+  playerAge,
+  playerClass,
+  playerLargePhoto,
+  playerPhoto
 ) {
   if (!playerFirstName || !playerLastName || !teamName) {
     console.error('All fields are required.')
@@ -71,6 +76,17 @@ async function uploadPlayer(
       const snapshot = await uploadBytes(playerPhotoRef, playerPhoto)
       playerPhotoUrl = await getDownloadURL(snapshot.ref)
     }
+    let playerLargePhotoUrl = null
+    // Upload large player photo if provided
+    if (playerLargePhoto) {
+      const playerLargePhotoRef = ref(
+        storage,
+        `player-photos/${playerLargePhoto.name}`
+      )
+      const snapshot = await uploadBytes(playerLargePhotoRef, playerLargePhoto)
+      playerLargePhotoUrl = await getDownloadURL(snapshot.ref)
+    }
+
     // Check if the team exists
     const teamRef = collection(db, 'teams')
     const teamQuery = query(teamRef, where('name', '==', teamName))
@@ -86,27 +102,28 @@ async function uploadPlayer(
 
     // Check if the 'players' field exists
     const teamData = (await getDoc(teamDoc)).data()
+
+    const playerData = {
+      firstName: playerFirstName,
+      lastName: playerLastName,
+      photo: playerPhotoUrl,
+      largePlayerPhoto: playerLargePhotoUrl,
+      bio: playerBio,
+      height: playerHeight,
+      age: playerAge,
+      class: playerClass
+    }
+
     if (!teamData.players) {
       // If 'players' field doesn't exist, create it and initialize it as an array
       // backwards support for old storage schema
       await updateDoc(teamDoc, {
-        players: [
-          {
-            firstName: playerFirstName,
-            lastName: playerLastName,
-            playerHand,
-            photo: playerPhotoUrl
-          }
-        ]
+        players: [playerData]
       })
     } else {
       // If 'players' field exists, append the playerName to the array
       await updateDoc(teamDoc, {
-        players: arrayUnion({
-          firstName: playerFirstName,
-          lastName: playerLastName,
-          photo: playerPhotoUrl
-        })
+        players: arrayUnion(playerData)
       })
     }
   } catch (e) {

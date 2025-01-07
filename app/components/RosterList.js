@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import RosterTile from './RosterTile'
-import { db } from '../services/initializeFirebase.js' // Ensure storage is exported from initializeFirebase.js
+import RosterTile from '@/app/components/RosterTile'
+import { db } from '@/app/services/initializeFirebase.js' // Ensure storage is exported from initializeFirebase.js
 import { collection, getDocs } from 'firebase/firestore'
 
 const RosterList = () => {
@@ -25,7 +25,7 @@ const RosterList = () => {
     }
 
     fetchTeams()
-  }, [mensRoster])
+  }, [])
 
   return (
     // entire container

@@ -2,17 +2,17 @@
 
 import React, { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { useData } from './DataProvider'
-import styles from '../styles/Dashboard.module.css'
-import DashTileContainer from './DashTileContainer'
-// import getTeams from '@/app/services/getTeams.js'
-// import RosterList from './RosterList.js'
 import Fuse from 'fuse.js'
+
+import { useData } from '@/app/DataProvider'
+import styles from '@/app/styles/Dashboard.module.css'
+
+import DashTileContainer from '@/app/components/DashTileContainer'
+// import getTeams from '@/app/services/getTeams.js'
+import RosterList from '@/app/components/RosterList.js'
+
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 import SearchIcon from '@/public/search'
-
-// for log out
-import { useAuth } from './AuthWrapper'
 
 const formatMatches = (matches) => {
   return matches
@@ -25,19 +25,9 @@ const Dashboard = () => {
   const { matches, logos } = useData()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
-
+  console.log(matches)
   const formattedMatches = formatMatches(matches)
-
-  // for log out
-  const { handleSignOut } = useAuth()
-
-  // default show latest match: TODO BUG causes infinite re-rendering
-  // useEffect(() => {
-  //   if (formattedMatches.length > 0) {
-  //     const latestMatchKey = `${formattedMatches[0].matchDate}#${formattedMatches[0].teams.opponentTeam}`
-  //     setSelectedMatchSets([latestMatchKey])
-  //   }
-  // }, [formattedMatches])
+  console.log(formattedMatches)
 
   // Fuzzy search
   const fuse = useMemo(() => {
@@ -77,17 +67,28 @@ const Dashboard = () => {
     )
   }
 
-  const displayMatchSets = searchTerm ? filteredMatchSets : selectedMatchSets
+  // A: Search Results
+  // B: Carousel Results
+  // Default: All
+  const displayMatchSets = useMemo(() => {
+    if (searchTerm) return filteredMatchSets
+    if (selectedMatchSets.length > 0) return selectedMatchSets
+
+    // fetch all, arr(set(matches))
+    return [
+      ...new Set(
+        formattedMatches.map((match) =>
+          match.matchDetails.duel
+            ? `${match.matchDate}#${match.teams.opponentTeam}`
+            : `_#${match.matchDetails.event}`
+        )
+      )
+    ]
+  }, [searchTerm, filteredMatchSets, selectedMatchSets, formattedMatches])
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <div className={styles.titleBar}>
-          <h1>BSA | Tennis Consulting</h1>
-          <div className={styles.buttonBox}>
-            <button onClick={handleSignOut}>Sign Out</button>
-          </div>
-        </div>
         <div className={styles.headerContent}>
           <h2>Dashboard</h2>
           <div className={styles.searchContainer}>
@@ -119,7 +120,11 @@ const Dashboard = () => {
 
       <div className={styles.carousel}>
         {formattedMatches.map((match, index) => {
-          const matchKey = `${match.matchDate}#${match.teams.opponentTeam}`
+          let matchKey = `${match.matchDate}#${match.teams.opponentTeam}`
+          if (!match.matchDetails.duel) {
+            console.log('EVENT')
+            matchKey = `_#${match.matchDetails.event}`
+          }
 
           return (
             <div
@@ -144,19 +149,28 @@ const Dashboard = () => {
             const singlesMatches = formattedMatches.filter(
               (match) =>
                 match.singles &&
-                matchKey === `${match.matchDate}#${match.teams.opponentTeam}`
+                ((match.matchDetails.duel &&
+                  matchKey ===
+                    `${match.matchDate}#${match.teams.opponentTeam}`) ||
+                  (!match.matchDetails.duel &&
+                    matchKey === `_#${match.matchDetails.event}`))
             )
             const doublesMatches = formattedMatches.filter(
               (match) =>
                 !match.singles &&
-                matchKey === `${match.matchDate}#${match.teams.opponentTeam}`
+                ((match.matchDetails.duel &&
+                  matchKey ===
+                    `${match.matchDate}#${match.teams.opponentTeam}`) ||
+                  (!match.matchDetails.duel &&
+                    matchKey === `_#${match.matchDetails.event}`))
             )
+            console.log(matchKey)
             const [matchDate, matchName] = matchKey.split('#')
             return (
               <div key={index} className={styles.matchSection}>
                 <div className={styles.matchContainer}>
                   <div className={styles.matchHeader}>
-                    <h3>{`v ${matchName}`}</h3>
+                    <h3>{matchName}</h3>
                     <span className={styles.date}>{matchDate}</span>
                   </div>
                   <DashTileContainer
@@ -176,8 +190,8 @@ const Dashboard = () => {
         </div>
 
         <div className={styles.rosterContainer}>
-          {/* <RosterList /> */}
-          <p>Roster being fixed ...</p>
+          {<RosterList />}
+          {/* <p>Roster being fixed ...</p> */}
         </div>
       </div>
     </div>

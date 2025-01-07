@@ -1,3 +1,5 @@
+@import url('https://api.fontshare.com/css?f[]=clash-display@100,300,400,500&display=swap');
+
 /* :root {
   --max-width: 1100px;
   --border-radius: 12px;
@@ -105,3 +107,55 @@ a {
     color-scheme: dark;
   }
 } */
+
+@import url('https://api.fontshare.com/css?f[]=clash-display@100,300,400,500&display=swap');
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    Segoe UI,
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    Fira Sans,
+    Droid Sans,
+    Helvetica Neue,
+    sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Clash Display', sans-serif;
+}
+
+p,
+button {
+  font-family: 'DM Sans', sans-serif;
+}
+
+a {
+  color: inherit;
+  /* text-decoration: none; */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}

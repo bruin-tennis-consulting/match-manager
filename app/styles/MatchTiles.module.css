@@ -1,92 +1,91 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
-
 .matchTilesContainer {
-    display: flex;
-    justify-content: space-between; /* Ensures tiles are spaced evenly */
-    width: 90vw;
-    padding-top: 2vw;
-    box-sizing: border-box;
+  display: flex;
+  justify-content: space-between; /* Ensures tiles are spaced evenly */
+  width: 90vw;
+  padding-top: 2vw;
+  box-sizing: border-box;
 }
 
 .matchInfoContainer {
-    border: 0.13vw solid #DEDEDE;
-    border-radius: 1.2vw;
-    font-family: 'DM Sans', sans-serif;
-    width: calc(33.33% - 0.47vw); /* Adjusted to fit within the container with spacing */
-    margin: 0 0.7vw; /* Margin between tiles */
-    padding: 1vw; /* Padding inside each tile */
+  border: 0.13vw solid #dedede;
+  border-radius: 1.2vw;
+  font-family: 'DM Sans', sans-serif;
+  width: calc(
+    33.33% - 0.47vw
+  ); /* Adjusted to fit within the container with spacing */
+  margin: 0 0.7vw; /* Margin between tiles */
+  padding: 1vw; /* Padding inside each tile */
 
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 .matchTopLine {
-    display: flex;
-    justify-content: space-between; /* This spreads the child elements out */
-    align-items: center; /* This vertically centers the items in case they have different heights */
+  display: flex;
+  justify-content: space-between; /* This spreads the child elements out */
+  align-items: center; /* This vertically centers the items in case they have different heights */
 }
-.containerTagged{
-    font-size: 1vw;
-    font-weight: 350;
-    color: white;
-    background-color: #2774AE;
-    padding-left: 8px;
-    padding-right: 8px;
-    border-radius: 15px;
-    padding-top: 2px;
-    padding-bottom: 2px;
+.containerTagged {
+  font-size: 1vw;
+  font-weight: 350;
+  color: white;
+  background-color: #2774ae;
+  padding-left: 8px;
+  padding-right: 8px;
+  border-radius: 15px;
+  padding-top: 2px;
+  padding-bottom: 2px;
 }
 .containerTitle {
-    font-size: 1.1vw;
-    font-weight: 350;
-    padding-bottom: 0.2vw;
+  font-size: 1.1vw;
+  font-weight: 350;
+  padding-bottom: 0.2vw;
 }
 
 .containerInfo {
-    font-size: 1.5vw;
-    font-weight: 600;
+  font-size: 1.5vw;
+  font-weight: 600;
 }
 
 .playerInfo {
-    display: flex;
-    font-size: 1.5vw;
-    font-weight: 600;
-    position: relative;
+  display: flex;
+  font-size: 1.5vw;
+  font-weight: 600;
+  position: relative;
 }
 
 .playerInfoName {
-    padding-left: 1vw;
-    padding-right: 2vw;
-    display: flex;
-    font-size: 1.43vw;
-    font-weight: 600;
-    overflow: hidden;
-    white-space: nowrap;
+  padding-left: 1vw;
+  padding-right: 2vw;
+  display: flex;
+  font-size: 1.43vw;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .playerInfoScore {
-    position: absolute;
-    display: flex;
-    font-size: 1.5vw;
-    font-weight: 600;
-    padding-left: 22.6vw;
-    letter-spacing: 0.5vw;
+  position: absolute;
+  display: flex;
+  font-size: 1.5vw;
+  font-weight: 600;
+  padding-left: 22.6vw;
+  letter-spacing: 0.5vw;
 }
 
-
 .playerSchoolImgcontainerhome {
-    max-width: 3vw; /* Adjust max-width using viewport units */
-    height: 2vw; /* Set the desired height */
-    padding: 0.1vw;
-    display: flex;
-    justify-content: center; /* Center the image vertically */
-    align-items: center; /* Center the image horizontally */
-    overflow: hidden; /* Ensure the image doesn't overflow the container */
-  }
+  max-width: 3vw; /* Adjust max-width using viewport units */
+  height: 2vw; /* Set the desired height */
+  padding: 0.1vw;
+  display: flex;
+  justify-content: center; /* Center the image vertically */
+  align-items: center; /* Center the image horizontally */
+  overflow: hidden; /* Ensure the image doesn't overflow the container */
+}
 
 .playerSchoolImgcontainer {
-    max-width: 2.9vw; /* Adjust max-width using viewport units */
-    padding-bottom: 0.4vw;
-    display: flex;
-    justify-content: center; /* Center the image vertically */
-    align-items: center; /* Center the image horizontally */
-    overflow: hidden; /* Ensure the image doesn't overflow the container */
-  }
+  max-width: 2.9vw; /* Adjust max-width using viewport units */
+  padding-bottom: 0.4vw;
+  display: flex;
+  justify-content: center; /* Center the image vertically */
+  align-items: center; /* Center the image horizontally */
+  overflow: hidden; /* Ensure the image doesn't overflow the container */
+}

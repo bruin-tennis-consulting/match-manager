@@ -1,38 +1,35 @@
-/* DashboardMatch.module.css */
-
-
 .matchesContainer {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 0.4fr)); /* Creates three columns */
-    max-width: 99%;
-    
-    margin-bottom: 20px;
-    
+  display: grid;
+  grid-template-columns: repeat(
+    3,
+    minmax(0, 0.4fr)
+  ); /* Creates three columns */
+  max-width: 99%;
+
+  margin-bottom: 20px;
 }
 
 .matchItem {
-   transform: scale(0.98);
-  
+  transform: scale(0.98);
 }
-.matchTypeTitle{
-    margin-left: 20px;
-    margin-bottom: 5px;
-    border: 0px;
-    font-size: clamp(15px, 2.0vw, 30px);
-
+.matchTypeTitle {
+  margin-left: 20px;
+  margin-bottom: 5px;
+  border: 0px;
+  font-size: clamp(15px, 2vw, 30px);
 }
 .title {
-    margin-left: 20px;
-    margin-bottom: 5px;
-    border: 0px;
+  margin-left: 20px;
+  margin-bottom: 5px;
+  border: 0px;
 }
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center; 
-    font-size: clamp(10px, 1.2vw, 35px);
-}.date {
-    margin-right: 20px;
-    margin-bottom: 0px;
-    
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: clamp(10px, 1.2vw, 35px);
+}
+.date {
+  margin-right: 20px;
+  margin-bottom: 0px;
 }

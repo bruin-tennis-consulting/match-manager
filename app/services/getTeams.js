@@ -1,5 +1,6 @@
-import { db } from '../services/initializeFirebase.js' // Ensure storage is exported from initializeFirebase.js
 import { collection, getDocs } from 'firebase/firestore'
+
+import { db } from '@/app/services/initializeFirebase.js'
 
 const getTeams = async () => {
   try {

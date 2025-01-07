@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-import styles from '../styles/Roster.module.css'
+import styles from '@/app/styles/Roster.module.css'
 const RosterTile = ({ firstName, lastName, playerPhoto }) => {
   const [playerClicked, setPlayerClicked] = useState(false)
 

@@ -3,12 +3,16 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import Form from '@rjsf/core'
 import validator from '@rjsf/validator-ajv8'
-import { useData } from '../../components/DataProvider.js'
-import { useAuth } from '../../components/AuthWrapper.js'
+import { dataURItoBlob } from '@rjsf/utils'
+
 import getTeams from '@/app/services/getTeams.js'
-import styles from '../../styles/Upload.module.css'
 import { initialSchema, uiSchema } from '@/app/services/matchSchemas.js'
 import { searchableProperties } from '@/app/services/searchableProperties.js'
+
+import { useData } from '@/app/DataProvider.js'
+import { useAuth } from '@/app/AuthWrapper.js'
+
+import styles from '@/app/styles/Upload.module.css'
 
 export default function UploadMatchForm() {
   const { createMatch } = useData() // Use the createMatch hook
@@ -98,6 +102,7 @@ export default function UploadMatchForm() {
 
   const handleSubmit = async ({ formData }) => {
     try {
+      let published = true
       const pointsJson = formData.jsonFile
         ? JSON.parse(atob(formData.jsonFile.split(',')[1]))
         : []
@@ -106,6 +111,7 @@ export default function UploadMatchForm() {
           "You're currently uploading an UNTAGGED match. Proceed?"
         )
         if (!result) throw new Error('Upload cancelled by user.')
+        published = false
       }
       const teams = {
         clientTeam: formData.clientTeam,
@@ -136,7 +142,9 @@ export default function UploadMatchForm() {
         matchVenue: formData.matchVenue || null,
         round: formData.round || null,
         indoor: formData.court ? formData.court === 'Indoor' : null,
-        surface: formData.surface || null
+        surface: formData.surface || null,
+        unfinished: formData.unfinished || false,
+        duel: formData.duel || false
       }
       // const sets = parseMatchScore(formData.matchScore);
       const sets = [
@@ -150,7 +158,7 @@ export default function UploadMatchForm() {
         sets,
         videoId: formData.videoID,
         pointsJson,
-        pdfFile: formData.pdfFile || null,
+        pdfFile: formData.pdfFile ? dataURItoBlob(formData.pdfFile) : null,
         teams,
         players,
         matchDate: formData.date,
@@ -158,7 +166,7 @@ export default function UploadMatchForm() {
         matchDetails,
         searchableProperties,
         version: 'v1', // Current version for new matches added
-        published: true
+        published
       })
 
       alert('Match uploaded successfully!')

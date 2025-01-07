@@ -1,7 +1,8 @@
 import React from 'react'
-import MatchTiles from './MatchTiles'
+
+import MatchTiles from '@/app/components/MatchTiles'
 import extractSetScores from '@/app/services/extractSetScores'
-import styles from '../styles/DashboardMatch.module.css' // Import the CSS module
+import styles from '@/app/styles/DashboardMatch.module.css' // Import the CSS module
 
 const calculateMatchDate = (matchInfo) => {
   if (matchInfo && matchInfo.length > 0 && matchInfo[0].matchDate) {

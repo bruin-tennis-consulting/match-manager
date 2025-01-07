@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import VideoPlayer from '../../components/VideoPlayer'
-import styles from '../../styles/Tagging.module.css'
+import VideoPlayer from '@/app/components/VideoPlayer'
+import styles from '@/app/styles/Tagging.module.css'
 
 const TagTable = ({
   pair,

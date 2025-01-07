@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import styles from '../styles/ExtendedList.module.css'
+
+import styles from '@/app/styles/ExtendedList.module.css'
 import getTeams from '@/app/services/getTeams.js'
-import Winner from '../../public/Winner.js'
-import Error from '../../public/Error.js'
-import DoubleFault from '../../public/DoubleFault'
-import PlayButton from '../../public/PlayButton'
+
+import Winner from '@/public/Winner.js'
+import Error from '@/public/Error.js'
+import DoubleFault from '@/public/DoubleFault'
+import PlayButton from '@/public/PlayButton'
 
 const ExtendedList = ({
   pointsData,

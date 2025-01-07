@@ -1,16 +1,12 @@
-// components/SignIn.js
 import React, { useState } from 'react'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
-import styles from '../styles/SignIn.module.css'
-import { useAuth } from './AuthWrapper'
+import styles from '@/app/styles/SignIn.module.css'
 
-const SignInPage = () => {
+const SignIn = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' })
   const [error, setError] = useState(null)
-  const { authUser, userProfile, handleSignOut } = useAuth() // Use useAuth hook to get the user and sign-out function
 
   console.log(error)
-  console.log(userProfile)
 
   const handleSignIn = async (e) => {
     e.preventDefault()
@@ -32,18 +28,6 @@ const SignInPage = () => {
 
   return (
     <div>
-      <div className={styles.titleBar}>
-        <div className={styles.leftTitle}>
-          <h2>BSA | Tennis Consulting</h2>
-        </div>
-        <div className={styles.rightTitle}>
-          {authUser ? (
-            <button onClick={handleSignOut}>Sign Out</button>
-          ) : (
-            <button>Sign In</button>
-          )}
-        </div>
-      </div>
       <div className={styles.container}>
         <form onSubmit={handleSignIn}>
           <div className={styles.card}>
@@ -101,4 +85,4 @@ const SignInPage = () => {
   )
 }
 
-export default SignInPage
+export default SignIn

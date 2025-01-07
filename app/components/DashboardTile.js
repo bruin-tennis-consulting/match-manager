@@ -1,6 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import styles from '../styles/DashboardTile.module.css';
-import { useData } from './DataProvider';
+import React, { useEffect, useState } from 'react'
+
+import styles from '@/app/styles/DashboardTile.module.css'
+
+import { useData } from '@/app/DataProvider'
+
+// Calculate winner of match
+const calculateWinner = (player1, player2) => {
+  const player1Total = player1.reduce(
+    (total, current) => (!isNaN(current.score) ? total + current.score : total),
+    0
+  )
+  const player2Total = player2.reduce(
+    (total, current) => (!isNaN(current.score) ? total + current.score : total),
+    0
+  )
+  return player1Total > player2Total
+}
 
 const DashboardTile = ({
   clientTeam,

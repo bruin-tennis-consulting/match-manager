@@ -24,11 +24,11 @@ const ScoreBoard = ({
 
   const [localPlayData, setLocalPlayData] = useState(playData);
 
-  useEffect(() => {   //smooth transition effect when scores change
+  useEffect(() => {
     if (playData) {
       const timeout = setTimeout(() => {
         setLocalPlayData(playData);
-      }, 100);
+      }, 500);
       return () => clearTimeout(timeout);
     }
   }, [playData]);
@@ -55,7 +55,7 @@ const ScoreBoard = ({
                   key={index} 
                   style={{ 
                     position: 'relative', 
-                    opacity: score.score > player2FinalScores[index]?.score ? '100%' : '40%'
+                    opacity: score.score > player2FinalScores[index].score ? 1 : 0.4
                   }}
                 >
                   {player1TieScores[index] ? (
@@ -80,9 +80,7 @@ const ScoreBoard = ({
               ) : null
             )}
             
-            <td style={{ 
-                opacity: '0.4'   // makes number 40% opaque 
-              }}>{player1GameScore}</td>
+            <td style={{ opacity: 0.4 }}>{player1GameScore}</td>
 
             <td className={styles.pointScore}>
               {pointScore ? player1PointScore : player1TiebreakScore}
@@ -97,7 +95,7 @@ const ScoreBoard = ({
                   key={index} 
                   style={{ 
                     position: 'relative', 
-                    opacity: score.score > player2FinalScores[index]?.score ? '100%' : '40%'
+                    opacity: score.score > player1FinalScores[index].score ? 1 : 0.4
                   }}
                 >
                   {player2TieScores[index] ? (
@@ -121,9 +119,7 @@ const ScoreBoard = ({
                 </td>
               ) : null
             )}
-            <td style={{ 
-                opacity: '0.4'  // makes number 40% opaque 
-                }}>{player2GameScore}</td>
+            <td style={{ opacity: 0.4 }}>{player2GameScore}</td>
 
             <td className={styles.pointScore}>
               {pointScore ? player2PointScore : player2TiebreakScore}

@@ -7,9 +7,11 @@ import React, {
   useContext
 } from 'react'
 import { collection, getDocs, doc, updateDoc, addDoc } from 'firebase/firestore'
-import { db } from '../services/initializeFirebase.js'
-import { useAuth } from './AuthWrapper.js'
-import getTeams from '../services/getTeams.js'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+
+import { db, storage } from '@/app/services/initializeFirebase.js'
+import { useAuth } from '@/app/AuthWrapper.js'
+import getTeams from '@/app/services/getTeams.js'
 
 const DataContext = createContext()
 
@@ -91,6 +93,23 @@ export const DataProvider = ({ children }) => {
 
   const createMatch = useCallback(async (collectionName, newMatchData) => {
     try {
+      let pdfUrl = null
+      if (newMatchData.pdfFile) {
+        const pdfRef = ref(storage, `match-pdfs/${newMatchData.pdfFile.name}`)
+        const metadata = {
+          contentType: 'application/pdf'
+        }
+
+        const snapshot = await uploadBytes(
+          pdfRef,
+          newMatchData.pdfFile.blob,
+          metadata
+        )
+        pdfUrl = await getDownloadURL(snapshot.ref)
+      }
+      console.log(pdfUrl)
+      newMatchData.pdfFile = pdfUrl
+
       const newMatch = {
         id: 'temp-id',
         collection: collectionName,
@@ -109,11 +128,19 @@ export const DataProvider = ({ children }) => {
   }, [])
 
   const fetchLogos = useCallback(async () => {
+    // Cache expiry time, currently 24 hours
+    const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000
     const storedLogos = localStorage.getItem('teamLogos')
-    if (storedLogos) {
-      setLogos(JSON.parse(storedLogos))
-      setLogosLoading(false)
-      return
+    const storedTimeStamp = localStorage.getItem('teamLogosTimestamp')
+
+    if (storedLogos && storedTimeStamp) {
+      // check if cache expired
+      const cacheAge = Date.now() - parseInt(storedTimeStamp, 10)
+      if (cacheAge < CACHE_EXPIRY_MS) {
+        setLogos(JSON.parse(storedLogos))
+        setLogosLoading(false)
+        return
+      }
     }
 
     setLogosLoading(true)
@@ -128,6 +155,7 @@ export const DataProvider = ({ children }) => {
 
       setLogos(logosMap)
       localStorage.setItem('teamLogos', JSON.stringify(logosMap))
+      localStorage.setItem('teamLogosTimestamp', Date.now().toString())
     } catch (err) {
       setLogosError(err)
       console.error('Error fetching team logos:', err)
