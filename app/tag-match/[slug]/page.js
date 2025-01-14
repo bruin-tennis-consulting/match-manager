@@ -26,18 +26,23 @@ export default function TagMatch() {
     rows: [],
     activeRowIndex: null
   })
-  const [currentPage, setCurrentPage] = useState('PointScore') // TODO: the default should continue from what was filled in last
-  const [taggerHistory, setTaggerHistory] = useState([]) // Array to hold the history of states
-  const [isPublished, setIsPublished] = useState(false) // Customers can only see Published matches
+  const [currentPage, setCurrentPage] = useState('PointScore')
+  const [taggerHistory, setTaggerHistory] = useState([])
+  const [isPublished, setIsPublished] = useState(false)
   const [matchMetadata, setMatchMetadata] = useState({})
   const [serverName, setServerName] = useState('Player1')
   const [serverFarNear, setServerFarNear] = useState('Near')
   const [tiebreak, setTiebreak] = useState(false)
-  const [initialLoad, setInitialLoad] = useState(true) // Flag to control initial data load
+  const [initialLoad, setInitialLoad] = useState(true)
 
   const [popUp, setPopUp] = useState([])
   const [isVisible, setIsVisible] = useState(true)
   const FRAMERATE = 30
+
+  // States for Jump To functionality
+  const [jumpMs, setJumpMs] = useState('')
+  const [jumpMinutes, setJumpMinutes] = useState('')
+  const [jumpSecs, setJumpSecs] = useState('')
 
   useEffect(() => {
     if (match && initialLoad) {
@@ -50,7 +55,7 @@ export default function TagMatch() {
 
       const { points, ...metadata } = match
       setMatchMetadata(metadata)
-      setInitialLoad(false) // Set initial load to false after the first load
+      setInitialLoad(false)
     }
   }, [match, initialLoad])
 
@@ -59,7 +64,7 @@ export default function TagMatch() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [videoObject, videoId, tableState.rows, currentPage]) // TODO: the buttons should be in a different component
+  }, [videoObject, videoId, tableState.rows, currentPage])
 
   useEffect(() => {
     sortTable()
@@ -76,8 +81,6 @@ export default function TagMatch() {
       d: () => {
         const newTimestamp = getVideoTimestamp()
 
-        // If there is an active row and it has a start timestamp but no end timestamp, update the start to the current video timestamp
-        // Otherwise, add a new row with the current video timestamp
         if (
           tableState.activeRowIndex !== null &&
           tableState.rows[tableState.activeRowIndex].pointStartTime !== '' &&
@@ -97,7 +100,6 @@ export default function TagMatch() {
       },
       f: () => {
         const newTimestamp = getVideoTimestamp()
-        // If there is an active row, update the end timestamp to the current video timestamp
         if (tableState.activeRowIndex !== null) {
           saveToHistory()
           changeRowValue(
@@ -177,19 +179,16 @@ export default function TagMatch() {
 
   const addNewRowAndSync = () => {
     setTableState((oldTableState) => {
-      pullAndPushRows(oldTableState.rows, null) // TODO: Maybe delete?
+      pullAndPushRows(oldTableState.rows, null)
 
       let newTimestamp = getVideoTimestamp()
 
-      // Create a new row object with the required structure
       const newRow = columnNames.reduce((acc, columnName) => {
-        // Check if a row already exists with the new timestamp
         let existingRow = tableState.rows.find(
           (row) => row.pointStartTime === newTimestamp
         )
 
         while (existingRow !== undefined) {
-          // If a row already exists, increment the timestamp by 1
           newTimestamp += 1
           existingRow = tableState.rows.find(
             (row) => row.pointStartTime === newTimestamp
@@ -200,25 +199,20 @@ export default function TagMatch() {
         return acc
       }, {})
 
-      // Add new row and sort
       const updatedTable = [...oldTableState.rows, newRow]
-      // Sort the table by 'pointStartTime'
       updatedTable.sort((a, b) => a.pointStartTime - b.pointStartTime)
 
-      // After sorting, find the index of the new row
       const newIndex = updatedTable.findIndex(
         (row) => row.pointStartTime === newTimestamp
       )
 
-      // Update the current row index state
       return { rows: updatedTable, activeRowIndex: newIndex }
     })
   }
 
   const deleteRowAndSync = (rowIndex) => {
-    const rowToDeleteTimestamp = tableState.rows[rowIndex].pointStartTime // TODO: Delete this line?
+    const rowToDeleteTimestamp = tableState.rows[rowIndex].pointStartTime
     setTableState((oldTableState) => {
-      // Filter out the row to delete and sort the table
       const updatedTable = oldTableState.rows.filter(
         (_, index) => index !== rowIndex
       )
@@ -233,7 +227,6 @@ export default function TagMatch() {
 
   const saveToHistory = () => {
     setTaggerHistory((prevHistory) => {
-      // Create a deepy copy of the current state using JSON parse/stringify
       const newHistoryEntry = {
         table: JSON.parse(JSON.stringify(tableState.rows)),
         page: currentPage,
@@ -245,10 +238,7 @@ export default function TagMatch() {
   }
 
   const getLatestMatchDocument = async (matchId) => {
-    // Refresh the data to ensure we have the latest from Firestore
     await refresh()
-
-    // Find and return the match data after refresh
     const match = matches.find((m) => m.id === matchId)
 
     if (match) {
@@ -260,15 +250,12 @@ export default function TagMatch() {
 
   const pullAndPushRows = async (rowState, rowToDeleteTimestamp = null) => {
     try {
-      const tableSnapshot = [...rowState] // Snapshot of the table before fetching updates
-      // Fetch the current document state from the database
+      const tableSnapshot = [...rowState]
       const matchDocument = await getLatestMatchDocument(matchId)
       const incomingRows = matchDocument.points ?? []
 
-      // Combine local snapshot and incoming rows
       let combinedRows = [...tableSnapshot, ...incomingRows]
 
-      // If a `rowToDeleteTimestamp` is provided, filter out that row
       combinedRows =
         rowToDeleteTimestamp != null
           ? combinedRows.filter(
@@ -276,7 +263,6 @@ export default function TagMatch() {
             )
           : combinedRows
 
-      // Filter out duplicates based on pointStartTime, keeping the last occurrence
       const uniqueRows = combinedRows.reduceRight(
         (acc, row) => {
           acc.pointStartTimes.add(row.pointStartTime)
@@ -284,7 +270,7 @@ export default function TagMatch() {
             acc.pointStartTimes.has(row.pointStartTime) &&
             !acc.added.has(row.pointStartTime)
           ) {
-            acc.rows.unshift(row) // Add the row to the beginning to maintain order
+            acc.rows.unshift(row)
             acc.added.add(row.pointStartTime)
           }
           return acc
@@ -292,8 +278,6 @@ export default function TagMatch() {
         { rows: [], pointStartTimes: new Set(), added: new Set() }
       ).rows
 
-      // If any rows have a value of undefined, set it to an empty string
-      // This is a requirement for Firestore
       uniqueRows.forEach((row) => {
         for (const key in row) {
           if (row[key] === undefined) {
@@ -304,10 +288,7 @@ export default function TagMatch() {
 
       await updateMatch(matchId, { points: uniqueRows })
 
-      // Update local state with the merged result
       setTableState((oldTableState) => {
-        // Merge the unique rows with current local changes that might have occurred during the async operation
-        // First, filter out any outdated rows from the current table state
         const currentTableWithOutdatedRemoved = oldTableState.rows.filter(
           (row) =>
             !uniqueRows.some(
@@ -317,10 +298,8 @@ export default function TagMatch() {
 
         const updatedTable = [...currentTableWithOutdatedRemoved, ...uniqueRows]
 
-        // Sort the table by 'pointStartTime'
         updatedTable.sort((a, b) => a.pointStartTime - b.pointStartTime)
 
-        // Update the current row index state
         const oldIndex = oldTableState.activeRowIndex
         const oldActiveRowTimestamp =
           oldTableState.rows[oldIndex]?.pointStartTime
@@ -328,7 +307,6 @@ export default function TagMatch() {
           (row) => row.pointStartTime === oldActiveRowTimestamp
         )
 
-        // Return the merged result
         return { rows: updatedTable, activeRowIndex: newIndex }
       })
       sortTable()
@@ -337,7 +315,6 @@ export default function TagMatch() {
     }
   }
 
-  // Toggle the published state of the match
   const togglePublish = async () => {
     pullAndPushRows(tableState.rows, null)
     try {
@@ -346,7 +323,6 @@ export default function TagMatch() {
     } catch (error) {
       console.error('Error toggling published state: ', error)
     }
-    // TODO: Add CSV conversion function
   }
 
   const sortTable = () => {
@@ -363,7 +339,6 @@ export default function TagMatch() {
   const undoLastAction = () => {
     if (taggerHistory.length === 0) return
 
-    // Get the last state and restore it
     const lastState = taggerHistory[taggerHistory.length - 1]
     setTableState({
       rows: JSON.parse(JSON.stringify(lastState.table)),
@@ -372,11 +347,27 @@ export default function TagMatch() {
     setCurrentPage(lastState.page)
     setPopUp(lastState.popUp)
 
-    // Remove the used state from history
     setTaggerHistory((prev) => prev.slice(0, -1))
   }
 
-  // This pulls the button data from the taggerButtonData.js file
+  // Jump to a specific timestamp in milliseconds
+  const handleJumpToMs = () => {
+    if (videoObject && jumpMs !== '') {
+      const timeInSeconds = parseInt(jumpMs, 10) / 1000
+      videoObject.seekTo(timeInSeconds, true)
+    }
+  }
+
+  // Jump to a specific timestamp given minutes and seconds
+  const handleJumpToMinSec = () => {
+    if (videoObject && jumpMinutes !== '' && jumpSecs !== '') {
+      const minutes = parseInt(jumpMinutes, 10)
+      const seconds = parseInt(jumpSecs, 10)
+      const totalSeconds = minutes * 60 + seconds
+      videoObject.seekTo(totalSeconds, true)
+    }
+  }
+
   const buttonData = getTaggerButtonData(
     updateActiveRow,
     addNewRowAndSync,
@@ -389,36 +380,24 @@ export default function TagMatch() {
   )
 
   const handleImageClick = (event) => {
-    const courtWidthInInches = 432 // The court is 36 feet wide, or 432 inches
-    // const courtHeightInInches = 936; // The court is 78 feet long, or 936 inches
-
-    // The current SVG has the actual in width of the court as 360 out of 600 total
-    // The height is 780 out of 1080 total
-    // This makes the ratio 0.6 for width and 0.7222 for height
+    const courtWidthInInches = 432
     const xRatio = 0.6
-    // const yRatio = 0.7222;
 
-    // Get the bounding rectangle of the SVG container
     const rect = event.currentTarget.getBoundingClientRect()
-
-    const widthOfCourt = rect.width // Using rect.width is more reliable
+    const widthOfCourt = rect.width
     const heightOfCourt = rect.height
 
-    const inchesPerPixel = courtWidthInInches / (widthOfCourt * xRatio) // This is slightly wrong bc it rounds at some point?
+    const inchesPerPixel = courtWidthInInches / (widthOfCourt * xRatio)
 
-    // Calculate the click position relative to the SVG container
     const x = event.clientX - rect.left
     const y = event.clientY - rect.top
 
-    // Find how far from the center the click was
     const xFromCenter = x - widthOfCourt / 2
     const yFromCenter = y - heightOfCourt / 2
 
-    // Calculate the click position in inches
     let xInches = Math.round(xFromCenter * inchesPerPixel)
     let yInches = Math.round(yFromCenter * inchesPerPixel) * -1
 
-    // Convert -0 to 0
     xInches = Object.is(xInches, -0) ? 0 : xInches
     yInches = Object.is(yInches, -0) ? 0 : yInches
 
@@ -428,6 +407,48 @@ export default function TagMatch() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
+      {/* Jump To Section */}
+      <div style={{ marginBottom: '1rem' }}>
+        <h3>Jump To Timestamp</h3>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label>Milliseconds:</label>
+            <input
+              type="number"
+              value={jumpMs}
+              onChange={(e) => setJumpMs(e.target.value)}
+              placeholder="Enter milliseconds"
+            />
+            <button onClick={handleJumpToMs}>Jump</button>
+          </div>
+          
+          {/* Group minutes and seconds side by side */}
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label>Minutes:</label>
+              <input
+                type="number"
+                value={jumpMinutes}
+                onChange={(e) => setJumpMinutes(e.target.value)}
+                placeholder="Enter minutes"
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label>Seconds:</label>
+              <input
+                type="number"
+                value={jumpSecs}
+                onChange={(e) => setJumpSecs(e.target.value)}
+                placeholder="Enter seconds"
+              />
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+            <button onClick={handleJumpToMinSec}>Jump</button>
+          </div>
+        </div>
+      </div>
+
       <div
         style={{
           display: 'flex',
@@ -577,10 +598,9 @@ export default function TagMatch() {
                     type="text"
                     value={row[columnName] || ''}
                     onChange={(event) => {
-                      saveToHistory() // Save the current state to history first
-                      changeRowValue(rowIndex, columnName, event.target.value) // Then handle the change
+                      saveToHistory()
+                      changeRowValue(rowIndex, columnName, event.target.value)
                     }}
-                    // If the current row is the one being edited, highlight it
                     style={{
                       backgroundColor:
                         tableState.activeRowIndex === rowIndex
