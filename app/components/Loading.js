@@ -1,30 +1,29 @@
 import styles from '@/app/styles/Loading.module.css'
 
-export default function Loading() {
+export default function Loading({ prompt }) {
   return (
     <div className={styles.loadingContainer}>
       <svg
+        width="400"
+        height="400"
+        viewBox="0 0 400 400"
+        fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="xMidYMid"
-        className={styles.spinner}
       >
-        <g>
-          <path
-            stroke="none"
-            fill="#2774ae"
-            d="M10 50A40 40 0 0 0 90 50A40 41.4 0 0 1 10 50"
-          >
-            <animateTransform
-              values="0 50 50.7;360 50 50.7"
-              keyTimes="0;1"
-              repeatCount="indefinite"
-              dur="1s"
-              type="rotate"
-              attributeName="transform"
-            />
-          </path>
-        </g>
+        <circle
+          cx="200"
+          cy="200"
+          r="100"
+          stroke="#2774ae"
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeDasharray="628.32" /* Circumference of the circle */
+          strokeDashoffset="628.32" /* Initially hidden */
+          className={styles.animatedCircle}
+        />
+        <text x="200" y="350" className={styles.customText}>
+          {prompt}
+        </text>
       </svg>
     </div>
   )

@@ -4,9 +4,31 @@
   align-items: center;
   width: 100%;
   height: 100%;
+  font-family: 'DM Sans', sans-serif;
 }
 
-.spinner {
-  width: 200px;
-  height: 200px;
+.customText {
+  fill: #2774ae;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.2rem;
+  text-anchor: middle;
+}
+
+.animatedCircle {
+  animation: animateCircle 1s linear infinite;
+}
+
+@keyframes animateCircle {
+  0% {
+    stroke-dashoffset: 628.32; /* Start hidden */
+  }
+  30% {
+    stroke-dashoffset: 314.16; /* Halfway drawn (half of the circle) */
+  }
+  75% {
+    stroke-dashoffset: -471.24;
+  }
+  100% {
+    stroke-dashoffset: -628.32; /* Fully drawn (circle completed) */
+  }
 }
