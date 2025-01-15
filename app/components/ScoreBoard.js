@@ -1,5 +1,5 @@
-import React from 'react'
-import styles from '@/app/styles/Scoreboard.module.css'
+import React, { useState, useEffect } from 'react';
+import styles from '../styles/Scoreboard.module.css';
 
 const ScoreBoard = ({
   playData,
@@ -20,26 +20,44 @@ const ScoreBoard = ({
     player2TiebreakScore = 0,
     serverName = '',
     pointScore = true
-  } = playData || {}
+  } = playData || {};
 
-  // console.log(playData)
+  const [localPlayData, setLocalPlayData] = useState(playData);
+
+  useEffect(() => {
+    if (playData) {
+      const timeout = setTimeout(() => {
+        setLocalPlayData(playData);
+      }, 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [playData]);
+
+  // Get the server name safely
+  const currentServerName = localPlayData?.serverName || serverName;
 
   return (
     <div className={styles.scoreboard}>
       <table>
         <thead>
           <tr>
-            <th className={styles.live}>Live Score {isUnfinished && '(UF)'}</th>
+            <th className={styles.live}>
+              Live Score {isUnfinished && '(UF)'}
+            </th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td className={styles.highlight}>{player1Name}</td>
-            {/* FINISHED SETS using data from parent! */}
-            {/* Check if tie break, if so add exponent */}
             {player1FinalScores.map((score, index) =>
-              playData && !isNaN(score.score) && index + 1 < playData.setNum ? (
-                <td key={index} style={{ position: 'relative' }}>
+              localPlayData && !isNaN(score.score) && index + 1 < localPlayData.setNum ? (
+                <td 
+                  key={index} 
+                  style={{ 
+                    position: 'relative', 
+                    opacity: score.score > player2FinalScores[index].score ? 1 : 0.4
+                  }}
+                >
                   {player1TieScores[index] ? (
                     <div key={index}>
                       {score.score}
@@ -49,7 +67,7 @@ const ScoreBoard = ({
                           fontSize: '0.6em',
                           top: '0.1em',
                           right: '0em',
-                          letterSpacing: '1px'
+                          letterSpacing: '1px',
                         }}
                       >
                         {player1TieScores[index]}
@@ -61,19 +79,25 @@ const ScoreBoard = ({
                 </td>
               ) : null
             )}
-            {/* Current Set */}
-            <td>{player1GameScore}</td>
+            
+            <td style={{ opacity: 0.4 }}>{player1GameScore}</td>
+
             <td className={styles.pointScore}>
               {pointScore ? player1PointScore : player1TiebreakScore}
-              {player1Name === serverName && <span> &bull;</span>}
+              {currentServerName && player1Name === currentServerName && <span> &bull;</span>}
             </td>
           </tr>
           <tr>
             <td className={styles.highlight}>{player2Name}</td>
-            {/* FINISHED SETS using data from parent! */}
             {player2FinalScores.map((score, index) =>
-              playData && !isNaN(score.score) && index + 1 < playData.setNum ? (
-                <td key={index} style={{ position: 'relative' }}>
+              localPlayData && !isNaN(score.score) && index + 1 < localPlayData.setNum ? (
+                <td 
+                  key={index} 
+                  style={{ 
+                    position: 'relative', 
+                    opacity: score.score > player1FinalScores[index].score ? 1 : 0.4
+                  }}
+                >
                   {player2TieScores[index] ? (
                     <div key={index}>
                       {score.score}
@@ -95,17 +119,17 @@ const ScoreBoard = ({
                 </td>
               ) : null
             )}
-            {/* Current Set */}
-            <td>{player2GameScore}</td>
+            <td style={{ opacity: 0.4 }}>{player2GameScore}</td>
+
             <td className={styles.pointScore}>
               {pointScore ? player2PointScore : player2TiebreakScore}
-              {player2Name === serverName && <span> &bull;</span>}
+              {currentServerName && player2Name === currentServerName && <span> &bull;</span>}
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-  )
-}
+  );
+};
 
-export default ScoreBoard
+export default ScoreBoard;
