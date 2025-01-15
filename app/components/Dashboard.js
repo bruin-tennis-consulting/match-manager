@@ -148,8 +148,8 @@ const Dashboard = () => {
 
       <div className={styles.mainContent}>
         <div className={styles.matchesSection}>
-          {matches.length === 0 ? (  
-              <Loading prompt = {"Fetching Matches..."}/>
+          {matches.length === 0 ? (
+            <Loading prompt={'Fetching Matches...'} />
           ) : (
             displayMatchSets.map((matchKey, index) => {
               const singlesMatches = formattedMatches.filter(

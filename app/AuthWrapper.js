@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
   if (loading) {
     return (
       <div>
-        <Loading prompt = {"Logging In..."}/>
+        <Loading prompt={'Logging In...'} />
       </div>
     )
   }
