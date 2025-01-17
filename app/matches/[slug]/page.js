@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation' // Updated import for usePathname
 
 import { useData } from '@/app/DataProvider'
 
@@ -32,8 +32,32 @@ const MatchPage = () => {
   const iframeRef = useRef(null)
 
   const { matches, updateMatch } = useData()
-  const pathname = usePathname()
+  const pathname = usePathname() // usePathname now imported from next/navigation
   const docId = pathname.substring(pathname.lastIndexOf('/') + 1)
+
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Read filter parameters from URL on initial load
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams)
+    const initialFilters = []
+    for (const [key, value] of params.entries()) {
+      initialFilters.push([key, value])
+    }
+    setFilterList(initialFilters)
+  }, [searchParams])
+
+  // Update URL whenever filterList changes
+  useEffect(() => {
+    if (filterList) {
+      const params = new URLSearchParams()
+      filterList.forEach(([key, value]) => {
+        params.append(key, value)
+      })
+      router.replace(`?${params.toString()}`)
+    }
+  }, [filterList, router])
 
   useEffect(() => {
     const selectedMatch = matches.find((match) => match.id === docId)
@@ -192,7 +216,7 @@ const MatchPage = () => {
             matchName={matchData.matchDetails.event}
             clientTeam={matchData.teams.clientTeam}
             opponentTeam={matchData.teams.opponentTeam}
-            matchDetails={matchData.matchDetails.event} // This needs to be updated in MatchTiles.js
+            matchDetails={matchData.matchDetails.event}
             date={matchData.matchDetails.date}
             player1Name={
               matchData.players.client.firstName +
@@ -216,7 +240,7 @@ const MatchPage = () => {
             player2TieScores={matchData.pointsJson.map(
               (point) => point.player2TiebreakScore
             )}
-            isUnfinished={matchData.matchDetails.status === 'unfinished'}
+            isUnfinished={matchData.matchDetails.unfinished}
             displaySections={{ score: true, info: true, matchup: true }}
           />
           <div className={styles.headerRow}>
@@ -400,7 +424,7 @@ const MatchPage = () => {
                   player2TieScores={matchData.pointsJson.map(
                     (point) => point.player2TiebreakScore
                   )}
-                  isUnfinished={matchData.matchDetails.status === 'unfinished'}
+                  isUnfinished={matchData.matchDetails.unfinished}
                   displaySections={{ score: true, info: true, matchup: true }}
                 />
               </div>
@@ -430,7 +454,7 @@ const MatchPage = () => {
             {showPDF ? (
               <iframe
                 className={styles.pdfView}
-                src={matchData.pdfUrl}
+                src={matchData.pdfFile}
                 width="90%"
                 height="1550"
               />
