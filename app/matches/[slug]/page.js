@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'  // Updated import for usePathname
+import { usePathname, useRouter, useSearchParams } from 'next/navigation' // Updated import for usePathname
 
 import { useData } from '@/app/DataProvider'
 
@@ -32,7 +32,7 @@ const MatchPage = () => {
   const iframeRef = useRef(null)
 
   const { matches, updateMatch } = useData()
-  const pathname = usePathname()  // usePathname now imported from next/navigation
+  const pathname = usePathname() // usePathname now imported from next/navigation
   const docId = pathname.substring(pathname.lastIndexOf('/') + 1)
 
   const router = useRouter()
