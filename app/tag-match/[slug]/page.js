@@ -41,8 +41,8 @@ export default function TagMatch() {
 
   // States for Jump To functionality
   const [jumpMs, setJumpMs] = useState('')
-  const [jumpMinutes, setJumpMinutes] = useState('')
-  const [jumpSecs, setJumpSecs] = useState('')
+  const [jumpMinutes, setJumpMinutes] = useState(0)
+  const [jumpSecs, setJumpSecs] = useState(0)
 
   useEffect(() => {
     if (match && initialLoad) {
@@ -360,9 +360,9 @@ export default function TagMatch() {
 
   // Jump to a specific timestamp given minutes and seconds
   const handleJumpToMinSec = () => {
-    if (videoObject && jumpMinutes !== '' && jumpSecs !== '') {
-      const minutes = parseInt(jumpMinutes, 10)
-      const seconds = parseInt(jumpSecs, 10)
+    if (videoObject) {
+      const minutes = parseInt(jumpMinutes, 10) || 0
+      const seconds = parseInt(jumpSecs, 10) || 0
       const totalSeconds = minutes * 60 + seconds
       videoObject.seekTo(totalSeconds, true)
     }
@@ -407,45 +407,68 @@ export default function TagMatch() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
-      {/* Jump To Section */}
-      <div style={{ marginBottom: '1rem' }}>
-        <h3>Jump To Timestamp</h3>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+      {/* Condensed Jump To Section */}
+      <div style={{ marginBottom: '1rem', marginLeft: '2vw' }}>
+        <h3 style={{ marginBottom: '1vh', marginTop: '0px' }}>
+          {' '}
+          Jump To Timestamp
+        </h3>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '1vw',
+            alignItems: 'flex-end'
+          }}
+        >
+          <div
+            style={{ display: 'flex', flexDirection: 'column', width: '10vw' }}
+          >
             <label>Milliseconds:</label>
             <input
               type="number"
               value={jumpMs}
               onChange={(e) => setJumpMs(e.target.value)}
-              placeholder="Enter milliseconds"
+              placeholder="Enter ms"
+              style={{ width: '10vw' }}
             />
-            <button onClick={handleJumpToMs}>Jump</button>
           </div>
-          
-          {/* Group minutes and seconds side by side */}
-          <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <label>Minutes:</label>
-              <input
-                type="number"
-                value={jumpMinutes}
-                onChange={(e) => setJumpMinutes(e.target.value)}
-                placeholder="Enter minutes"
-              />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <label>Seconds:</label>
-              <input
-                type="number"
-                value={jumpSecs}
-                onChange={(e) => setJumpSecs(e.target.value)}
-                placeholder="Enter seconds"
-              />
-            </div>
+          <button
+            onClick={handleJumpToMs}
+            style={{ alignSelf: 'flex-end', height: '4vh', marginRight: '2vw' }}
+          >
+            Jump
+          </button>
+          <div
+            style={{ display: 'flex', flexDirection: 'column', width: '10vw' }}
+          >
+            <label>Minutes:</label>
+            <input
+              type="number"
+              value={jumpMinutes}
+              onChange={(e) => setJumpMinutes(e.target.valueAsNumber || 0)}
+              placeholder="Min"
+              style={{ width: '10vw' }}
+            />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-            <button onClick={handleJumpToMinSec}>Jump</button>
+          <div
+            style={{ display: 'flex', flexDirection: 'column', width: '10vw' }}
+          >
+            <label>Seconds:</label>
+            <input
+              type="number"
+              value={jumpSecs}
+              onChange={(e) => setJumpSecs(e.target.valueAsNumber || 0)}
+              placeholder="Sec"
+              style={{ width: '10vw' }}
+            />
           </div>
+          <button
+            onClick={handleJumpToMinSec}
+            style={{ alignSelf: 'flex-end', height: '4vh' }}
+          >
+            Jump
+          </button>
         </div>
       </div>
 
@@ -457,12 +480,14 @@ export default function TagMatch() {
           gap: '1rem'
         }}
       >
+        {/* Left Column with Left Padding */}
         <div
           style={{
             display: 'flex',
             flexDirection: 'column',
             width: '48vw',
-            height: '36vw'
+            height: '36vw',
+            paddingLeft: '2vw'
           }}
         >
           <VideoPlayer videoId={videoId} setVideoObject={setVideoObject} />
@@ -473,9 +498,10 @@ export default function TagMatch() {
             {isPublished ? 'Unpublish' : 'Publish'}
           </button>
           <button onClick={() => setIsVisible(!isVisible)}>
-            {isVisible ? 'Hide Last Command' : 'Show Last Commmand'}
+            {isVisible ? 'Hide Last Command' : 'Show Last Command'}
           </button>
         </div>
+
         <div>
           <p>{currentPage}</p>
           <div className={styles.buttonDataControl}>
@@ -524,6 +550,7 @@ export default function TagMatch() {
             })}
           </div>
         </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
             <p>Current Server: {serverName}</p>
