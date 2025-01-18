@@ -355,6 +355,8 @@ export default function TagMatch() {
               />
               <button onClick={handleLoadVideo}>Load Video</button>
             </div>
+            <button onClick={handleDownload}>Download JSON</button>
+            <button onClick={handleCopyColumns}>Copy Columns</button>
 
             {/* Timestamp Table */}
             <div className={styles.timestampTableContainer}>
