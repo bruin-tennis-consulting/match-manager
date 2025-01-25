@@ -39,6 +39,14 @@ const initialSchema = {
       title: 'Date',
       format: 'date'
     },
+    unfinished: {
+      type: 'boolean',
+      title: 'Unfinished'
+    },
+    duel: {
+      type: 'boolean',
+      title: 'Duel'
+    },
     matchScore: {
       type: 'object',
       title: 'Match Score',
@@ -149,8 +157,8 @@ const initialSchema = {
     },
     pdfFile: {
       type: 'string',
-      title: 'PDF File',
-      format: 'data-url'
+      title: 'PDF File'
+      // format: 'data-url'
     }
   },
   required: [
@@ -175,26 +183,44 @@ const uiSchema = {
   matchScore: {
     set1: {
       clientTiebreak: {
-        'ui:widget': 'updown'
+        'ui:widget': 'text',
+        'ui:options': {
+          inputType: 'number'
+        }
       },
       opponentTiebreak: {
-        'ui:widget': 'updown'
+        'ui:widget': 'text',
+        'ui:options': {
+          inputType: 'number'
+        }
       }
     },
     set2: {
       clientTiebreak: {
-        'ui:widget': 'updown'
+        'ui:widget': 'text',
+        'ui:options': {
+          inputType: 'number'
+        }
       },
       opponentTiebreak: {
-        'ui:widget': 'updown'
+        'ui:widget': 'text',
+        'ui:options': {
+          inputType: 'number'
+        }
       }
     },
     set3: {
       clientTiebreak: {
-        'ui:widget': 'updown'
+        'ui:widget': 'text',
+        'ui:options': {
+          inputType: 'number'
+        }
       },
       opponentTiebreak: {
-        'ui:widget': 'updown'
+        'ui:widget': 'text',
+        'ui:options': {
+          inputType: 'number'
+        }
       }
     }
   }

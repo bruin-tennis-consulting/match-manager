@@ -3,17 +3,15 @@ import React, { useEffect, useState } from 'react'
 import styles from '@/app/styles/MatchTiles.module.css'
 import getTeams from '@/app/services/getTeams.js'
 
-// Calculate winner of match
-const calculateWinner = (player1, player2) => {
-  const player1Total = player1.reduce(
-    (total, current) => (!isNaN(current.score) ? total + current.score : total),
-    0
-  )
-  const player2Total = player2.reduce(
-    (total, current) => (!isNaN(current.score) ? total + current.score : total),
-    0
-  )
-  return player1Total > player2Total
+// Calculate opacity for individual scores
+const isOpaque = (player1Scores, player2Scores) => {
+  return player1Scores.map((score, index) => {
+    const player1Score = !isNaN(score.score) ? score.score : 0
+    const player2Score = !isNaN(player2Scores[index]?.score)
+      ? player2Scores[index].score
+      : 0
+    return player1Score > player2Score
+  })
 }
 
 const MatchTiles = ({
@@ -35,6 +33,9 @@ const MatchTiles = ({
   const [clientLogo, setClientLogo] = useState('')
   const [opponentLogo, setOpponentLogo] = useState('')
 
+  // to calculate the opcaity
+  const player1Opacity = isOpaque(player1FinalScores, player2FinalScores)
+
   useEffect(() => {
     const fetchLogos = async () => {
       try {
@@ -55,6 +56,44 @@ const MatchTiles = ({
     fetchLogos()
   }, [clientTeam, opponentTeam])
 
+  // Render function for scores
+  const renderScore = (score, index, isPlayer1, tieScores) => {
+    const opacity = isPlayer1
+      ? player1Opacity[index]
+        ? '100%'
+        : '40%'
+      : !player1Opacity[index]
+        ? '100%'
+        : '40%'
+
+    return (
+      !isNaN(score.score) && (
+        <div
+          key={index}
+          style={{
+            position: 'relative',
+            opacity
+          }}
+        >
+          {score.score}
+          {tieScores[index] && (
+            <sup
+              style={{
+                position: 'absolute',
+                fontSize: '0.6em',
+                top: '-0.3em',
+                left: '0.9em',
+                letterSpacing: '1vw'
+              }}
+            >
+              {tieScores[index]}
+            </sup>
+          )}
+        </div>
+      )
+    )
+  }
+
   return (
     <div className={styles.matchTilesContainer}>
       <div className={styles.matchInfoContainer}>
@@ -64,102 +103,34 @@ const MatchTiles = ({
             <div className={styles.containerTagged}>Tagged</div>
           )}
         </div>
-        {/* Player Information  */}
+        {/* Player 1 Information  */}
         <div className={styles.playerInfo}>
           <div className={styles.playerSchoolImgcontainerhome}>
             <img src={clientLogo} alt={`${clientTeam} logo`} />
           </div>
-          <div
-            className={styles.playerInfoName}
-            style={{
-              opacity:
-                isUnfinished ||
-                !calculateWinner(player1FinalScores, player2FinalScores)
-                  ? '40%'
-                  : '100%'
-            }}
-          >
+          <div className={styles.playerInfoName}>
             {player1Name} {isUnfinished && '(UF)'}
           </div>
-          <div
-            className={styles.playerInfoScore}
-            style={{
-              opacity:
-                isUnfinished ||
-                !calculateWinner(player1FinalScores, player2FinalScores)
-                  ? '40%'
-                  : '100%'
-            }}
-          >
-            {player1FinalScores.map(
-              (score, index) =>
-                !isNaN(score.score) && (
-                  <div key={index} style={{ position: 'relative' }}>
-                    {score.score}
-                    {player1TieScores[index] && (
-                      <sup
-                        style={{
-                          position: 'absolute',
-                          fontSize: '0.6em',
-                          top: '-0.3em',
-                          left: '0.9em',
-                          letterSpacing: '1vw'
-                        }}
-                      >
-                        {player1TieScores[index]}
-                      </sup>
-                    )}
-                  </div>
-                )
+          <div className={styles.playerInfoScore}>
+            {player1FinalScores.map((score, index) =>
+              renderScore(score, index, true, player1TieScores)
             )}
           </div>
         </div>
+        {/* Player 2 Information */}
         <div className={styles.playerInfo}>
           <div className={styles.playerSchoolImgcontainer}>
             <img src={opponentLogo} alt={`${opponentTeam} logo`} />
           </div>
-          <div
-            className={styles.playerInfoName}
-            style={{
-              opacity: calculateWinner(player1FinalScores, player2FinalScores)
-                ? '40%'
-                : '100%'
-            }}
-          >
-            {player2Name}
-          </div>
-          <div
-            className={styles.playerInfoScore}
-            style={{
-              opacity: calculateWinner(player1FinalScores, player2FinalScores)
-                ? '40%'
-                : '100%'
-            }}
-          >
-            {player2FinalScores.map(
-              (score, index) =>
-                !isNaN(score.score) && (
-                  <div key={index} style={{ position: 'relative' }}>
-                    {score.score}
-                    {player2TieScores[index] && (
-                      <sup
-                        style={{
-                          position: 'absolute',
-                          fontSize: '0.6em',
-                          top: '-0.3em',
-                          left: '0.9em',
-                          letterSpacing: '1vw'
-                        }}
-                      >
-                        {player2TieScores[index]}
-                      </sup>
-                    )}
-                  </div>
-                )
+          <div className={styles.playerInfoName}>{player2Name}</div>
+          <div className={styles.playerInfoScore}>
+            {player2FinalScores.map((score, index) =>
+              renderScore(score, index, false, player2TieScores)
             )}
           </div>
         </div>
       </div>
+
       {/* Match Location */}
       {displaySections.info && (
         <div className={styles.matchInfoContainer}>
