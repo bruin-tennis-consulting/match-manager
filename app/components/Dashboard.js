@@ -10,6 +10,7 @@ import styles from '@/app/styles/Dashboard.module.css'
 import DashTileContainer from '@/app/components/DashTileContainer'
 // import getTeams from '@/app/services/getTeams.js'
 import RosterList from '@/app/components/RosterList.js'
+import Loading from './Loading'
 
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 import SearchIcon from '@/public/search'
@@ -25,7 +26,9 @@ const Dashboard = () => {
   const { matches, logos } = useData()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
-  console.log(matches)
+
+  console.log('matches', matches)
+  console.log(matches.length)
   const formattedMatches = formatMatches(matches)
   console.log(formattedMatches)
 
@@ -145,48 +148,52 @@ const Dashboard = () => {
 
       <div className={styles.mainContent}>
         <div className={styles.matchesSection}>
-          {displayMatchSets.map((matchKey, index) => {
-            const singlesMatches = formattedMatches.filter(
-              (match) =>
-                match.singles &&
-                ((match.matchDetails.duel &&
-                  matchKey ===
-                    `${match.matchDate}#${match.teams.opponentTeam}`) ||
-                  (!match.matchDetails.duel &&
-                    matchKey === `_#${match.matchDetails.event}`))
-            )
-            const doublesMatches = formattedMatches.filter(
-              (match) =>
-                !match.singles &&
-                ((match.matchDetails.duel &&
-                  matchKey ===
-                    `${match.matchDate}#${match.teams.opponentTeam}`) ||
-                  (!match.matchDetails.duel &&
-                    matchKey === `_#${match.matchDetails.event}`))
-            )
-            console.log(matchKey)
-            const [matchDate, matchName] = matchKey.split('#')
-            return (
-              <div key={index} className={styles.matchSection}>
-                <div className={styles.matchContainer}>
-                  <div className={styles.matchHeader}>
-                    <h3>{matchName}</h3>
-                    <span className={styles.date}>{matchDate}</span>
+          {matches.length === 0 ? (
+            <Loading prompt={'Fetching Matches...'} />
+          ) : (
+            displayMatchSets.map((matchKey, index) => {
+              const singlesMatches = formattedMatches.filter(
+                (match) =>
+                  match.singles &&
+                  ((match.matchDetails.duel &&
+                    matchKey ===
+                      `${match.matchDate}#${match.teams.opponentTeam}`) ||
+                    (!match.matchDetails.duel &&
+                      matchKey === `_#${match.matchDetails.event}`))
+              )
+              const doublesMatches = formattedMatches.filter(
+                (match) =>
+                  !match.singles &&
+                  ((match.matchDetails.duel &&
+                    matchKey ===
+                      `${match.matchDate}#${match.teams.opponentTeam}`) ||
+                    (!match.matchDetails.duel &&
+                      matchKey === `_#${match.matchDetails.event}`))
+              )
+              const [matchDate, matchName] = matchKey.split('#')
+
+              return (
+                <div key={index} className={styles.matchSection}>
+                  <div className={styles.matchContainer}>
+                    <div className={styles.matchHeader}>
+                      <h3>{matchName}</h3>
+                      <span className={styles.date}>{matchDate}</span>
+                    </div>
+                    <DashTileContainer
+                      matches={singlesMatches}
+                      matchType="Singles"
+                      onTileClick={handleTileClick}
+                    />
+                    <DashTileContainer
+                      matches={doublesMatches}
+                      matchType="Doubles"
+                      onTileClick={handleTileClick}
+                    />
                   </div>
-                  <DashTileContainer
-                    matches={singlesMatches}
-                    matchType="Singles"
-                    onTileClick={handleTileClick}
-                  />
-                  <DashTileContainer
-                    matches={doublesMatches}
-                    matchType="Doubles"
-                    onTileClick={handleTileClick}
-                  />
                 </div>
-              </div>
-            )
-          })}
+              )
+            })
+          )}
         </div>
 
         <div className={styles.rosterContainer}>

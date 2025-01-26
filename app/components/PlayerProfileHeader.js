@@ -1,8 +1,6 @@
 import React from 'react'
-import Image from 'next/image'
-
 import styles from '@/app/styles/PlayerProfileHeader.module.css' // Assuming you have CSS module for styling
-import govinImage from '@/public/images/govin.png'
+import defaultPhotoBig from '@/public/images/defaultPhotoBig.png'
 import StatBox from '@/app/components/StatBox'
 
 const PlayerProfileHeader = ({ playerData }) => {
@@ -43,11 +41,9 @@ const PlayerProfileHeader = ({ playerData }) => {
           </div>
         </div>
       </div>
-
-      {/* Profile Picture */}
       <div className={styles.profilePictureContainer}>
-        <Image
-          src={playerData.pictureUrl || govinImage}
+        <img
+          src={playerData.largePlayerPhoto || defaultPhotoBig.src}
           alt={`${playerData.name}'s profile`}
           className={styles.profilePicture}
         />

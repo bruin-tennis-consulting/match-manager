@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation' // Updated import for usePathname
 
 import { useData } from '@/app/DataProvider'
 
@@ -32,8 +32,32 @@ const MatchPage = () => {
   const iframeRef = useRef(null)
 
   const { matches, updateMatch } = useData()
-  const pathname = usePathname()
+  const pathname = usePathname() // usePathname now imported from next/navigation
   const docId = pathname.substring(pathname.lastIndexOf('/') + 1)
+
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Read filter parameters from URL on initial load
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams)
+    const initialFilters = []
+    for (const [key, value] of params.entries()) {
+      initialFilters.push([key, value])
+    }
+    setFilterList(initialFilters)
+  }, [searchParams])
+
+  // Update URL whenever filterList changes
+  useEffect(() => {
+    if (filterList) {
+      const params = new URLSearchParams()
+      filterList.forEach(([key, value]) => {
+        params.append(key, value)
+      })
+      router.replace(`?${params.toString()}`)
+    }
+  }, [filterList, router])
 
   useEffect(() => {
     const selectedMatch = matches.find((match) => match.id === docId)
@@ -181,6 +205,7 @@ const MatchPage = () => {
   }
 
   // Usage in your component:
+  console.log(matchData)
   const matchScores = matchData ? getMatchScores(matchData.pointsJson) : []
 
   return (
@@ -191,7 +216,7 @@ const MatchPage = () => {
             matchName={matchData.matchDetails.event}
             clientTeam={matchData.teams.clientTeam}
             opponentTeam={matchData.teams.opponentTeam}
-            matchDetails={matchData.matchDetails.event} // This needs to be updated in MatchTiles.js
+            matchDetails={matchData.matchDetails.event}
             date={matchData.matchDetails.date}
             player1Name={
               matchData.players.client.firstName +
@@ -203,11 +228,11 @@ const MatchPage = () => {
               ' ' +
               matchData.players.opponent.lastName
             }
-            player1FinalScores={matchScores.map((scores) => ({
-              score: scores[0]
+            player1FinalScores={matchData.sets.map((set) => ({
+              score: set.clientGames
             }))}
-            player2FinalScores={matchScores.map((scores) => ({
-              score: scores[1]
+            player2FinalScores={matchData.sets.map((set) => ({
+              score: set.opponentGames
             }))}
             player1TieScores={matchData.pointsJson.map(
               (point) => point.player1TiebreakScore
