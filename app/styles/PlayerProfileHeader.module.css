@@ -42,7 +42,7 @@
 
 .profilePicture {
   height: 100%;
-  width: auto;
+  width: 100%;
 }
 
 .playerBio {
@@ -89,11 +89,13 @@
 
   .profileInfo {
     padding-top: 20px;
+    order: 2;
     max-width: 100%;
   }
 
   .profilePictureContainer {
     width: 100%;
+    order: 1;
     margin-top: 20px;
   }
 

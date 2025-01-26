@@ -2,7 +2,10 @@ import Link from 'next/link'
 import styles from '@/app/styles/Roster.module.css'
 
 const RosterTile = ({ firstName, lastName, playerPhoto }) => {
-  const playerId = `${firstName.toLowerCase()}-${lastName.toLowerCase()}`
+  // removes spaces from names so we can use them in the URL
+  const cleanString = (str) => str.toLowerCase().replace(/\s+/g, '')
+  const playerId = `${cleanString(firstName)}-${cleanString(lastName)}`
+  console.log(playerId)
 
   return (
     <div className={styles.playerContainer}>

@@ -4,17 +4,18 @@ import { db } from '@/app/services/initializeFirebase'
 import { notFound } from 'next/navigation'
 import PlayerProfile from '@/app/components/PlayerProfile'
 
-// Consider moving this to a separate utils/service file
+// Server Side Rendering to fetch player data
 async function getPlayerData(playerId) {
   try {
+    const cleanString = (str) => str.toLowerCase().replace(/\s+/g, '')
     const querySnapshot = await getDocs(collection(db, 'teams'))
     const teamsData = querySnapshot.docs.map((doc) => doc.data())
     const mensTeam = teamsData.find((team) => team.name === 'UCLA (M)')
     const [firstName, lastName] = playerId.split('-')
     const targetPlayer = mensTeam?.players?.find(
       (player) =>
-        player.firstName.toLowerCase() === firstName.toLowerCase() &&
-        player.lastName.toLowerCase() === lastName.toLowerCase()
+        cleanString(player.firstName) === cleanString(firstName) &&
+        cleanString(player.lastName) === cleanString(lastName)
     )
 
     if (!targetPlayer) {
@@ -27,7 +28,7 @@ async function getPlayerData(playerId) {
       height: targetPlayer.height,
       class: targetPlayer.class,
       age: targetPlayer.age,
-      pictureUrl: targetPlayer.largePhoto, // Add default image
+      largePlayerPhoto: targetPlayer.largePlayerPhoto, // Add default image
       overallWins: targetPlayer.stats?.overallWins || 0,
       singleWins: targetPlayer.stats?.singleWins || 0,
       doubleWins: targetPlayer.stats?.doubleWins || 0
