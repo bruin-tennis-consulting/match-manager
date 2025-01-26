@@ -215,7 +215,7 @@ const MatchPage = () => {
             player2TieScores={matchData.pointsJson.map(
               (point) => point.player2TiebreakScore
             )}
-            isUnfinished={matchData.matchDetails.status === 'unfinished'}
+            isUnfinished={matchData.matchDetails.unfinished}
             displaySections={{ score: true, info: true, matchup: true }}
           />
           <div className={styles.headerRow}>
@@ -399,7 +399,7 @@ const MatchPage = () => {
                   player2TieScores={matchData.pointsJson.map(
                     (point) => point.player2TiebreakScore
                   )}
-                  isUnfinished={matchData.matchDetails.status === 'unfinished'}
+                  isUnfinished={matchData.matchDetails.unfinished}
                   displaySections={{ score: true, info: true, matchup: true }}
                 />
               </div>
@@ -429,7 +429,7 @@ const MatchPage = () => {
             {showPDF ? (
               <iframe
                 className={styles.pdfView}
-                src={matchData.pdfUrl}
+                src={matchData.pdfFile}
                 width="90%"
                 height="1550"
               />
