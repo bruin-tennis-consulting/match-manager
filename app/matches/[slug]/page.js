@@ -181,6 +181,7 @@ const MatchPage = () => {
   }
 
   // Usage in your component:
+  console.log(matchData)
   const matchScores = matchData ? getMatchScores(matchData.pointsJson) : []
 
   return (
@@ -203,11 +204,11 @@ const MatchPage = () => {
               ' ' +
               matchData.players.opponent.lastName
             }
-            player1FinalScores={matchScores.map((scores) => ({
-              score: scores[0]
+            player1FinalScores={matchData.sets.map((set) => ({
+              score: set.clientGames
             }))}
-            player2FinalScores={matchScores.map((scores) => ({
-              score: scores[1]
+            player2FinalScores={matchData.sets.map((set) => ({
+              score: set.opponentGames
             }))}
             player1TieScores={matchData.pointsJson.map(
               (point) => point.player1TiebreakScore
