@@ -4,9 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation' // Updated import for usePathname
 
 import { useData } from '@/app/DataProvider'
-
-import nameMap from '@/app/services/nameMap'
-
+import { filterGroups } from '@/app/services/filterGroups'
 import filterListStyles from '@/app/styles/FilterList.module.css'
 import styles from '@/app/styles/Match.module.css'
 
@@ -16,6 +14,27 @@ import PointsList from '@/app/components/PointsList'
 import ScoreBoard from '@/app/components/ScoreBoard'
 import MatchTiles from '@/app/components/MatchTiles'
 import ExtendedList from '@/app/components/ExtendedList'
+
+const findDisplayName = (key) => {
+  // Search through all sections of filterGroups
+  for (const section of Object.values(filterGroups)) {
+    // Check in subCategories
+    if (section.subCategories && section.subCategories[key]) {
+      return section.subCategories[key].title
+    }
+
+    // Check in players
+    if (section.players) {
+      for (const player of Object.values(section.players)) {
+        if (player.categories && player.categories[key]) {
+          return player.categories[key].title
+        }
+      }
+    }
+  }
+
+  return key // Fallback to key if no display name found
+}
 
 const MatchPage = () => {
   const [matchData, setMatchData] = useState()
@@ -270,7 +289,7 @@ const MatchPage = () => {
                       style={{ cursor: 'pointer' }}
                       onClick={() => removeFilter(key, value)}
                     >
-                      {nameMap[key]}: {value}
+                      {findDisplayName(key)}: {value}
                     </li>
                   ))}
                 </ul>
