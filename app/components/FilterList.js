@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react'
-
-import styles from '@/app/styles/FilterList.module.css'
+import React, { useState, useEffect } from 'react'
+// import styles from '@/app/styles/FilterList.module.css'
 // This file renames columns to more human-readable names
 import nameMap from '@/app/services/nameMap.js'
 
+// Define groups of values that are mutually exclusive
 const exclusiveGroups = {
   player1ReturnFhBh: ['Forehand', 'Backhand'],
   player1ReturnPlacement: ['Down the Line', 'Crosscourt'],
@@ -13,6 +13,46 @@ const exclusiveGroups = {
   side: ['Deuce', 'Ad']
 }
 
+const filterGroups = {
+  serve: {
+    title: 'Serve',
+    keys: [
+      'player1ServePlacement',
+      'player1ServeResult',
+      '1st Serve In',
+      '2nd Serve In',
+      'Ace',
+      'Double Fault'
+    ]
+  },
+  return: {
+    title: 'Return',
+    keys: ['player1ReturnFhBh', 'player1ReturnPlacement']
+  },
+  lastShot: {
+    title: 'Last Shot',
+    keys: [
+      'player1LastShotFhBh',
+      'player1LastShotPlacement',
+      'player1LastShotResult'
+    ]
+  },
+  pointInfo: {
+    title: 'Point Information',
+    keys: ['rallyCountFreq', 'atNetPlayer1', 'pointWonBy', 'side', 'setNum']
+  },
+  special: {
+    title: 'Special Points',
+    keys: [
+      'isPressurePoint',
+      'isUnforcedError',
+      'isSecondServeAttacked',
+      'isAggressiveServePlusOne',
+      'pointScore'
+    ]
+  }
+}
+
 const FilterList = ({
   pointsData,
   filterList,
@@ -20,37 +60,44 @@ const FilterList = ({
   showPercent,
   showCount
 }) => {
-  // only keep relevant keys
-  const keys = Object.keys(nameMap).filter(
-    (key) =>
-      pointsData &&
-      pointsData.some((point) =>
-        Object.prototype.hasOwnProperty.call(point, key)
-      )
-  )
-  const uniqueValues = {}
+  const [openGroups, setOpenGroups] = useState({})
+  const [openKeys, setOpenKeys] = useState({})
 
-  // Iterate through filtered keys and populate uniqueValues
-  keys.forEach((key) => {
-    uniqueValues[key] = [
-      ...new Set(pointsData.map((point) => point[key]))
-    ].sort()
+  // Keep track of unique values for each key
+  const uniqueValues = {}
+  Object.keys(filterGroups).forEach((groupKey) => {
+    filterGroups[groupKey].keys.forEach((key) => {
+      if (
+        pointsData &&
+        pointsData.some((point) =>
+          Object.prototype.hasOwnProperty.call(point, key)
+        )
+      ) {
+        uniqueValues[key] = [
+          ...new Set(pointsData.map((point) => point[key]))
+        ].sort()
+      }
+    })
   })
 
-  // State for the open key
-  const [openKey, setOpenKey] = useState(null)
-
-  // Effect to reset open key when pointsData changes
+  // Effect to reset open keys when pointsData changes
   useEffect(() => {
-    setOpenKey(null)
+    setOpenGroups({})
+    setOpenKeys({})
   }, [pointsData])
 
-  const toggleOpen = (key) => {
-    if (openKey === key) {
-      setOpenKey(null)
-    } else {
-      setOpenKey(key)
-    }
+  const toggleGroup = (groupKey) => {
+    setOpenGroups((prev) => ({
+      ...prev,
+      [groupKey]: !prev[groupKey]
+    }))
+  }
+
+  const toggleKey = (key) => {
+    setOpenKeys((prev) => ({
+      ...prev,
+      [key]: !prev[key]
+    }))
   }
 
   const addFilter = (key, value) => {
@@ -67,6 +114,7 @@ const FilterList = ({
       setFilterList([...updatedFilterList, [key, value]])
     }
   }
+
   const removeFilter = (key, value) => {
     const updatedFilterList = filterList.filter(
       ([filterKey, filterValue]) =>
@@ -75,113 +123,161 @@ const FilterList = ({
     setFilterList(updatedFilterList)
   }
 
-  // Counts points for each filter
-  const countFilteredPointsForValue = (key, value) => {
-    return pointsData.filter((point) => point[key] === value).length
-  }
-
-  const countFilteredPointsTotal = (key) => {
-    return pointsData.reduce((total, point) => {
-      // Check if the value attribute is not an empty string
-      if (point[key] !== '' && point[key] !== null) {
-        return total + 1 // Add 1 to the total if this point has a value specific to this category (key)
-      }
-      // Otherwise, just return the current total without adding anything
-      return total
-    }, 0)
-  }
-
-  // Function to determine if the value is an active filter
   const isActiveFilter = (key, value) => {
     return filterList.some(
       ([filterKey, filterValue]) => filterKey === key && filterValue === value
     )
   }
 
-  // Sort the filterList array in alphabetical order
-  // const sortedFilterList = filterList.sort((a, b) => a[0].localeCompare(b[0]));
-  return (
-    <>
-      <div>
-        <ul className={styles.availableFilterList}>
-          {keys.map((key) => {
-            return (
-              <div
-                className={styles.availableFilterItem}
-                key={key}
-                onClick={() => toggleOpen(key)}
-              >
-                <li>
-                  <strong>{nameMap[key]}</strong>
-                  <ul
-                    className={styles.filterValuesList}
-                    style={{ display: openKey === key ? 'block' : 'none' }}
-                  >
-                    {/* { console.log(uniqueValues)} */}
-                    {uniqueValues[key].map(
-                      (value) =>
-                        value !== '' &&
-                        value !== null && (
-                          <div
-                            className={styles.filterValueItem}
-                            key={value}
-                            style={{
-                              cursor: 'pointer',
-                              backgroundColor: isActiveFilter(key, value)
-                                ? '#8BB8E8'
-                                : ''
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation() // Prevent the click from toggling the open key
-                              if (isActiveFilter(key, value)) {
-                                removeFilter(key, value)
-                              } else {
-                                addFilter(key, value)
-                              }
-                            }}
-                          >
-                            <li>{value}</li>
-                            {/* Point Percentage */}
+  const commonStyles = {
+    checkbox: {
+      width: '20px',
+      height: '20px',
+      marginRight: '10px'
+    },
+    expandIcon: {
+      marginRight: '10px',
+      width: '20px',
+      display: 'inline-block'
+    }
+  }
 
-                            {/* {console.log(value)}  */}
-                            {showPercent && value && (
-                              // make a sum
-                              <li>
-                                {Math.round(
-                                  (countFilteredPointsForValue(key, value) /
-                                    Math.round(
-                                      countFilteredPointsTotal(key, value)
-                                    )) /* ERROR IS HERE */ *
-                                    100
+  return (
+    <div
+      className="filter-container"
+      style={{
+        border: '1px solid #ccd0d4',
+        background: '#fff',
+        borderRadius: '4px',
+        padding: '15px 20px',
+        fontSize: '20px'
+      }}
+    >
+      {Object.entries(filterGroups).map(([groupKey, group]) => (
+        <div key={groupKey} style={{ marginBottom: '15px' }}>
+          <div
+            onClick={() => toggleGroup(groupKey)}
+            style={{
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              padding: '8px 0',
+              fontSize: '24px'
+            }}
+          >
+            <span style={commonStyles.expandIcon}>
+              {openGroups[groupKey] ? '▼' : '▶'}
+            </span>
+            <span>{group.title}</span>
+          </div>
+
+          {openGroups[groupKey] && (
+            <div style={{ paddingLeft: '30px' }}>
+              {group.keys.map((key) => {
+                if (!uniqueValues[key]) return null
+
+                return (
+                  <div key={key} style={{ marginTop: '10px' }}>
+                    <div
+                      onClick={() => toggleKey(key)}
+                      style={{
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '6px 0',
+                        fontSize: '22px'
+                      }}
+                    >
+                      <span style={commonStyles.expandIcon}>
+                        {openKeys[key] ? '▼' : '▶'}
+                      </span>
+                      <span>{nameMap[key] || key}</span>
+                    </div>
+
+                    {openKeys[key] && (
+                      <div style={{ paddingLeft: '30px' }}>
+                        {uniqueValues[key].map(
+                          (value) =>
+                            value !== '' &&
+                            value !== null && (
+                              <div
+                                key={`${key}-${value}`}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  padding: '6px 0',
+                                  fontSize: '20px'
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isActiveFilter(key, value)}
+                                  onChange={() => {
+                                    if (isActiveFilter(key, value)) {
+                                      removeFilter(key, value)
+                                    } else {
+                                      addFilter(key, value)
+                                    }
+                                  }}
+                                  style={commonStyles.checkbox}
+                                />
+                                <span style={{ flex: 1 }}>{value}</span>
+                                {showPercent && (
+                                  <span
+                                    style={{
+                                      marginLeft: '10px',
+                                      color: '#666'
+                                    }}
+                                  >
+                                    {Math.round(
+                                      (pointsData.filter(
+                                        (point) => point[key] === value
+                                      ).length /
+                                        pointsData.filter(
+                                          (point) =>
+                                            point[key] !== '' &&
+                                            point[key] !== null
+                                        ).length) *
+                                        100
+                                    )}
+                                    %
+                                  </span>
                                 )}
-                                %
-                              </li>
-                            )}
-                            {/* Point Count */}
-                            {showCount && value && (
-                              <li>
-                                {countFilteredPointsForValue(key, value)} /{' '}
-                                {
-                                  Math.round(
-                                    countFilteredPointsTotal(key, value)
-                                  ) /* ERROR IS HERE */
-                                }
-                              </li>
-                            )}
-                          </div>
-                        )
+                                {showCount && (
+                                  <span
+                                    style={{
+                                      marginLeft: '10px',
+                                      color: '#666'
+                                    }}
+                                  >
+                                    {
+                                      pointsData.filter(
+                                        (point) => point[key] === value
+                                      ).length
+                                    }{' '}
+                                    /{' '}
+                                    {
+                                      pointsData.filter(
+                                        (point) =>
+                                          point[key] !== '' &&
+                                          point[key] !== null
+                                      ).length
+                                    }
+                                  </span>
+                                )}
+                              </div>
+                            )
+                        )}
+                      </div>
                     )}
-                  </ul>
-                </li>
-              </div>
-            )
-            // } else {
-            //   return null; // Skip rendering if key is not in the map
-            // }
-          })}
-        </ul>
-      </div>
-    </>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
   )
 }
 
