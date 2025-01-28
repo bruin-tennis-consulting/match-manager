@@ -279,144 +279,6 @@ const MatchPage = () => {
               </div>
             </div>
             <div className={styles.sidebar}>
-              <div className={filterListStyles.activeFilterListContainer}>
-                Active Filters:
-                <ul className={filterListStyles.activeFilterList}>
-                  {sortedFilterList.map(([key, value]) => (
-                    <li
-                      className={filterListStyles.activeFilterItem}
-                      key={`${key}-${value}`}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => removeFilter(key, value)}
-                    >
-                      {findDisplayName(key)}: {value}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <button
-                onClick={() => setTab(0)}
-                className={
-                  tab === 0
-                    ? styles.toggle_buttonb_active
-                    : styles.toggle_buttonb_inactive
-                }
-              >
-                Filters
-              </button>
-              <button
-                onClick={() => setTab(1)}
-                className={
-                  tab === 1
-                    ? styles.toggle_button_neutral_active
-                    : styles.toggle_button_neutral_inactive
-                }
-              >
-                Points
-              </button>
-              <button
-                onClick={() => setTab(2)}
-                className={
-                  tab === 2
-                    ? styles.toggle_buttona_active
-                    : styles.toggle_buttona_inactive
-                }
-              >
-                Bookmarks
-              </button>
-              {tab === 0 && (
-                <div className={styles.sidebox}>
-                  <div className={filterListStyles.optionsList}>
-                    <div>
-                      <input
-                        type="radio"
-                        id="defaultRadio"
-                        checked={!showCount && !showPercent}
-                        onChange={() => {
-                          setShowPercent(false)
-                          setShowCount(false)
-                        }}
-                      />
-                      <label htmlFor="defaultRadio">Default</label>
-                    </div>
-                    <div>
-                      <input
-                        type="radio"
-                        id="percentRadio"
-                        checked={showPercent}
-                        onChange={() => {
-                          setShowPercent(true)
-                          setShowCount(false)
-                        }}
-                      />
-                      <label htmlFor="percentRadio">Show Percent</label>
-                    </div>
-                    <div>
-                      <input
-                        type="radio"
-                        id="countRadio"
-                        checked={showCount}
-                        onChange={() => {
-                          setShowPercent(false)
-                          setShowCount(true)
-                        }}
-                      />
-                      <label htmlFor="countRadio">Show Count</label>
-                    </div>
-                  </div>
-                  <div className={styles.sidecontent}>
-                    <FilterList
-                      pointsData={matchData.pointsJson}
-                      filterList={filterList}
-                      setFilterList={setFilterList}
-                      showPercent={showPercent}
-                      showCount={showCount}
-                    />
-                  </div>
-                </div>
-              )}
-              {tab === 1 && (
-                <div className={styles.sidebox}>
-                  <div className={styles.sidecontent}>
-                    <PointsList
-                      pointsData={returnFilteredPoints()}
-                      onPointSelect={handleJumpToTime}
-                      onBookmark={handleBookmark}
-                      clientTeam={matchData.teams.clientTeam}
-                      opponentTeam={matchData.teams.opponentTeam}
-                    />
-                  </div>
-                  <div style={{ padding: '0.5vw', paddingLeft: '5vw' }}>
-                    <button
-                      className={styles.viewDetailedListButton}
-                      onClick={scrollToDetailedList}
-                    >
-                      View Detailed List
-                    </button>
-                  </div>
-                </div>
-              )}
-              {tab === 2 && (
-                <div className={styles.sidebox}>
-                  <div className={styles.sidecontent}>
-                    <PointsList
-                      pointsData={bookmarks}
-                      onPointSelect={handleJumpToTime}
-                      onBookmark={handleBookmark}
-                      clientTeam={matchData.teams.clientTeam}
-                      opponentTeam={matchData.teams.opponentTeam}
-                    />
-                  </div>
-                  <div style={{ padding: '0.5vw', paddingLeft: '5vw' }}>
-                    <button
-                      className={styles.viewDetailedListButton}
-                      onClick={scrollToDetailedList}
-                    >
-                      View Detailed List
-                    </button>
-                  </div>
-                </div>
-              )}
               <div className="scoreboard">
                 <ScoreBoard
                   names={matchData.name}
@@ -447,6 +309,154 @@ const MatchPage = () => {
                   displaySections={{ score: true, info: true, matchup: true }}
                 />
               </div>
+              <div className={filterListStyles.activeFilterListContainer}>
+                Active Filters:
+                <ul className={filterListStyles.activeFilterList}>
+                  {sortedFilterList.map(([key, value]) => (
+                    <li
+                      className={filterListStyles.activeFilterItem}
+                      key={`${key}-${value}`}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => removeFilter(key, value)}
+                    >
+                      {findDisplayName(key)}: {value}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <button
+                onClick={() => setTab(0)}
+                className={
+                  tab === 0
+                    ? styles.toggle_button_neutral_active
+                    : styles.toggle_button_neutral_inactive
+                }
+              >
+                Filters
+              </button>
+              <button
+                onClick={() => setTab(1)}
+                className={
+                  tab === 1
+                    ? styles.toggle_button_neutral_active
+                    : styles.toggle_button_neutral_inactive
+                }
+              >
+                Points
+              </button>
+              <button
+                onClick={() => setTab(2)}
+                className={
+                  tab === 2
+                    ? styles.toggle_button_neutral_active
+                    : styles.toggle_button_neutral_inactive
+                }
+              >
+                Saved
+              </button>
+              {tab === 0 && (
+                <div className={styles.sidebox}>
+                  <div className={styles.sidecontent}>
+                    <div className={filterListStyles.optionsList}>
+                      <div>
+                        <input
+                          type="radio"
+                          id="defaultRadio"
+                          checked={!showCount && !showPercent}
+                          onChange={() => {
+                            setShowPercent(false)
+                            setShowCount(false)
+                          }}
+                        />
+                        <label htmlFor="defaultRadio">Default</label>
+                      </div>
+                      <div>
+                        <input
+                          type="radio"
+                          id="percentRadio"
+                          checked={showPercent}
+                          onChange={() => {
+                            setShowPercent(true)
+                            setShowCount(false)
+                          }}
+                        />
+                        <label htmlFor="percentRadio">Show Percent</label>
+                      </div>
+                      <div>
+                        <input
+                          type="radio"
+                          id="countRadio"
+                          checked={showCount}
+                          onChange={() => {
+                            setShowPercent(false)
+                            setShowCount(true)
+                          }}
+                        />
+                        <label htmlFor="countRadio">Show Count</label>
+                      </div>
+                    </div>
+                    <FilterList
+                      pointsData={matchData.pointsJson}
+                      filterList={filterList}
+                      setFilterList={setFilterList}
+                      showPercent={showPercent}
+                      showCount={showCount}
+                    />
+                  </div>
+                </div>
+              )}
+              {tab === 1 && (
+                <div className={styles.sidebox}>
+                  <div className={styles.sidecontent}>
+                    <PointsList
+                      pointsData={returnFilteredPoints()}
+                      onPointSelect={handleJumpToTime}
+                      onBookmark={handleBookmark}
+                      clientTeam={matchData.teams.clientTeam}
+                      opponentTeam={matchData.teams.opponentTeam}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      padding: '0.5vw',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <button
+                      className={styles.viewDetailedListButton}
+                      onClick={scrollToDetailedList}
+                    >
+                      View Detailed List
+                    </button>
+                  </div>
+                </div>
+              )}
+              {tab === 2 && (
+                <div className={styles.sidebox}>
+                  <div className={styles.sidecontent}>
+                    <PointsList
+                      pointsData={bookmarks}
+                      onPointSelect={handleJumpToTime}
+                      onBookmark={handleBookmark}
+                      clientTeam={matchData.teams.clientTeam}
+                      opponentTeam={matchData.teams.opponentTeam}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      padding: '0.5vw',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <button
+                      className={styles.viewDetailedListButton}
+                      onClick={scrollToDetailedList}
+                    >
+                      View Detailed List
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className={styles.toggle}>
@@ -468,7 +478,7 @@ const MatchPage = () => {
                   : styles.toggle_buttona_inactive
               }
             >
-              Points Played
+              Detailed Point List
             </button>
             {showPDF ? (
               <iframe
