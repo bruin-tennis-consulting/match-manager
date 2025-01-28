@@ -1,0 +1,138 @@
+.titleBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.leftTitle {
+  margin-top: 1%;
+  font-size: 1.1vw;
+  padding-left: 2%;
+}
+
+.rightTitle {
+  padding-right: 2%;
+}
+
+.rightTitle button {
+  width: 5vw;
+  padding: 0.5vw;
+  background-color: #2c61ab;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.8vw;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-weight: 700;
+}
+
+.rightTitle button:hover {
+  background-color: #0056b3;
+}
+
+.mainText {
+  color: #000;
+  font-size: 3vw;
+  letter-spacing: 0.1em;
+  font-weight: 100;
+  line-height: 1.1;
+  text-align: left;
+  margin-left: 2%;
+  margin-top: 2%;
+}
+
+.mainText h1 {
+  margin: 0;
+}
+
+.subText {
+  color: #484848;
+  font-size: 1.5vw;
+  font-weight: 600; /* Use a moderate weight instead of full bold if needed */
+  text-align: left;
+  line-height: 0.4; /* Adjust this to increase spacing between lines */
+  margin-left: 2%;
+  margin-top: 1.5%;
+  max-width: 600px;
+}
+
+.startButton {
+  width: 10vw; /* Set width based on viewport width */
+  padding: 0.5vw; /* Use responsive padding */
+  background-color: #2c61ab;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.2vw; /* Responsive font size */
+  cursor: pointer;
+  transition:
+    background-color 0.3s,
+    transform 0.2s; /* Add smooth transition for shrinking effect */
+  font-weight: 700;
+}
+
+.startButton:hover {
+  background-color: #0056b3;
+}
+
+.parentContainer {
+  padding-bottom: 250px;
+}
+
+.imageContainer {
+  position: absolute;
+  top: 50%;
+  right: 8%;
+  transform: translateY(-50%);
+  width: 50vw;
+  height: 80vh;
+  perspective: 1000px; /* Adds perspective for 3D effect */
+}
+
+.image1 {
+  position: absolute;
+  top: 40%;
+  right: 20%;
+  z-index: 3;
+}
+
+.image2 {
+  position: absolute;
+  top: 20%;
+  right: 25%;
+  z-index: 2;
+}
+
+.image3 {
+  position: absolute;
+  top: 30%;
+  right: 2%;
+  z-index: 1;
+}
+
+.image4 {
+  position: absolute;
+  top: 0;
+  right: 8%;
+  z-index: 0;
+}
+
+.polygon {
+  position: absolute;
+  bottom: 70px;
+  right: 0;
+  width: 70vw;
+  height: 70vh;
+  background-color: #2c61ab; /* Color of the polygon */
+  clip-path: polygon(0% 100%, 100% 100%, 100% 0%); /* Adjusted points */
+  z-index: -1; /* Position it behind other content if needed */
+}
+
+.logo {
+  position: absolute;
+  bottom: 100px; /* Adjust to control distance from the bottom */
+  right: 30px; /* Adjust to control distance from the right */
+  width: 80px; /* Set width to match design */
+  height: auto; /* Maintain aspect ratio */
+}

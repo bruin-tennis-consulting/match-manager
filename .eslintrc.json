@@ -4,11 +4,13 @@
     "plugin:react/recommended",
     "plugin:react-hooks/recommended",
     "plugin:@next/next/recommended",
-    "next/core-web-vitals"
+    "next/core-web-vitals",
+    "standard",
+    "prettier"
   ],
-  "plugins": [],
+  "plugins": ["prettier"],
   "rules": {
-    "indent": ["error", 2]
+    "prettier/prettier": ["error"]
   },
   "settings": {
     "react": {
@@ -16,6 +18,8 @@
     }
   },
   "env": {
-    "es6": true
+    "es6": true,
+    "node": true,
+    "browser": true
   }
 }

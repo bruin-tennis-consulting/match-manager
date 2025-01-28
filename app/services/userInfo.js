@@ -1,6 +1,6 @@
-import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore'
 
-const db = getFirestore();
+const db = getFirestore()
 
 /**
  * Creates a user profile in Firestore.
@@ -13,12 +13,12 @@ const db = getFirestore();
  * @param {Array} authUser.teams - The teams the user is part of.
  */
 export async function createUserProfile(user) {
-  await setDoc(doc(db, "users", user.uid), {
+  await setDoc(doc(db, 'users', user.uid), {
     email: user.email,
     displayName: user.displayName,
     collections: user.collections,
     teams: user.teams
-  });
+  })
 }
 
 /**
@@ -28,19 +28,16 @@ export async function createUserProfile(user) {
  * @returns {Promise<Object|null>} The user profile data or null if not found.
  */
 export async function getUserProfile(userUid) {
-  const userDocRef = doc(db, "users", userUid);
-  const userDoc = await getDoc(userDocRef);
+  const userDocRef = doc(db, 'users', userUid)
+  const userDoc = await getDoc(userDocRef)
 
   if (userDoc.exists()) {
-    return userDoc.data();
+    return userDoc.data()
   } else {
-    console.log("No such document!");
-    return null;
+    console.log('No such document!')
+    return null
   }
 }
-
-
-
 
 // user = {
 //   uid: 'a3u4V8FDlgQWyf05g5mWf05rpYX2',

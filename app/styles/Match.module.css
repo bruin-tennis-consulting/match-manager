@@ -1,157 +1,157 @@
 .container {
-    min-height: 100vh;
-    padding: 0 1.5rem;
-    /* padding-top: 50px; Adjust this value based on the height of your toolbar */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    box-sizing: border-box;
-  }
-  
-  .title a {
-    color: #0070f3;
-    text-decoration: none;
-  }
-  
-  .title a:hover,
-  .title a:focus,
-  .title a:active {
-    text-decoration: underline;
-  }
-  
-  .title {
-    margin: 0 0 1rem;
-    line-height: 1.15;
-    font-size: 3.6rem;
-  }
-  
-  .title {
-    text-align: center;
-  }
-  
-  .title,
-  .description {
-    text-align: center;
-  }
-  
-  .description {
-    line-height: 1.5;
-    font-size: 1.5rem;
-  }
-  
+  min-height: 100vh;
+  padding: 0 1.5rem;
+  /* padding-top: 50px; Adjust this value based on the height of your toolbar */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.title a {
+  color: #0070f3;
+  text-decoration: none;
+}
+
+.title a:hover,
+.title a:focus,
+.title a:active {
+  text-decoration: underline;
+}
+
+.title {
+  margin: 0 0 1rem;
+  line-height: 1.15;
+  font-size: 3.6rem;
+}
+
+.title {
+  text-align: center;
+}
+
+.title,
+.description {
+  text-align: center;
+}
+
+.description {
+  line-height: 1.5;
+  font-size: 1.5rem;
+}
+
+.grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  max-width: 800px;
+  margin-top: 3rem;
+}
+
+.card {
+  margin: 1rem;
+  flex-basis: 45%;
+  padding: 1.5rem;
+  text-align: left;
+  color: inherit;
+  text-decoration: none;
+  border: 1px solid #eaeaea;
+  border-radius: 10px;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.card:hover,
+.card:focus,
+.card:active {
+  color: #0070f3;
+  border-color: #0070f3;
+}
+
+.card h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+}
+
+.card p {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+
+.logo {
+  height: 1em;
+}
+
+@media (max-width: 600px) {
   .grid {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-  
-    max-width: 800px;
-    margin-top: 3rem;
-  }
-  
-  .card {
-    margin: 1rem;
-    flex-basis: 45%;
-    padding: 1.5rem;
-    text-align: left;
-    color: inherit;
-    text-decoration: none;
-    border: 1px solid #eaeaea;
-    border-radius: 10px;
-    transition:
-      color 0.15s ease,
-      border-color 0.15s ease;
-  }
-  
-  .card:hover,
-  .card:focus,
-  .card:active {
-    color: #0070f3;
-    border-color: #0070f3;
-  }
-  
-  .card h3 {
-    margin: 0 0 1rem 0;
-    font-size: 1.5rem;
-  }
-  
-  .card p {
-    margin: 0;
-    font-size: 1.25rem;
-    line-height: 1.5;
-  }
-  
-  .logo {
-    height: 1em;
-  }
-  
-  @media (max-width: 600px) {
-    .grid {
-      width: 100%;
-      flex-direction: column;
-    }
-  }
-  
-  .mainContent {
-    display: flex;
-    flex-direction: row;
     width: 100%;
+    flex-direction: column;
   }
-  
-  .titleContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center; /* This centers the title vertically */
-    margin: 0 auto; /* This may help maintain the centering if other elements are taking up space */
-  }
-  
-  .pdfView {
-    width: 100%;
-    border: 1px solid #eaeaea;
-    border-radius: 10px;
-    border-top-left-radius: 0% !important;
-    /* padding: 1.5rem; */
-    text-align: left;
-    color: inherit;
-    text-decoration: none;
-    transition:
-      color 0.15s ease,
-      border-color 0.15s ease;
-  }
+}
 
-  .ExtendedList{
-    width:100%;
-    border: 1px solid #eaeaea;
-    border-radius: 10px;
-    border-top-left-radius: 0% !important;
-    padding: 1.5rem;
-    text-align: left;
-    color: inherit;
-    text-decoration: none;
-    transition:
-      color 0.15s ease,
-      border-color 0.15s ease;
-  }
+.mainContent {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
 
-  .viewDetailedListButton {
-    padding: 0.625vw 2.5vw; /* Adjust padding using viewport units */
-    cursor: pointer;
-    background-color: #fafafa;
-    border: none; /* Remove the default border */
-    /* border-left: 0.313vw solid #b0b0b0; /* Adjust border width using viewport units */
-    /* border-bottom: 0.313vw solid #b0b0b0; /* Adjust border width using viewport units */
-    border: 1px solid #eaeaea;
-    font-weight: 400;
-    font-size: 1.3vw; /* Adjust font size using viewport units */
-    line-height: 1.0vw;
-    border-radius: 0.25vw; /* Adjust border radius using viewport units */
-  }
-  
-  .viewDetailedListButton:hover {
-    background-color: #e9ecef;
-    border-color: #b8c2cc;
-  }
+.titleContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center; /* This centers the title vertically */
+  margin: 0 auto; /* This may help maintain the centering if other elements are taking up space */
+}
+
+.pdfView {
+  width: 100%;
+  border: 1px solid #eaeaea;
+  border-radius: 10px;
+  border-top-left-radius: 0% !important;
+  /* padding: 1.5rem; */
+  text-align: left;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.ExtendedList {
+  width: 100%;
+  border: 1px solid #eaeaea;
+  border-radius: 10px;
+  border-top-left-radius: 0% !important;
+  padding: 1.5rem;
+  text-align: left;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.viewDetailedListButton {
+  padding: 0.625vw 2.5vw; /* Adjust padding using viewport units */
+  cursor: pointer;
+  background-color: #fafafa;
+  border: none; /* Remove the default border */
+  /* border-left: 0.313vw solid #b0b0b0; /* Adjust border width using viewport units */
+  /* border-bottom: 0.313vw solid #b0b0b0; /* Adjust border width using viewport units */
+  border: 1px solid #eaeaea;
+  font-weight: 400;
+  font-size: 1.3vw; /* Adjust font size using viewport units */
+  line-height: 1vw;
+  border-radius: 0.25vw; /* Adjust border radius using viewport units */
+}
+
+.viewDetailedListButton:hover {
+  background-color: #e9ecef;
+  border-color: #b8c2cc;
+}
 
 .videoPlayer {
   flex: 3;
@@ -178,71 +178,71 @@
   display: none;
 }
 
-  .toggle {
-    width: 90%;
-    padding-top: 3vw;
-  }
+.toggle {
+  width: 90%;
+  padding-top: 3vw;
+}
 
-  .toggle_buttona_active{
-    font-size: 1vw;
-    width: 6vw;
-    height: 5vh;
-    background-color: #fafafa;
-    border-top-right-radius: 10px;
-    border: 1px solid #eaeaea;
-    cursor: pointer;
-    font-weight: bold;
-  }
+.toggle_buttona_active {
+  font-size: 1vw;
+  width: 6vw;
+  height: 5vh;
+  background-color: #fafafa;
+  border-top-right-radius: 10px;
+  border: 1px solid #eaeaea;
+  cursor: pointer;
+  font-weight: bold;
+}
 
-  .toggle_buttona_inactive{
-    font-size: 1vw;
-    width: 6vw;
-    height: 5vh;
-    background-color: #ffffff;
-    border-top-right-radius: 10px;
-    border: 1px solid #eaeaea;
-    cursor: pointer;
-    font-weight: bold;
-  }
+.toggle_buttona_inactive {
+  font-size: 1vw;
+  width: 6vw;
+  height: 5vh;
+  background-color: #ffffff;
+  border-top-right-radius: 10px;
+  border: 1px solid #eaeaea;
+  cursor: pointer;
+  font-weight: bold;
+}
 
-  .toggle_button_neutral_active{
-    font-size: 1vw;
-    width: 6vw;
-    height: 5vh;
-    background-color: #fafafa;
-    border: 1px solid #eaeaea;
-    cursor: pointer;
-    font-weight: bold;
-  }
+.toggle_button_neutral_active {
+  font-size: 1vw;
+  width: 6vw;
+  height: 5vh;
+  background-color: #fafafa;
+  border: 1px solid #eaeaea;
+  cursor: pointer;
+  font-weight: bold;
+}
 
-  .toggle_button_neutral_inactive{
-    font-size: 1vw;
-    width: 6vw;
-    height: 5vh;
-    background-color: #ffffff;
-    border: 1px solid #eaeaea;
-    cursor: pointer;
-    font-weight: bold;
-  }
+.toggle_button_neutral_inactive {
+  font-size: 1vw;
+  width: 6vw;
+  height: 5vh;
+  background-color: #ffffff;
+  border: 1px solid #eaeaea;
+  cursor: pointer;
+  font-weight: bold;
+}
 
-  .toggle_buttonb_active{
-    font-size: 1vw;
-    width: 6vw;
-    height: 5vh;
-    background-color: #fafafa;
-    border-top-left-radius: 10px;
-    border: 1px solid #eaeaea;
-    cursor: pointer;
-    font-weight: bold;
-  }
+.toggle_buttonb_active {
+  font-size: 1vw;
+  width: 6vw;
+  height: 5vh;
+  background-color: #fafafa;
+  border-top-left-radius: 10px;
+  border: 1px solid #eaeaea;
+  cursor: pointer;
+  font-weight: bold;
+}
 
-  .toggle_buttonb_inactive{
-    font-size: 1vw;
-    width: 6vw;
-    height: 5vh;
-    background-color: #ffffff;
-    border-top-left-radius: 10px;
-    border: 1px solid #eaeaea;
-    cursor: pointer;
-    font-weight: bold;
-  }
+.toggle_buttonb_inactive {
+  font-size: 1vw;
+  width: 6vw;
+  height: 5vh;
+  background-color: #ffffff;
+  border-top-left-radius: 10px;
+  border: 1px solid #eaeaea;
+  cursor: pointer;
+  font-weight: bold;
+}

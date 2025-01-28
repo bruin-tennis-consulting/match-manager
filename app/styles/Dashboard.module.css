@@ -1,0 +1,301 @@
+.container {
+  padding: 20px;
+  margin: 0 auto;
+  padding-left: 40px;
+  padding-right: 40px;
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+}
+
+.header {
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+.header h1 {
+  font-size: 20px;
+  font-weight: 550;
+}
+
+.header h2 {
+  font-size: 50px;
+  font-weight: 600;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -15px;
+}
+
+.titleBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mainContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.matchesSection {
+  width: 70%;
+}
+
+.rosterContainer {
+  width: 28%;
+  padding-left: 5%;
+  font-family: 'DM Sans', sans-serif;
+  position: relative;
+  top: -25px;
+}
+
+.matchSection {
+  margin-bottom: 20px;
+}
+
+.matchContainer {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.matchHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.matchTileContainer {
+  display: grid;
+
+  width: 100%;
+  gap: 10px;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+.matchTileContainer--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.matchTileContainer--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.matchSection h3 {
+  font-size: 28px;
+  color: #2774ae;
+  font-weight: 550;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+}
+
+.matchSection .date {
+  font-size: 20px;
+  font-weight: 550;
+  color: #2774ae;
+  margin-bottom: 0;
+  margin-left: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.matchTypeHeader h4 {
+  font-size: 20px;
+  margin: 10px 0 0 0;
+}
+
+/* Carousel of cards (match filtering) */
+
+.carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  margin-bottom: 30px;
+  padding: 10px 0;
+  border-top: 1px solid #dedede;
+  border-bottom: 1px solid #dedede;
+  white-space: nowrap;
+  scroll-behavior: smooth;
+}
+
+.carousel::-webkit-scrollbar {
+  display: none; /* hide scrollbar */
+}
+
+.card {
+  display: flex;
+  justify-content: center;
+  min-width: 125px;
+  border: 1px solid #dedede;
+  border-radius: 20px;
+  padding: 6px 10px;
+  min-width: 100px; /* Reduce min-width for narrower cards */
+  max-width: 150px; /* Set max-width to prevent them from growing too wide */
+  flex-shrink: 0; /* Prevent shrinking beyond min-width */
+  margin-right: 10px;
+  background-color: #ffffff;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition:
+    background-color 0.3s,
+    box-shadow 0.3s,
+    border 0.3s;
+  cursor: pointer;
+}
+
+.cardContent {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  width: 27.5px;
+  height: 20px;
+  object-fit: contain;
+  display: block;
+  margin-right: 5px;
+}
+
+.matchDate {
+  font-size: 15px;
+  font-weight: 500;
+  color: #000000;
+  margin-right: 0px;
+}
+
+.card:hover {
+  background-color: #f7f7f7;
+}
+
+.active {
+  background-color: #2774ae;
+  color: #ffffff;
+  border: 1px solid #2774ae;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition:
+    background-color 0.3s,
+    box-shadow 0.3s,
+    color 0.3s;
+}
+
+.active .matchDate {
+  color: #ffffff;
+}
+
+.active:hover {
+  background-color: #3b87c1;
+  color: #ffffff;
+}
+
+.active:hover .matchDate {
+  color: #ffffff;
+}
+
+/* Search Bar */
+
+.placeholderContainer {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.searchIcon {
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* search bar styles */
+
+/* Dashboard.module.css */
+
+.searchContainer {
+  position: relative;
+  width: 25vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.searchInput {
+  width: 100%;
+  height: 40px;
+  padding: 22px 22px;
+  padding-left: 40px;
+  border: 1px solid #ededed;
+  border-radius: 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  color: black;
+}
+
+/* Style for the icon */
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: #888;
+}
+
+/* Optional: Placeholder styling */
+.searchInput::placeholder {
+  color: black;
+  opacity: 1;
+}
+
+.clearButton {
+  margin-left: 10px;
+  background-color: transparent;
+  border: 1px solid #ededed;
+  border-radius: 16px;
+  color: black;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+}
+
+.clearContainer {
+  display: flex;
+}
+
+.matchName {
+  list-style-type: none;
+}
+
+.searchWrapper {
+  position: relative;
+  display: inline-block;
+  width: 20vw;
+}
+
+.buttonBox button {
+  width: 100%;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
+  background-color: #2c61ab;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.buttonBox button:hover {
+  background-color: #0056b3;
+}

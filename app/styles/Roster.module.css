@@ -1,34 +1,39 @@
 .infoContainer {
-    display: flex;
-    flex-direction: row;
-    cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  cursor: pointer;
 }
 
-
 .playerContainer {
-    border-top: 1px solid #EDEDED; 
-    border-bottom: 1px solid #EDEDED; 
-    padding-top: 2%;
-    padding-bottom: 2%;
+  border-bottom: 0.5px solid #dedede;
+  padding-top: 2%;
+  padding-bottom: 2%;
+}
+
+.playerContainer:first-child {
+  border-top: 0.5px solid #dedede;
+}
+
+.playerContainer:last-child {
+  border-bottom: 0.5px solid #dedede;
 }
 
 .playerImage {
-    width: 12%;
-    height: 12%;
-    border-radius: 30%;
+  width: 12%;
+  height: 12%;
+  border-radius: 30%;
 }
 
 .playerName {
-    /* padding-bottom: 20%; */
-    font-size: 14px;
+  /* padding-bottom: 20%; */
+  font-size: 14px;
 }
 
 .textContainer {
-    font-weight: 550;
-    flex-direction: column;
-    justify-content: center; 
-    display: flex;
-    padding-left: 3%;
-    letter-spacing: .5px; 
-
+  font-weight: 550;
+  flex-direction: column;
+  justify-content: center;
+  display: flex;
+  padding-left: 3%;
+  letter-spacing: 0.5px;
 }

@@ -1,39 +1,41 @@
-/* TagMatch.module.css */
-
 .customButton {
-    background-color: #2774AE; /* Example background color */
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  background-color: #2774ae; /* Example background color */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .customButton:hover {
-    background-color: #195982; /* Darker shade for hover */
+  background-color: #195982; /* Darker shade for hover */
+}
+
+.buttonDataControl {
+  width: 350px;
 }
 
 .popUp {
-    background-color: #2774AE; /* Example background color */
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    padding: 3px;
-    padding-left: 10px;
-    margin-bottom: 5px;
-    width: 300px;
-    height: 240px;
-    position: fixed;
-    top: 33%;
-    left: 80%;
-    transform: translateX(-50%);
-    
+  background-color: #2774ae; /* Example background color */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  padding: 3px;
+  padding-left: 10px;
+  margin-bottom: 5px;
+  width: 300px;
+  height: 240px;
+  /* position: fixed; */
+  /* top: 33%;
+    left: 80%; */
+  /* transform: translateX(-50%); */
+  overflow-y: auto;
 }
 
 .courtImage {
-    width: 50%;
-    height: 50%;
-    /* object-fit: cover; */
+  width: 50%;
+  height: 50%;
+  /* object-fit: cover; */
 }

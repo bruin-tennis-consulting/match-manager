@@ -1,8 +1,265 @@
+/* Tagging.module.css */
+
 .container {
-    padding: 10px;
+  padding: 15px; /* Reduced padding */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
 }
 
-.table {
-    display: flex;
+/* Minimalistic Video ID Input Line */
+.videoIdLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
+.videoIdLine input {
+  flex: 1.5;
+  padding: 6px 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.videoIdLine button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: #0070f3;
+  color: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.videoIdLine button:hover {
+  background-color: #005bb5;
+}
+
+.topSection {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.videoSection {
+  flex: 4; /* 60% of the container's width (assuming total flex is 5) */
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Space between elements */
+}
+
+.videoPlayer {
+  width: 100%;
+  aspect-ratio: 16 / 9; /* Maintains aspect ratio */
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.timestampTableContainer {
+  flex: 1; /* Matches the height of the video player */
+  overflow-y: auto; /* Adds scrollbar if content overflows */
+}
+
+.timestampTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.timestampTable th,
+.timestampTable td {
+  padding: 8px;
+  border: 1px solid #dddddd;
+  text-align: center;
+  font-size: 14px;
+}
+
+.timestampTable th {
+  background-color: #e0e0e0;
+  font-weight: 600;
+}
+
+.inputGroup {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.inputGroup label {
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.inputGroup input {
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.buttonsGroup {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+.buttonsGroup button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: #0070f3;
+  color: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.buttonsGroup button:hover {
+  background-color: #005bb5;
+}
+
+.courtSection {
+  flex: 2; /* 40% of the container's width (assuming total flex is 5) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px; /* Smaller padding */
+}
+
+.courtImage {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.courtImage:hover {
+  transform: scale(1.05);
+}
+
+.controlsSection {
+  flex: 2; /* Adjust as needed */
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.timerTable {
+  width: 100%; /* Full width of controlsSection */
+  margin-top: 20px;
+  border-collapse: collapse;
+}
+
+.timerTable td {
+  padding: 6px; /* Smaller padding */
+  border: 1px solid #dddddd;
+  font-size: 14px;
+}
+
+.inputField {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.keybindingsTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.keybindingsTable th,
+.keybindingsTable td {
+  padding: 8px;
+  border: 1px solid #dddddd;
+  text-align: left;
+  font-size: 14px;
+}
+
+.keybindingsTable th {
+  background-color: #e0e0e0;
+  font-weight: 600;
+}
+
+.clickedInfo {
+  padding: 12px;
+  border: 1px solid #dddddd;
+  border-radius: 6px;
+  background-color: #fafafa;
+}
+
+.clickedInfo h3 {
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #333333;
+}
+
+.clickedInfo p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #555555;
+}
+
+.customHr {
+  border: none;
+  height: 2px;
+  background-color: #e0e0e0;
+  margin: 30px 0;
+}
+
+.deleteButton {
+  padding: 6px 10px;
+  background-color: #e74c3c;
+  border: none;
+  border-radius: 4px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.deleteButton:hover {
+  background-color: #c0392b;
+}
+
+@media (max-width: 1200px) {
+  .topSection {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .courtSection {
+    flex: 1;
+    width: 100%;
+  }
+
+  .videoSection,
+  .controlsSection {
+    width: 100%;
+  }
+
+  .timestampTableContainer {
+    height: 200px; /* Adjust as needed for smaller screens */
+  }
+
+  .videoIdLine input {
+    width: 80%;
+  }
+}
+
+@media (max-width: 768px) {
+  .buttonsGroup {
+    flex-direction: column;
+  }
+
+  .buttonsGroup button {
+    width: 100%;
+  }
+}

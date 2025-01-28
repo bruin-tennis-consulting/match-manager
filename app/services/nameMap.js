@@ -1,41 +1,35 @@
 /* Usage: If you want to change the name of a column in the filter list, 
    add the original column name to the left side and the display name
    to the right side. */
- 
+
 const nameMap = {
-
-   
-
   // New Player1 Focused Map
-  "player1ServePlacement"  : 'Serve Placement',
-  "player1ServeResult"     : 'Serve Result',
+  player1ServePlacement: 'Serve Placement',
+  player1ServeResult: 'Serve Result',
 
-  //Group 2: Return
-  "player1ReturnFhBh"      : 'Return Forehand/Backhand',
-  "player1ReturnPlacement" : 'Return Placement',
-    
-  "player1LastShotResult"  : 'Point Ends with Winner/Error',// Include in Group 2 and 3
+  // Group 2: Return
+  player1ReturnFhBh: 'Return Forehand/Backhand',
+  player1ReturnPlacement: 'Return Placement',
 
-  //Group 3: Last Shot
-  "player1LastShotFhBh" : 'Last Shot Forehand/Backhand',
-  "player1LastShotPlacement" : 'Last Shot Placement',
-    
-  //Group 4: Point Information
-  "rallyCountFreq"         : 'Rally Length',
-  "atNetPlayer1"           : 'Player Comes to Net',
-  "pointWonBy"             : 'Point Won By',
-  "side"                   : 'Deuce/Ad Serve',
-  "setNum"                 : 'Set Number',
+  player1LastShotResult: 'Point Ends with Winner/Error', // Include in Group 2 and 3
 
-  //Group 5: Special Requests
-  "isPressurePoint"        : " Pressure Point",
-  "isUnforcedError"        : "Unforced Error",
-  "isSecondServeAttacked"  : "Second Serve Attacked",
-  "isAggressiveServePlusOne"  : "Aggressive Serve +1",
-  "pointScore"             : "Point Score",
+  // Group 3: Last Shot
+  player1LastShotFhBh: 'Last Shot Forehand/Backhand',
+  player1LastShotPlacement: 'Last Shot Placement',
 
+  // Group 4: Point Information
+  rallyCountFreq: 'Rally Length',
+  atNetPlayer1: 'Player Comes to Net',
+  pointWonBy: 'Point Won By',
+  side: 'Deuce/Ad Serve',
+  setNum: 'Set Number',
 
-
+  // Group 5: Special Requests
+  isPressurePoint: ' Pressure Point',
+  isUnforcedError: 'Unforced Error',
+  isSecondServeAttacked: 'Second Serve Attacked',
+  isAggressiveServePlusOne: 'Aggressive Serve +1',
+  pointScore: 'Point Score'
 
   // Data Version 0 (Points)
   //  "point_winner"           : 'Point Winner',
@@ -66,16 +60,7 @@ const nameMap = {
   //  "isbreakPoint"           : 'Break Point',
   //  "setScoreSum"            : 'Set #',
   //  "rallyCountFreq"         : 'Rally Length',
-    
 
-
-
-  
-
-
-
-    
-    
   // Data Version 1
   // "Name"                   : 'Point Score',
   //  "Shot 1: gameScore"      : 'Game Score',
@@ -86,7 +71,7 @@ const nameMap = {
   //  "Shot 1: secondServeIn"  : 'Second Serve In',
   //  "Shot 1: secondServeZone": 'Second Serve Zone',
   //  "Shot 2: returnData"     : 'Return Data',
-};  
+}
 
 /* Available keys for data format 1
    (each starts with "Shot X: ")
@@ -118,4 +103,4 @@ const nameMap = {
 //   isPointEnd
 //   player2Name
 
-export default nameMap;
+export default nameMap

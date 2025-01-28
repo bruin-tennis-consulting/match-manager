@@ -1,65 +1,65 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react'
 
 function VideoPlayer({ videoId, setVideoObject, onReady }) {
-  const playerRef = useRef(null);
+  const playerRef = useRef(null)
 
   useEffect(() => {
     const initializePlayer = () => {
-      const playerWidth = document.getElementById('player').offsetWidth;
-      const playerHeight = Math.ceil(playerWidth / 16 * 9); // Assuming 16:9 aspect ratio
+      const playerWidth = document.getElementById('player').offsetWidth
+      const playerHeight = Math.ceil((playerWidth / 16) * 9) // Assuming 16:9 aspect ratio
 
       playerRef.current = new window.YT.Player('player', {
-        videoId: videoId,
+        videoId,
         events: {
-          'onReady': onPlayerReady
+          onReady: onPlayerReady
         },
         playerVars: {
-          'origin': 'http://localhost:3000' 
+          origin: 'http://localhost:3000'
         },
         width: '100%', // Adjust the width here
         height: playerHeight
-      });
-      setVideoObject(playerRef.current);
-    };
+      })
+      setVideoObject(playerRef.current)
+    }
 
     if (!window.YT) {
       // Load the YouTube iframe API script
-      const tag = document.createElement('script');
-      tag.id = 'youtube-api-script';
-      tag.src = 'https://www.youtube.com/iframe_api';
+      const tag = document.createElement('script')
+      tag.id = 'youtube-api-script'
+      tag.src = 'https://www.youtube.com/iframe_api'
 
-      const firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+      const firstScriptTag = document.getElementsByTagName('script')[0]
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag)
 
       // Define the callback function for when the API is ready
-      window.onYouTubeIframeAPIReady = initializePlayer;
+      window.onYouTubeIframeAPIReady = initializePlayer
     } else {
       // If the API is already loaded, initialize the player immediately
-      initializePlayer();
+      initializePlayer()
     }
 
     return () => {
       // Clean up the player
       if (playerRef.current) {
-        playerRef.current.destroy();
+        playerRef.current.destroy()
       }
-    };
-  }, [videoId, setVideoObject]);
+    }
+  }, [videoId, setVideoObject])
 
   useEffect(() => {
     if (playerRef.current && playerRef.current.loadVideoById) {
-      playerRef.current.loadVideoById(videoId);
+      playerRef.current.loadVideoById(videoId)
     }
-  }, [videoId]);
+  }, [videoId])
 
   const onPlayerReady = () => {
-    console.log('player is ready');
+    console.log('player is ready')
     if (onReady) {
-      onReady();
+      onReady()
     }
-  };
+  }
 
-  return <div id="player"></div>;
+  return <div id="player"></div>
 }
 
-export default VideoPlayer;
+export default VideoPlayer

@@ -1,0 +1,93 @@
+.dashTilesContainer {
+  display: flex;
+  width: 85vw;
+  padding-top: 1.5vw;
+  box-sizing: border-box;
+}
+
+.matchInfoContainer {
+  border: 0.13vw solid #dedede;
+  border-radius: 1vw;
+  font-family: 'DM Sans', sans-serif;
+  width: calc(25% - 0.47vw);
+  margin: 0 0.5vw;
+  padding: 0.8vw;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.matchInfoContainer:hover {
+  cursor: pointer;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
+}
+
+.containerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.containerTitle {
+  font-size: 1vw;
+  font-weight: 350;
+  padding-bottom: 0.4vw;
+  text-align: left;
+}
+
+.taggedBadge {
+  background-color: #2774ae;
+  font-family: 'DM Sans', sans-serif;
+  color: white;
+  font-size: 0.7vw;
+  padding: 0.2vw 0.5vw;
+  border-radius: 0.6vw;
+}
+
+.playerInfo {
+  display: flex;
+  align-items: center;
+  font-size: 1.3vw;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 0.4vw;
+}
+
+.playerInfoName {
+  padding-left: 0.8vw;
+  display: flex;
+  align-items: center;
+  font-size: 1.3vw;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.playerInfoScore {
+  display: flex;
+  font-size: 1.3vw;
+  font-weight: 600;
+  margin-left: auto;
+  letter-spacing: 0.4vw;
+}
+
+.playerSchoolImgcontainerhome,
+.playerSchoolImgcontainer {
+  width: 40px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.playerSchoolImgcontainerhome img,
+.playerSchoolImgcontainer img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
