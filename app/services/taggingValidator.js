@@ -108,6 +108,7 @@
  * Made by Alex West, contact him for more info.
  */
 
+// eslint-disable-next-line
 function checkForEmptyCellsInActiveRow(tableData, matchMetadata) {
   const errors = []
   const activeRow = matchMetadata.activeRow

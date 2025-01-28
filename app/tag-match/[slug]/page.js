@@ -232,7 +232,7 @@ export default function TagMatch() {
       setErrors(
         validateTable(updatedTable, {
           ...matchMetadata,
-          activeRowIndex: newIndex
+          activeRowIndex: newActiveRowIndex
         })
       )
       return { rows: updatedTable, activeRowIndex: newActiveRowIndex }
