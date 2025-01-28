@@ -81,11 +81,7 @@ export const filterGroups = {
         title: 'Set Score',
         values: ['0-0', '1-0', '0-1', '1-1']
       },
-      tiebreak: {
-        title: 'Tiebreak',
-        type: 'checkbox'
-      },
-      breakPoint: {
+      isBreakPoint: {
         title: 'Break Point',
         type: 'checkbox'
       }
@@ -97,15 +93,22 @@ export const filterGroups = {
       player1: {
         title: 'Player 1',
         categories: {
-          servePlacement: {
+          player1ServePlacement: {
             title: 'Serve Placement',
-            values: ['Wide', 'Body', 'T']
+            values: [
+              'Deuce: Wide',
+              'Deuce: Body',
+              'Deuce: T',
+              'Ad: Wide',
+              'Ad: Body',
+              'Ad: T'
+            ]
           },
-          serveResult: {
+          player1ServeResult: {
             title: 'Serve Result',
-            values: ['Ace', 'Ball In Play']
+            values: ['1st Serve In', '2nd Serve In', 'Double Fault', 'Ace']
           },
-          serveSide: {
+          side: {
             title: 'Serve Side',
             values: ['Deuce', 'Ad']
           }
@@ -114,17 +117,24 @@ export const filterGroups = {
       player2: {
         title: 'Player 2',
         categories: {
-          servingSide: {
-            title: 'Serving Side',
-            values: ['Deuce', 'Ad']
-          },
-          servePlacement: {
+          player2ServePlacement: {
             title: 'Serve Placement',
-            values: ['Wide', 'Body', 'T']
+            values: [
+              'Deuce: Wide',
+              'Deuce: Body',
+              'Deuce: T',
+              'Ad: Wide',
+              'Ad: Body',
+              'Ad: T'
+            ]
           },
-          serveResult: {
+          player2ServeResult: {
             title: 'Serve Result',
-            values: ['Ace', 'Ball In Play']
+            values: ['1st Serve In', '2nd Serve In', 'Double Fault', 'Ace']
+          },
+          side: {
+            title: 'Serve Side',
+            values: ['Deuce', 'Ad']
           }
         }
       }
@@ -136,26 +146,26 @@ export const filterGroups = {
       player1: {
         title: 'Player 1',
         categories: {
-          returningSide: {
-            title: 'Returning Side',
-            values: ['Deuce', 'Ad']
+          player1ReturnFhBh: {
+            title: 'Return Forehand/Backhand',
+            values: ['Forehand', 'Backhand']
           },
-          returnPlacement: {
+          player1ReturnPlacement: {
             title: 'Return Placement',
-            values: ['Down the Line', 'Cross Court']
+            values: ['Down the Line', 'Crosscourt']
           }
         }
       },
       player2: {
         title: 'Player 2',
         categories: {
-          returnFhBh: {
+          player2ReturnFhBh: {
             title: 'Return Forehand/Backhand',
             values: ['Forehand', 'Backhand']
           },
-          returnPlacement: {
+          player2ReturnPlacement: {
             title: 'Return Placement',
-            values: ['Down the Line', 'Cross Court']
+            values: ['Down the Line', 'Crosscourt']
           }
         }
       }
@@ -164,38 +174,30 @@ export const filterGroups = {
   rally: {
     title: 'Rally',
     subCategories: {
-      rallyLength: {
+      rallyCountFreq: {
         title: 'Rally Length',
-        values: ['1-4', '5-8', '9+']
+        values: ['1 - 4', '5 - 8', '9 - 12', '13 +']
       },
       pointWonBy: {
         title: 'Point Won By',
         values: ['Player 1', 'Player 2']
       },
-      shotType: {
-        title: 'Shot Type',
-        values: ['Lob', 'Approach', 'Dropshot', 'Slice', 'Overhead']
-      },
-      approach: {
-        title: 'Approach',
-        type: 'checkbox'
+      lastShotDirection: {
+        title: 'Last Shot Direction',
+        values: ['Down the Line', 'Crosscourt']
       }
     }
   },
   lastShot: {
     title: 'Last Shot',
     subCategories: {
-      winner: {
-        title: 'Winner',
-        type: 'checkbox'
+      lastShotResult: {
+        title: 'Result',
+        values: ['Winner', 'Error']
       },
-      forcedError: {
-        title: 'Forced Error',
-        type: 'checkbox'
-      },
-      unforcedError: {
-        title: 'Unforced Error',
-        type: 'checkbox'
+      errorType: {
+        title: 'Error Type',
+        values: ['Net', 'Wide Right', 'Wide Left', 'Long']
       }
     }
   }
