@@ -230,11 +230,14 @@ const MatchPage = () => {
   return (
     <div className={styles.container}>
       {error ? (
-        <div className={styles.card}>
+        <div
+          className={styles.card}
+          style={{ margin: 0, maxWidth: '560px', marginTop: '-120px' }}
+        >
           <h3>{error === 'not-found' ? 'Match Not Found' : 'Access Denied'}</h3>
           <p>
             {error === 'not-found'
-              ? 'The match you are looking for does not exist or has been removed.'
+              ? 'The match you are looking for does not exist or has been removed. You may be logged into the wrong account. Please try again.'
               : 'You may be logged into the wrong account. Please check your login and try again.'}
           </p>
         </div>
