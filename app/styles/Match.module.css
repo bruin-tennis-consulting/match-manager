@@ -139,8 +139,6 @@
   cursor: pointer;
   background-color: #fafafa;
   border: none; /* Remove the default border */
-  /* border-left: 0.313vw solid #b0b0b0; /* Adjust border width using viewport units */
-  /* border-bottom: 0.313vw solid #b0b0b0; /* Adjust border width using viewport units */
   border: 1px solid #eaeaea;
   font-weight: 400;
   font-size: 1.3vw; /* Adjust font size using viewport units */
@@ -185,7 +183,7 @@
 
 .toggle_buttona_active {
   font-size: 1vw;
-  width: 6vw;
+  width: 15vw;
   height: 5vh;
   background-color: #fafafa;
   border-top-right-radius: 10px;
@@ -196,7 +194,7 @@
 
 .toggle_buttona_inactive {
   font-size: 1vw;
-  width: 6vw;
+  width: 15vw;
   height: 5vh;
   background-color: #ffffff;
   border-top-right-radius: 10px;
@@ -207,7 +205,7 @@
 
 .toggle_button_neutral_active {
   font-size: 1vw;
-  width: 6vw;
+  width: 5vw;
   height: 5vh;
   background-color: #fafafa;
   border: 1px solid #eaeaea;
@@ -217,7 +215,7 @@
 
 .toggle_button_neutral_inactive {
   font-size: 1vw;
-  width: 6vw;
+  width: 5vw;
   height: 5vh;
   background-color: #ffffff;
   border: 1px solid #eaeaea;
@@ -227,7 +225,7 @@
 
 .toggle_buttonb_active {
   font-size: 1vw;
-  width: 6vw;
+  width: 12vw;
   height: 5vh;
   background-color: #fafafa;
   border-top-left-radius: 10px;
@@ -238,7 +236,7 @@
 
 .toggle_buttonb_inactive {
   font-size: 1vw;
-  width: 6vw;
+  width: 12vw;
   height: 5vh;
   background-color: #ffffff;
   border-top-left-radius: 10px;
