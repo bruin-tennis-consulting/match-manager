@@ -47,6 +47,7 @@ const MatchPage = () => {
   const [tab, setTab] = useState(1)
   const [bookmarks, setBookmarks] = useState([])
   const [triggerScroll, setTriggerScroll] = useState(false)
+  const [error, setError] = useState(null) // now checking for error from invalid match access
   const tableRef = useRef(null)
   const iframeRef = useRef(null)
 
@@ -223,13 +224,43 @@ const MatchPage = () => {
     )
   }
 
+  // Check validilty of match by user access
+  useEffect(() => {
+    const selectedMatch = matches.find((match) => match.id === docId)
+
+    if (!selectedMatch) {
+      setError('not-found')
+      return
+    }
+
+    // If match exists, clear any error and set the match data
+    setError(null)
+    setMatchData(selectedMatch)
+    const initialBookmarks = selectedMatch.pointsJson.filter(
+      (point) => point.bookmarked
+    )
+    setBookmarks(initialBookmarks)
+  }, [matches, docId])
+
   // Usage in your component:
   console.log(matchData)
   const matchScores = matchData ? getMatchScores(matchData.pointsJson) : []
 
   return (
     <div className={styles.container}>
-      {matchData && (
+      {error ? (
+        <div
+          className={styles.card}
+          style={{ margin: 0, maxWidth: '560px', marginTop: '-120px' }}
+        >
+          <h3>{error === 'not-found' ? 'Match Not Found' : 'Access Denied'}</h3>
+          <p>
+            {error === 'not-found'
+              ? 'The match you are looking for does not exist or has been removed. You may be logged into the wrong account. Please try again.'
+              : 'You may be logged into the wrong account. Please check your login and try again.'}
+          </p>
+        </div>
+      ) : matchData ? (
         <>
           <MatchTiles
             matchName={matchData.matchDetails.event}
@@ -500,7 +531,7 @@ const MatchPage = () => {
             )}
           </div>
         </>
-      )}
+      ) : null}
     </div>
   )
 }
