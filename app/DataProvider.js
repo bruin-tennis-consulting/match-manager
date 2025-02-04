@@ -123,7 +123,8 @@ export const DataProvider = ({ children }) => {
       await fetchMatches()
     } catch (err) {
       setError(err)
-      console.error('Error creating new match:', err)
+      console.error('DataProvider: Error creating new match:', err)
+      throw err
     }
   }, [])
 

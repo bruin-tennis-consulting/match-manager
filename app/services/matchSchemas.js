@@ -65,7 +65,8 @@ const initialSchema = {
               type: 'number',
               title: 'Opponent Tiebreak (if applicable)'
             }
-          }
+          },
+          required: ['clientGames', 'opponentGames']
         },
         set2: {
           type: 'object',
@@ -81,7 +82,8 @@ const initialSchema = {
               type: 'number',
               title: 'Opponent Tiebreak (if applicable)'
             }
-          }
+          },
+          required: ['clientGames', 'opponentGames']
         },
         set3: {
           type: 'object',
@@ -99,7 +101,8 @@ const initialSchema = {
             }
           }
         }
-      }
+      },
+      required: ['set1']
     },
     division: {
       type: 'string',

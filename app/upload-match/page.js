@@ -20,6 +20,7 @@ export default function UploadMatchForm() {
   const [teams, setTeams] = useState([])
   const [collections, setCollections] = useState([])
   const [formData, setFormData] = useState({})
+  const [errors, setErrors] = useState([])
 
   const { userProfile } = useAuth()
 
@@ -100,9 +101,28 @@ export default function UploadMatchForm() {
     updatePlayerOptions(newFormData)
   }
 
+  const validateFileType = (file, expectedType, fieldName) => {
+    if (file && file.split(';')[0].split(':')[1] !== expectedType) {
+      throw new Error(
+        `Invalid file type for ${fieldName}. Please upload a ${expectedType.split('/')[1]} file.`
+      )
+    }
+  }
+
   const handleSubmit = async ({ formData }) => {
     try {
       let published = true
+      if (
+        !formData.opponentPlayer ||
+        formData.opponentPlayer.trim().split(/\s+/).length < 2
+      ) {
+        throw new Error(
+          'Opponent player must include both first and last name.'
+        )
+      }
+      // Validate the File types
+      validateFileType(formData.jsonFile, 'application/json', 'JSON file')
+      validateFileType(formData.pdfFile, 'application/pdf', 'PDF file')
       const pointsJson = formData.jsonFile
         ? JSON.parse(atob(formData.jsonFile.split(',')[1]))
         : []
@@ -168,11 +188,11 @@ export default function UploadMatchForm() {
         version: 'v1', // Current version for new matches added
         published
       })
-
+      setErrors([])
       alert('Match uploaded successfully!')
     } catch (error) {
       console.error('Error uploading match:', error)
-      alert(`Error uploading match: ${error.message}`)
+      setErrors([`Error: ${error.message}`])
     }
   }
 
@@ -192,6 +212,16 @@ export default function UploadMatchForm() {
           onSubmit={handleSubmit}
           validator={validator}
         />
+        {errors.length > 0 && (
+          <div className={styles.errorContainer}>
+            {errors.map((error, index) => (
+              <div key={index} className={styles.errorMessage}>
+                <span className={styles.errorIcon}>⚠️</span>
+                {error}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
