@@ -27,3 +27,29 @@
 .form label input {
   margin-left: 0.5rem; /* Adjust the margin-left as needed */
 }
+
+.errorContainer {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  padding: 16px;
+  background-color: #ffebee;
+  border-left: 4px solid #f44336;
+  border-radius: 4px;
+}
+
+.errorMessage {
+  color: #d32f2f;
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.errorMessage:last-child {
+  margin-bottom: 0;
+}
+
+.errorIcon {
+  margin-right: 8px;
+}
