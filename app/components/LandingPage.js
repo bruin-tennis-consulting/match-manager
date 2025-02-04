@@ -4,7 +4,7 @@ import styles from '@/app/styles/LandingPage.module.css'
 import navStyles from '@/app/styles/Navbar.module.css'
 import SignIn from './SignIn'
 
-const Land = () => {
+const Land = (setShowSignIn) => {
   return (
     <div className={styles.parentContainer}>
       <div className={styles.mainText}>
@@ -15,7 +15,12 @@ const Land = () => {
       <div className={styles.subText}>
         <p>Empowering Tennis Excellence</p>
         <p>through Data-Driven Insights</p>
-        <button className={styles.startButton}>Start Now</button>
+        <button
+          onClick={() => setShowSignIn(true)}
+          className={styles.startButton}
+        >
+          Start Now
+        </button>
       </div>
       <div className={styles.imageContainer}>
         <Image
@@ -83,7 +88,7 @@ const LandingPage = () => {
         </header>
       </div>
       {/* show LandingPage or SignIn Page */}
-      {!showSignIn ? <Land /> : <SignIn />}
+      {!showSignIn ? <Land setShowSignIn /> : <SignIn />}
     </div>
   )
 }

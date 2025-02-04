@@ -4,9 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation' // Updated import for usePathname
 
 import { useData } from '@/app/DataProvider'
-
-import nameMap from '@/app/services/nameMap'
-
+import { filterGroups } from '@/app/services/filterGroups'
 import filterListStyles from '@/app/styles/FilterList.module.css'
 import styles from '@/app/styles/Match.module.css'
 
@@ -16,6 +14,27 @@ import PointsList from '@/app/components/PointsList'
 import ScoreBoard from '@/app/components/ScoreBoard'
 import MatchTiles from '@/app/components/MatchTiles'
 import ExtendedList from '@/app/components/ExtendedList'
+
+const findDisplayName = (key) => {
+  // Search through all sections of filterGroups
+  for (const section of Object.values(filterGroups)) {
+    // Check in subCategories
+    if (section.subCategories && section.subCategories[key]) {
+      return section.subCategories[key].title
+    }
+
+    // Check in players
+    if (section.players) {
+      for (const player of Object.values(section.players)) {
+        if (player.categories && player.categories[key]) {
+          return player.categories[key].title
+        }
+      }
+    }
+  }
+
+  return key // Fallback to key if no display name found
+}
 
 const MatchPage = () => {
   const [matchData, setMatchData] = useState()
@@ -28,6 +47,7 @@ const MatchPage = () => {
   const [tab, setTab] = useState(1)
   const [bookmarks, setBookmarks] = useState([])
   const [triggerScroll, setTriggerScroll] = useState(false)
+  const [error, setError] = useState(null) // now checking for error from invalid match access
   const tableRef = useRef(null)
   const iframeRef = useRef(null)
 
@@ -204,13 +224,43 @@ const MatchPage = () => {
     )
   }
 
+  // Check validilty of match by user access
+  useEffect(() => {
+    const selectedMatch = matches.find((match) => match.id === docId)
+
+    if (!selectedMatch) {
+      setError('not-found')
+      return
+    }
+
+    // If match exists, clear any error and set the match data
+    setError(null)
+    setMatchData(selectedMatch)
+    const initialBookmarks = selectedMatch.pointsJson.filter(
+      (point) => point.bookmarked
+    )
+    setBookmarks(initialBookmarks)
+  }, [matches, docId])
+
   // Usage in your component:
   console.log(matchData)
   const matchScores = matchData ? getMatchScores(matchData.pointsJson) : []
 
   return (
     <div className={styles.container}>
-      {matchData && (
+      {error ? (
+        <div
+          className={styles.card}
+          style={{ margin: 0, maxWidth: '560px', marginTop: '-120px' }}
+        >
+          <h3>{error === 'not-found' ? 'Match Not Found' : 'Access Denied'}</h3>
+          <p>
+            {error === 'not-found'
+              ? 'The match you are looking for does not exist or has been removed. You may be logged into the wrong account. Please try again.'
+              : 'You may be logged into the wrong account. Please check your login and try again.'}
+          </p>
+        </div>
+      ) : matchData ? (
         <>
           <MatchTiles
             matchName={matchData.matchDetails.event}
@@ -260,144 +310,6 @@ const MatchPage = () => {
               </div>
             </div>
             <div className={styles.sidebar}>
-              <div className={filterListStyles.activeFilterListContainer}>
-                Active Filters:
-                <ul className={filterListStyles.activeFilterList}>
-                  {sortedFilterList.map(([key, value]) => (
-                    <li
-                      className={filterListStyles.activeFilterItem}
-                      key={`${key}-${value}`}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => removeFilter(key, value)}
-                    >
-                      {nameMap[key]}: {value}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <button
-                onClick={() => setTab(0)}
-                className={
-                  tab === 0
-                    ? styles.toggle_buttonb_active
-                    : styles.toggle_buttonb_inactive
-                }
-              >
-                Filters
-              </button>
-              <button
-                onClick={() => setTab(1)}
-                className={
-                  tab === 1
-                    ? styles.toggle_button_neutral_active
-                    : styles.toggle_button_neutral_inactive
-                }
-              >
-                Points
-              </button>
-              <button
-                onClick={() => setTab(2)}
-                className={
-                  tab === 2
-                    ? styles.toggle_buttona_active
-                    : styles.toggle_buttona_inactive
-                }
-              >
-                Bookmarks
-              </button>
-              {tab === 0 && (
-                <div className={styles.sidebox}>
-                  <div className={filterListStyles.optionsList}>
-                    <div>
-                      <input
-                        type="radio"
-                        id="defaultRadio"
-                        checked={!showCount && !showPercent}
-                        onChange={() => {
-                          setShowPercent(false)
-                          setShowCount(false)
-                        }}
-                      />
-                      <label htmlFor="defaultRadio">Default</label>
-                    </div>
-                    <div>
-                      <input
-                        type="radio"
-                        id="percentRadio"
-                        checked={showPercent}
-                        onChange={() => {
-                          setShowPercent(true)
-                          setShowCount(false)
-                        }}
-                      />
-                      <label htmlFor="percentRadio">Show Percent</label>
-                    </div>
-                    <div>
-                      <input
-                        type="radio"
-                        id="countRadio"
-                        checked={showCount}
-                        onChange={() => {
-                          setShowPercent(false)
-                          setShowCount(true)
-                        }}
-                      />
-                      <label htmlFor="countRadio">Show Count</label>
-                    </div>
-                  </div>
-                  <div className={styles.sidecontent}>
-                    <FilterList
-                      pointsData={matchData.pointsJson}
-                      filterList={filterList}
-                      setFilterList={setFilterList}
-                      showPercent={showPercent}
-                      showCount={showCount}
-                    />
-                  </div>
-                </div>
-              )}
-              {tab === 1 && (
-                <div className={styles.sidebox}>
-                  <div className={styles.sidecontent}>
-                    <PointsList
-                      pointsData={returnFilteredPoints()}
-                      onPointSelect={handleJumpToTime}
-                      onBookmark={handleBookmark}
-                      clientTeam={matchData.teams.clientTeam}
-                      opponentTeam={matchData.teams.opponentTeam}
-                    />
-                  </div>
-                  <div style={{ padding: '0.5vw', paddingLeft: '5vw' }}>
-                    <button
-                      className={styles.viewDetailedListButton}
-                      onClick={scrollToDetailedList}
-                    >
-                      View Detailed List
-                    </button>
-                  </div>
-                </div>
-              )}
-              {tab === 2 && (
-                <div className={styles.sidebox}>
-                  <div className={styles.sidecontent}>
-                    <PointsList
-                      pointsData={bookmarks}
-                      onPointSelect={handleJumpToTime}
-                      onBookmark={handleBookmark}
-                      clientTeam={matchData.teams.clientTeam}
-                      opponentTeam={matchData.teams.opponentTeam}
-                    />
-                  </div>
-                  <div style={{ padding: '0.5vw', paddingLeft: '5vw' }}>
-                    <button
-                      className={styles.viewDetailedListButton}
-                      onClick={scrollToDetailedList}
-                    >
-                      View Detailed List
-                    </button>
-                  </div>
-                </div>
-              )}
               <div className="scoreboard">
                 <ScoreBoard
                   names={matchData.name}
@@ -428,6 +340,154 @@ const MatchPage = () => {
                   displaySections={{ score: true, info: true, matchup: true }}
                 />
               </div>
+              <div className={filterListStyles.activeFilterListContainer}>
+                Active Filters:
+                <ul className={filterListStyles.activeFilterList}>
+                  {sortedFilterList.map(([key, value]) => (
+                    <li
+                      className={filterListStyles.activeFilterItem}
+                      key={`${key}-${value}`}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => removeFilter(key, value)}
+                    >
+                      {findDisplayName(key)}: {value}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <button
+                onClick={() => setTab(0)}
+                className={
+                  tab === 0
+                    ? styles.toggle_button_neutral_active
+                    : styles.toggle_button_neutral_inactive
+                }
+              >
+                Filters
+              </button>
+              <button
+                onClick={() => setTab(1)}
+                className={
+                  tab === 1
+                    ? styles.toggle_button_neutral_active
+                    : styles.toggle_button_neutral_inactive
+                }
+              >
+                Points
+              </button>
+              <button
+                onClick={() => setTab(2)}
+                className={
+                  tab === 2
+                    ? styles.toggle_button_neutral_active
+                    : styles.toggle_button_neutral_inactive
+                }
+              >
+                Saved
+              </button>
+              {tab === 0 && (
+                <div className={styles.sidebox}>
+                  <div className={styles.sidecontent}>
+                    <div className={filterListStyles.optionsList}>
+                      <div>
+                        <input
+                          type="radio"
+                          id="defaultRadio"
+                          checked={!showCount && !showPercent}
+                          onChange={() => {
+                            setShowPercent(false)
+                            setShowCount(false)
+                          }}
+                        />
+                        <label htmlFor="defaultRadio">Default</label>
+                      </div>
+                      <div>
+                        <input
+                          type="radio"
+                          id="percentRadio"
+                          checked={showPercent}
+                          onChange={() => {
+                            setShowPercent(true)
+                            setShowCount(false)
+                          }}
+                        />
+                        <label htmlFor="percentRadio">Show Percent</label>
+                      </div>
+                      <div>
+                        <input
+                          type="radio"
+                          id="countRadio"
+                          checked={showCount}
+                          onChange={() => {
+                            setShowPercent(false)
+                            setShowCount(true)
+                          }}
+                        />
+                        <label htmlFor="countRadio">Show Count</label>
+                      </div>
+                    </div>
+                    <FilterList
+                      pointsData={matchData.pointsJson}
+                      filterList={filterList}
+                      setFilterList={setFilterList}
+                      showPercent={showPercent}
+                      showCount={showCount}
+                    />
+                  </div>
+                </div>
+              )}
+              {tab === 1 && (
+                <div className={styles.sidebox}>
+                  <div className={styles.sidecontent}>
+                    <PointsList
+                      pointsData={returnFilteredPoints()}
+                      onPointSelect={handleJumpToTime}
+                      onBookmark={handleBookmark}
+                      clientTeam={matchData.teams.clientTeam}
+                      opponentTeam={matchData.teams.opponentTeam}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      padding: '0.5vw',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <button
+                      className={styles.viewDetailedListButton}
+                      onClick={scrollToDetailedList}
+                    >
+                      View Detailed List
+                    </button>
+                  </div>
+                </div>
+              )}
+              {tab === 2 && (
+                <div className={styles.sidebox}>
+                  <div className={styles.sidecontent}>
+                    <PointsList
+                      pointsData={bookmarks}
+                      onPointSelect={handleJumpToTime}
+                      onBookmark={handleBookmark}
+                      clientTeam={matchData.teams.clientTeam}
+                      opponentTeam={matchData.teams.opponentTeam}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      padding: '0.5vw',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <button
+                      className={styles.viewDetailedListButton}
+                      onClick={scrollToDetailedList}
+                    >
+                      View Detailed List
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className={styles.toggle}>
@@ -449,7 +509,7 @@ const MatchPage = () => {
                   : styles.toggle_buttona_inactive
               }
             >
-              Points Played
+              Detailed Point List
             </button>
             {showPDF ? (
               <iframe
@@ -471,7 +531,7 @@ const MatchPage = () => {
             )}
           </div>
         </>
-      )}
+      ) : null}
     </div>
   )
 }
