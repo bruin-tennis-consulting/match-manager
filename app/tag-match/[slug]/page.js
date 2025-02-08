@@ -11,6 +11,7 @@ import {
 
 import VideoPlayer from '@/app/components/VideoPlayer'
 import TennisCourtSVG from '@/public/TennisCourtSVG'
+import { validateTable } from '@/app/services/taggingValidator'
 
 import styles from '@/app/styles/TagMatch.module.css'
 
@@ -34,6 +35,7 @@ export default function TagMatch() {
   const [serverFarNear, setServerFarNear] = useState('Near')
   const [tiebreak, setTiebreak] = useState(false)
   const [initialLoad, setInitialLoad] = useState(true)
+  const [errors, setErrors] = useState([])
 
   const [popUp, setPopUp] = useState([])
   const [isVisible, setIsVisible] = useState(true)
@@ -206,6 +208,13 @@ export default function TagMatch() {
         (row) => row.pointStartTime === newTimestamp
       )
 
+      setErrors(
+        validateTable(updatedTable, {
+          ...matchMetadata,
+          activeRowIndex: newIndex
+        })
+      )
+
       return { rows: updatedTable, activeRowIndex: newIndex }
     })
   }
@@ -220,6 +229,12 @@ export default function TagMatch() {
         rowIndex === oldTableState.activeRowIndex
           ? oldTableState.activeRowIndex - 1
           : oldTableState.activeRowIndex
+      setErrors(
+        validateTable(updatedTable, {
+          ...matchMetadata,
+          activeRowIndex: newActiveRowIndex
+        })
+      )
       return { rows: updatedTable, activeRowIndex: newActiveRowIndex }
     })
     pullAndPushRows(tableState.rows, rowToDeleteTimestamp)
@@ -306,6 +321,12 @@ export default function TagMatch() {
         const newIndex = updatedTable.findIndex(
           (row) => row.pointStartTime === oldActiveRowTimestamp
         )
+        setErrors(
+          validateTable(updatedTable, {
+            ...matchMetadata,
+            activeRowIndex: newIndex
+          })
+        )
 
         return { rows: updatedTable, activeRowIndex: newIndex }
       })
@@ -346,6 +367,13 @@ export default function TagMatch() {
     })
     setCurrentPage(lastState.page)
     setPopUp(lastState.popUp)
+
+    setErrors(
+      validateTable(lastState.table, {
+        ...matchMetadata,
+        activeRowIndex: lastState.activeRowIndex
+      })
+    )
 
     setTaggerHistory((prev) => prev.slice(0, -1))
   }
@@ -403,6 +431,18 @@ export default function TagMatch() {
 
     console.log('xInches: ' + xInches + ' yInches: ' + yInches)
     return { x: xInches, y: yInches }
+  }
+
+  function getErrors(rowIndex, columnName) {
+    const cellErrors = errors.filter((error) =>
+      error.cells.some(
+        ([errorRow, errorCol]) =>
+          (errorRow === rowIndex || errorRow === null) &&
+          (errorCol === columnName || errorCol === null)
+      )
+    )
+
+    return cellErrors.length > 0 ? cellErrors : null
   }
 
   return (
@@ -619,24 +659,32 @@ export default function TagMatch() {
                   </i>
                 </button>
               </td>
-              {columnNames.map((columnName, colIndex) => (
-                <td key={colIndex}>
-                  <input
-                    type="text"
-                    value={row[columnName] || ''}
-                    onChange={(event) => {
-                      saveToHistory()
-                      changeRowValue(rowIndex, columnName, event.target.value)
-                    }}
-                    style={{
-                      backgroundColor:
-                        tableState.activeRowIndex === rowIndex
-                          ? 'yellow'
-                          : 'white'
-                    }}
-                  />
-                </td>
-              ))}
+              {columnNames.map((columnName, colIndex) => {
+                const cellErrors = getErrors(rowIndex, columnName)
+                const errorDescriptions = cellErrors
+                  ? cellErrors.map((error) => error.description).join(', ')
+                  : ''
+                return (
+                  <td key={colIndex}>
+                    <input
+                      type="text"
+                      value={row[columnName] || ''}
+                      onChange={(event) => {
+                        saveToHistory()
+                        changeRowValue(rowIndex, columnName, event.target.value)
+                      }}
+                      style={{
+                        backgroundColor: cellErrors
+                          ? 'lightcoral'
+                          : tableState.activeRowIndex === rowIndex
+                            ? 'yellow'
+                            : 'white'
+                      }}
+                      title={errorDescriptions}
+                    />
+                  </td>
+                )
+              })}
             </tr>
           ))}
         </tbody>
