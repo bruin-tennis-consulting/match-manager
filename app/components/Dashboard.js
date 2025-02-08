@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import Fuse from 'fuse.js'
 
 import { useData } from '@/app/DataProvider'
@@ -135,10 +136,12 @@ const Dashboard = () => {
               className={`${styles.card} ${selectedMatchSets.includes(matchKey) ? styles.active : ''}`}
               onClick={() => handleCarouselClick(matchKey)}
             >
-              <img
+              <Image
                 src={logos[match.teams.opponentTeam]}
                 alt="Team Logo"
                 className={styles.logo}
+                width={500} // Add appropriate width
+                height={300} // Add appropriate height
               />
               <span className={styles.matchDate}>{match.matchDate}</span>
             </div>
