@@ -27,11 +27,7 @@ const Dashboard = () => {
   const { matches, logos } = useData()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
-
-  console.log('matches', matches)
-  console.log(matches.length)
   const formattedMatches = formatMatches(matches)
-  console.log(formattedMatches)
 
   // Fuzzy search
   const fuse = useMemo(() => {
@@ -123,27 +119,44 @@ const Dashboard = () => {
       </header>
 
       <div className={styles.carousel}>
-        {formattedMatches.map((match, index) => {
-          let matchKey = `${match.matchDate}#${match.teams.opponentTeam}`
-          if (!match.matchDetails.duel) {
-            console.log('EVENT')
-            matchKey = `_#${match.matchDetails.event}`
-          }
+        {[
+          ...new Set(
+            formattedMatches.map((match) =>
+              match.matchDetails.duel
+                ? `${match.matchDate}#${match.teams.opponentTeam}`
+                : `_#${match.matchDetails.event}`
+            )
+          )
+        ].map((matchKey, index) => {
+          const [matchDate, identifier] = matchKey.split('#')
+          const isDuel = matchDate !== '_'
 
           return (
             <div
               key={index}
-              className={`${styles.card} ${selectedMatchSets.includes(matchKey) ? styles.active : ''}`}
+              className={`${styles.card} ${
+                selectedMatchSets.includes(matchKey) ? styles.active : ''
+              }`}
               onClick={() => handleCarouselClick(matchKey)}
             >
-              <Image
-                src={logos[match.teams.opponentTeam]}
-                alt="Team Logo"
-                className={styles.logo}
-                width={500} // Add appropriate width
-                height={300} // Add appropriate height
-              />
-              <span className={styles.matchDate}>{match.matchDate}</span>
+              {}
+              <div className={styles.cardContent}>
+                {isDuel && logos[identifier] ? (
+                  <Image
+                    src={logos[identifier] || ''}
+                    alt={`${identifier} Logo`}
+                    className={styles.logo}
+                    width={28}
+                    height={20}
+                    priority={true}
+                  />
+                ) : (
+                  <div className={styles.eventName}>{identifier}</div>
+                )}
+                <span className={styles.matchDate}>
+                  {isDuel ? matchDate : ''}
+                </span>
+              </div>
             </div>
           )
         })}

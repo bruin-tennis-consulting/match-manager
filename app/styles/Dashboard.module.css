@@ -134,13 +134,11 @@
 .card {
   display: flex;
   justify-content: center;
-  min-width: 125px;
   border: 1px solid #dedede;
   border-radius: 20px;
   padding: 6px 10px;
-  min-width: 100px; /* Reduce min-width for narrower cards */
-  max-width: 150px; /* Set max-width to prevent them from growing too wide */
-  flex-shrink: 0; /* Prevent shrinking beyond min-width */
+  padding: 8px 12px; 
+  flex-shrink: 0; 
   margin-right: 10px;
   background-color: #ffffff;
   white-space: nowrap;
@@ -150,6 +148,23 @@
     box-shadow 0.3s,
     border 0.3s;
   cursor: pointer;
+}
+
+.eventName {
+  font-size: 15px;
+  font-weight: 500;
+  color: #000000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.active .eventName {
+  color: #ffffff;
+}
+
+.active:hover .eventName {
+  color: #ffffff;
 }
 
 .cardContent {
