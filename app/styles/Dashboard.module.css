@@ -137,8 +137,8 @@
   border: 1px solid #dedede;
   border-radius: 20px;
   padding: 6px 10px;
-  padding: 8px 12px; 
-  flex-shrink: 0; 
+  padding: 8px 12px;
+  flex-shrink: 0;
   margin-right: 10px;
   background-color: #ffffff;
   white-space: nowrap;
@@ -213,6 +213,14 @@
 
 .active:hover .matchDate {
   color: #ffffff;
+}
+
+.yearPart {
+  color: #9fa6b3;
+}
+
+.active .yearPart {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* Search Bar */

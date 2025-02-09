@@ -18,8 +18,29 @@ import SearchIcon from '@/public/search'
 
 const formatMatches = (matches) => {
   return matches
-    .filter((match) => match.version === 'v1') // Filter for version 'v1'
-    .sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate)) // Sort by matchDate in descending order
+    .filter((match) => match.version === 'v1')
+    .sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate))
+}
+
+const formatDisplayDate = (dateStr) => {
+  if (!dateStr || dateStr === '_') return { mainPart: '', yearPart: '' }
+  const date = new Date(dateStr)
+  const currentYear = new Date().getFullYear()
+  const month = date.toLocaleString('en-US', { month: 'short' })
+  const day = date.getDate()
+  const year = date.getFullYear()
+
+  return {
+    mainPart: `${month} ${day}`,
+    yearPart: year !== currentYear ? ` '${String(year).slice(2)}` : ''
+  }
+}
+
+const formatDateKey = (dateStr) => {
+  if (!dateStr || dateStr === '_') return '_'
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return '_'
+  return dateStr
 }
 
 const Dashboard = () => {
@@ -79,7 +100,7 @@ const Dashboard = () => {
       ...new Set(
         formattedMatches.map((match) =>
           match.matchDetails.duel
-            ? `${match.matchDate}#${match.teams.opponentTeam}`
+            ? `${formatDateKey(match.matchDate)}#${match.teams.opponentTeam}`
             : `_#${match.matchDetails.event}`
         )
       )
@@ -154,7 +175,16 @@ const Dashboard = () => {
                   <div className={styles.eventName}>{identifier}</div>
                 )}
                 <span className={styles.matchDate}>
-                  {isDuel ? matchDate : ''}
+                  {isDuel ? (
+                    <>
+                      {formatDisplayDate(matchDate).mainPart}
+                      <span className={styles.yearPart}>
+                        {formatDisplayDate(matchDate).yearPart}
+                      </span>
+                    </>
+                  ) : (
+                    ''
+                  )}
                 </span>
               </div>
             </div>
@@ -193,7 +223,12 @@ const Dashboard = () => {
                   <div className={styles.matchContainer}>
                     <div className={styles.matchHeader}>
                       <h3>{matchName}</h3>
-                      <span className={styles.date}>{matchDate}</span>
+                      <span className={styles.date}>
+                        {formatDisplayDate(matchDate).mainPart}
+                        <span className={styles.yearPart}>
+                          {formatDisplayDate(matchDate).yearPart}
+                        </span>
+                      </span>
                     </div>
                     <DashTileContainer
                       matches={singlesMatches}
