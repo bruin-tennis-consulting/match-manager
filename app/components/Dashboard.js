@@ -36,13 +36,6 @@ const formatDisplayDate = (dateStr) => {
   }
 }
 
-const formatDateKey = (dateStr) => {
-  if (!dateStr || dateStr === '_') return '_'
-  const date = new Date(dateStr)
-  if (isNaN(date.getTime())) return '_'
-  return dateStr
-}
-
 const Dashboard = () => {
   const router = useRouter()
   const { matches, logos } = useData()
@@ -98,10 +91,9 @@ const Dashboard = () => {
     // fetch all, arr(set(matches))
     return [
       ...new Set(
-        formattedMatches.map((match) =>
-          match.matchDetails.duel
-            ? `${formatDateKey(match.matchDate)}#${match.teams.opponentTeam}`
-            : `_#${match.matchDetails.event}`
+        formattedMatches.map(
+          (match) =>
+            `${match.matchDate}#${match.matchDetails.duel ? match.teams.opponentTeam : match.matchDetails.event}`
         )
       )
     ]
@@ -205,8 +197,10 @@ const Dashboard = () => {
                     matchKey ===
                       `${match.matchDate}#${match.teams.opponentTeam}`) ||
                     (!match.matchDetails.duel &&
-                      matchKey === `_#${match.matchDetails.event}`))
+                      matchKey ===
+                        `${match.matchDate}#${match.matchDetails.event}`))
               )
+
               const doublesMatches = formattedMatches.filter(
                 (match) =>
                   !match.singles &&
@@ -214,7 +208,8 @@ const Dashboard = () => {
                     matchKey ===
                       `${match.matchDate}#${match.teams.opponentTeam}`) ||
                     (!match.matchDetails.duel &&
-                      matchKey === `_#${match.matchDetails.event}`))
+                      matchKey ===
+                        `${match.matchDate}#${match.matchDetails.event}`))
               )
               const [matchDate, matchName] = matchKey.split('#')
 
@@ -223,7 +218,7 @@ const Dashboard = () => {
                   <div className={styles.matchContainer}>
                     <div className={styles.matchHeader}>
                       <h3>{matchName}</h3>
-                      <span className={styles.date}>
+                      <span className={styles.matchDate}>
                         {formatDisplayDate(matchDate).mainPart}
                         <span className={styles.yearPart}>
                           {formatDisplayDate(matchDate).yearPart}
