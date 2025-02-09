@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
-
+import Image from 'next/image'
 import styles from '@/app/styles/DashboardTile.module.css'
-
 import { useData } from '@/app/DataProvider'
 
 const DashboardTile = ({
@@ -89,7 +88,15 @@ const DashboardTile = ({
         {/* Player 1 */}
         <div className={styles.playerInfo}>
           <div className={styles.playerSchoolImgcontainerhome}>
-            <img src={clientLogo} alt={`${clientTeam} logo`} />
+            {clientLogo && (
+              <Image
+                src={clientLogo}
+                alt={`${clientTeam} logo`}
+                width={50}
+                height={50}
+                priority
+              />
+            )}
           </div>
           <div className={styles.playerInfoName}>
             {player1Name} {isUnfinished && '(UF)'}
@@ -104,7 +111,15 @@ const DashboardTile = ({
         {/* Player 2 */}
         <div className={styles.playerInfo}>
           <div className={styles.playerSchoolImgcontainer}>
-            <img src={opponentLogo} alt={`${opponentTeam} logo`} />
+            {opponentLogo && (
+              <Image
+                src={opponentLogo}
+                alt={`${opponentTeam} logo`}
+                width={50}
+                height={50}
+                priority
+              />
+            )}
           </div>
           <div className={styles.playerInfoName}>{player2Name}</div>
           <div className={styles.playerInfoScore}>

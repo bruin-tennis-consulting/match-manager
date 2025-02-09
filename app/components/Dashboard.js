@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import Fuse from 'fuse.js'
 
 import { useData } from '@/app/DataProvider'
@@ -17,8 +18,22 @@ import SearchIcon from '@/public/search'
 
 const formatMatches = (matches) => {
   return matches
-    .filter((match) => match.version === 'v1') // Filter for version 'v1'
-    .sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate)) // Sort by matchDate in descending order
+    .filter((match) => match.version === 'v1')
+    .sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate))
+}
+
+const formatDisplayDate = (dateStr) => {
+  if (!dateStr || dateStr === '_') return { mainPart: '', yearPart: '' }
+  const date = new Date(dateStr)
+  const currentYear = new Date().getFullYear()
+  const month = date.toLocaleString('en-US', { month: 'short' })
+  const day = date.getDate()
+  const year = date.getFullYear()
+
+  return {
+    mainPart: `${month} ${day}`,
+    yearPart: year !== currentYear ? ` '${String(year).slice(2)}` : ''
+  }
 }
 
 const Dashboard = () => {
@@ -26,11 +41,7 @@ const Dashboard = () => {
   const { matches, logos } = useData()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
-
-  console.log('matches', matches)
-  console.log(matches.length)
   const formattedMatches = formatMatches(matches)
-  console.log(formattedMatches)
 
   // Fuzzy search
   const fuse = useMemo(() => {
@@ -80,10 +91,9 @@ const Dashboard = () => {
     // fetch all, arr(set(matches))
     return [
       ...new Set(
-        formattedMatches.map((match) =>
-          match.matchDetails.duel
-            ? `${match.matchDate}#${match.teams.opponentTeam}`
-            : `_#${match.matchDetails.event}`
+        formattedMatches.map(
+          (match) =>
+            `${match.matchDate}#${match.matchDetails.duel ? match.teams.opponentTeam : match.matchDetails.event}`
         )
       )
     ]
@@ -122,25 +132,53 @@ const Dashboard = () => {
       </header>
 
       <div className={styles.carousel}>
-        {formattedMatches.map((match, index) => {
-          let matchKey = `${match.matchDate}#${match.teams.opponentTeam}`
-          if (!match.matchDetails.duel) {
-            console.log('EVENT')
-            matchKey = `_#${match.matchDetails.event}`
-          }
+        {[
+          ...new Set(
+            formattedMatches.map((match) =>
+              match.matchDetails.duel
+                ? `${match.matchDate}#${match.teams.opponentTeam}`
+                : `_#${match.matchDetails.event}`
+            )
+          )
+        ].map((matchKey, index) => {
+          const [matchDate, identifier] = matchKey.split('#')
+          const isDuel = matchDate !== '_'
 
           return (
             <div
               key={index}
-              className={`${styles.card} ${selectedMatchSets.includes(matchKey) ? styles.active : ''}`}
+              className={`${styles.card} ${
+                selectedMatchSets.includes(matchKey) ? styles.active : ''
+              }`}
               onClick={() => handleCarouselClick(matchKey)}
             >
-              <img
-                src={logos[match.teams.opponentTeam]}
-                alt="Team Logo"
-                className={styles.logo}
-              />
-              <span className={styles.matchDate}>{match.matchDate}</span>
+              {}
+              <div className={styles.cardContent}>
+                {isDuel && logos[identifier] ? (
+                  <Image
+                    src={logos[identifier] || ''}
+                    alt={`${identifier} Logo`}
+                    className={styles.logo}
+                    width={28}
+                    height={20}
+                    priority={true}
+                  />
+                ) : (
+                  <div className={styles.eventName}>{identifier}</div>
+                )}
+                <span className={styles.matchDate}>
+                  {isDuel ? (
+                    <>
+                      {formatDisplayDate(matchDate).mainPart}
+                      <span className={styles.yearPart}>
+                        {formatDisplayDate(matchDate).yearPart}
+                      </span>
+                    </>
+                  ) : (
+                    ''
+                  )}
+                </span>
+              </div>
             </div>
           )
         })}
@@ -159,8 +197,10 @@ const Dashboard = () => {
                     matchKey ===
                       `${match.matchDate}#${match.teams.opponentTeam}`) ||
                     (!match.matchDetails.duel &&
-                      matchKey === `_#${match.matchDetails.event}`))
+                      matchKey ===
+                        `${match.matchDate}#${match.matchDetails.event}`))
               )
+
               const doublesMatches = formattedMatches.filter(
                 (match) =>
                   !match.singles &&
@@ -168,7 +208,8 @@ const Dashboard = () => {
                     matchKey ===
                       `${match.matchDate}#${match.teams.opponentTeam}`) ||
                     (!match.matchDetails.duel &&
-                      matchKey === `_#${match.matchDetails.event}`))
+                      matchKey ===
+                        `${match.matchDate}#${match.matchDetails.event}`))
               )
               const [matchDate, matchName] = matchKey.split('#')
 
@@ -177,7 +218,12 @@ const Dashboard = () => {
                   <div className={styles.matchContainer}>
                     <div className={styles.matchHeader}>
                       <h3>{matchName}</h3>
-                      <span className={styles.date}>{matchDate}</span>
+                      <span className={styles.matchDate}>
+                        {formatDisplayDate(matchDate).mainPart}
+                        <span className={styles.yearPart}>
+                          {formatDisplayDate(matchDate).yearPart}
+                        </span>
+                      </span>
                     </div>
                     <DashTileContainer
                       matches={singlesMatches}
