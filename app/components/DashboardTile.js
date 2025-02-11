@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
+import Image from 'next/image'
 
 import styles from '@/app/styles/DashboardTile.module.css'
-
 import { useData } from '@/app/DataProvider'
 
 const DashboardTile = ({
@@ -30,7 +30,6 @@ const DashboardTile = ({
     })
   }
 
-  // Calculate opacity map before rendering
   const player1Opacity = isOpaque(player1FinalScores, player2FinalScores)
 
   // Get match winner from Opacity Array
@@ -114,7 +113,16 @@ const DashboardTile = ({
         {/* Player 1 */}
         <div className={styles.playerInfo}>
           <div className={styles.playerSchoolImgcontainerhome}>
-            <img src={clientLogo} alt={`${clientTeam} logo`} />
+            {clientLogo ? (
+              <Image
+                src={clientLogo}
+                alt={`${clientTeam} logo`}
+                width={100}
+                height={100}
+              />
+            ) : (
+              <p>Logo not available</p>
+            )}
           </div>
           <div className={styles.playerInfoName}>
             {renderNameOpacity(player1Name, player1IsWinner)}{' '}
@@ -130,7 +138,16 @@ const DashboardTile = ({
         {/* Player 2 */}
         <div className={styles.playerInfo}>
           <div className={styles.playerSchoolImgcontainer}>
-            <img src={opponentLogo} alt={`${opponentTeam} logo`} />
+            {opponentLogo ? (
+              <Image
+                src={opponentLogo}
+                alt={`${opponentTeam} logo`}
+                width={100}
+                height={100}
+              />
+            ) : (
+              <p>Logo not available</p>
+            )}
           </div>
           <div className={styles.playerInfoName}>
             {renderNameOpacity(player2Name, player2IsWinner)}
