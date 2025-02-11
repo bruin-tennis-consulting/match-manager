@@ -14,6 +14,7 @@ import PointsList from '@/app/components/PointsList'
 import ScoreBoard from '@/app/components/ScoreBoard'
 import MatchTiles from '@/app/components/MatchTiles'
 import ExtendedList from '@/app/components/ExtendedList'
+import Loading from '@/app/components/Loading'
 
 const findDisplayName = (key) => {
   // Search through all sections of filterGroups
@@ -47,13 +48,15 @@ const MatchPage = () => {
   const [tab, setTab] = useState(1)
   const [bookmarks, setBookmarks] = useState([])
   const [triggerScroll, setTriggerScroll] = useState(false)
-  const [error, setError] = useState(null) // now checking for error from invalid match access
   const tableRef = useRef(null)
   const iframeRef = useRef(null)
 
   const { matches, updateMatch } = useData()
   const pathname = usePathname() // usePathname now imported from next/navigation
   const docId = pathname.substring(pathname.lastIndexOf('/') + 1)
+
+  const [error, setError] = useState(null)
+  const [isInitialLoad, setIsInitialLoad] = useState(matches.length === 0)
 
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -79,18 +82,27 @@ const MatchPage = () => {
     }
   }, [filterList, router])
 
+  // Check validity of match by user access
   useEffect(() => {
-    const selectedMatch = matches.find((match) => match.id === docId)
-    if (selectedMatch) {
-      setMatchData(selectedMatch)
-      // Set initial bookmarks
-      const initialBookmarks = selectedMatch.pointsJson.filter(
-        (point) => point.bookmarked
-      )
-      setBookmarks(initialBookmarks)
+    // Only proceed with match checking if matches array is not empty
+    // This ensures we don't show an error before data is loaded
+    if (matches.length > 0) {
+      const selectedMatch = matches.find((match) => match.id === docId)
+
+      if (!selectedMatch) {
+        setError('not-found')
+      } else {
+        setError(null)
+        setMatchData(selectedMatch)
+        const initialBookmarks = selectedMatch.pointsJson.filter(
+          (point) => point.bookmarked
+        )
+        setBookmarks(initialBookmarks)
+      }
+
+      setIsInitialLoad(false)
     }
   }, [matches, docId])
-
   const handleJumpToTime = (time) => {
     if (videoObject && videoObject.seekTo) {
       videoObject.seekTo(time / 1000, true)
@@ -224,31 +236,15 @@ const MatchPage = () => {
     )
   }
 
-  // Check validilty of match by user access
-  useEffect(() => {
-    const selectedMatch = matches.find((match) => match.id === docId)
-
-    if (!selectedMatch) {
-      setError('not-found')
-      return
-    }
-
-    // If match exists, clear any error and set the match data
-    setError(null)
-    setMatchData(selectedMatch)
-    const initialBookmarks = selectedMatch.pointsJson.filter(
-      (point) => point.bookmarked
-    )
-    setBookmarks(initialBookmarks)
-  }, [matches, docId])
-
   // Usage in your component:
   console.log(matchData)
   const matchScores = matchData ? getMatchScores(matchData.pointsJson) : []
 
   return (
     <div className={styles.container}>
-      {error ? (
+      {isInitialLoad ? (
+        <Loading prompt={'Fetching match...'} />
+      ) : error ? (
         <div
           className={styles.card}
           style={{ margin: 0, maxWidth: '560px', marginTop: '-120px' }}
