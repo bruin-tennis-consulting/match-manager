@@ -1,7 +1,8 @@
 import React from 'react'
-import styles from '@/app/styles/PlayerProfileHeader.module.css' // Assuming you have CSS module for styling
+import styles from '@/app/styles/PlayerProfileHeader.module.css'
 import defaultPhotoBig from '@/public/images/defaultPhotoBig.png'
 import StatBox from '@/app/components/StatBox'
+import Image from 'next/image'
 
 const PlayerProfileHeader = ({ playerData }) => {
   return (
@@ -11,9 +12,8 @@ const PlayerProfileHeader = ({ playerData }) => {
         <div className={styles.profileTop}>
           <h1 className={styles.playerName}>{playerData.name.toUpperCase()}</h1>
           <p className={styles.playerDetails}>
-            Class : {playerData.class} &nbsp;|&nbsp; Height :{' '}
-            {playerData.height}
-            &nbsp;|&nbsp;Age : {playerData.age}
+            Class: {playerData.class} &nbsp;|&nbsp; Height: {playerData.height}
+            &nbsp;|&nbsp; Age: {playerData.age}
           </p>
 
           {/* Player Bio */}
@@ -25,10 +25,12 @@ const PlayerProfileHeader = ({ playerData }) => {
           {/* Win Counters */}
           <div className={styles.filterContainer}>
             <p className={styles.filterText}>Filter</p>
-            <img
+            <Image
               src="/StatFilter.svg"
-              alt="Icon"
+              alt="Statistics filter icon"
               className={styles.StatFilter}
+              width={24}
+              height={24}
             />
           </div>
           <div className={styles.statBoxes}>
@@ -41,11 +43,15 @@ const PlayerProfileHeader = ({ playerData }) => {
           </div>
         </div>
       </div>
+
       <div className={styles.profilePictureContainer}>
-        <img
+        <Image
           src={playerData.largePlayerPhoto || defaultPhotoBig.src}
-          alt={`${playerData.name}'s profile`}
+          alt={`${playerData.name}'s profile photo`}
           className={styles.profilePicture}
+          width={200} // Adjust dimensions as needed
+          height={200}
+          layout="intrinsic"
         />
       </div>
     </div>
