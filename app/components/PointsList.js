@@ -87,7 +87,9 @@ const PointsList = ({
                     width: '20%'
                   }}
                 >
-                  {point.pointScore}
+                  {point.tiebreakScore !== null
+                    ? point.tiebreakScore
+                    : point.pointScore}
                 </b>
               </td>
               <td

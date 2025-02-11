@@ -14,6 +14,7 @@ import PointsList from '@/app/components/PointsList'
 import ScoreBoard from '@/app/components/ScoreBoard'
 import MatchTiles from '@/app/components/MatchTiles'
 import ExtendedList from '@/app/components/ExtendedList'
+import Loading from '@/app/components/Loading'
 
 const findDisplayName = (key) => {
   // Search through all sections of filterGroups
@@ -54,6 +55,9 @@ const MatchPage = () => {
   const pathname = usePathname() // usePathname now imported from next/navigation
   const docId = pathname.substring(pathname.lastIndexOf('/') + 1)
 
+  const [error, setError] = useState(null)
+  const [isInitialLoad, setIsInitialLoad] = useState(matches.length === 0)
+
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -78,18 +82,27 @@ const MatchPage = () => {
     }
   }, [filterList, router])
 
+  // Check validity of match by user access
   useEffect(() => {
-    const selectedMatch = matches.find((match) => match.id === docId)
-    if (selectedMatch) {
-      setMatchData(selectedMatch)
-      // Set initial bookmarks
-      const initialBookmarks = selectedMatch.pointsJson.filter(
-        (point) => point.bookmarked
-      )
-      setBookmarks(initialBookmarks)
+    // Only proceed with match checking if matches array is not empty
+    // This ensures we don't show an error before data is loaded
+    if (matches.length > 0) {
+      const selectedMatch = matches.find((match) => match.id === docId)
+
+      if (!selectedMatch) {
+        setError('not-found')
+      } else {
+        setError(null)
+        setMatchData(selectedMatch)
+        const initialBookmarks = selectedMatch.pointsJson.filter(
+          (point) => point.bookmarked
+        )
+        setBookmarks(initialBookmarks)
+      }
+
+      setIsInitialLoad(false)
     }
   }, [matches, docId])
-
   const handleJumpToTime = (time) => {
     if (videoObject && videoObject.seekTo) {
       videoObject.seekTo(time / 1000, true)
@@ -229,7 +242,21 @@ const MatchPage = () => {
 
   return (
     <div className={styles.container}>
-      {matchData && (
+      {isInitialLoad ? (
+        <Loading prompt={'Fetching match...'} />
+      ) : error ? (
+        <div
+          className={styles.card}
+          style={{ margin: 0, maxWidth: '560px', marginTop: '-120px' }}
+        >
+          <h3>{error === 'not-found' ? 'Match Not Found' : 'Access Denied'}</h3>
+          <p>
+            {error === 'not-found'
+              ? 'The match you are looking for does not exist or has been removed. You may be logged into the wrong account. Please try again.'
+              : 'You may be logged into the wrong account. Please check your login and try again.'}
+          </p>
+        </div>
+      ) : matchData ? (
         <>
           <MatchTiles
             matchName={matchData.matchDetails.event}
@@ -500,7 +527,7 @@ const MatchPage = () => {
             )}
           </div>
         </>
-      )}
+      ) : null}
     </div>
   )
 }
