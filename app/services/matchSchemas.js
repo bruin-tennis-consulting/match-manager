@@ -1,3 +1,5 @@
+//import { initialSchema, uiSchema as baseUiSchema } from '@/app/services/matchSchemas.js'
+
 const initialSchema = {
   title: 'Upload Match',
   type: 'object',
@@ -180,6 +182,11 @@ const uiSchema = {
   pdfFile: {
     'ui:widget': 'file'
   },
+
+  event: {
+    'ui:disabled': (formData) => !formData.duel  // the "event" field is disabled when "dual" is not selected
+  },
+
   matchScore: {
     set1: {
       clientTiebreak: {
