@@ -299,3 +299,25 @@
 .buttonBox button:hover {
   background-color: #0056b3;
 }
+
+@media (max-width: 768px) {
+  .mainContent {
+    flex-direction: column;
+  }
+
+  .matchesSection {
+    width: 100%;
+  }
+
+  .rosterContainer {
+    width: 100%;
+    padding-left: 0;
+    top: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .matchTileContainer {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}

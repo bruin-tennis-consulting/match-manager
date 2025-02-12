@@ -1,7 +1,7 @@
 .dashTilesContainer {
   display: flex;
-  width: 85vw;
-  padding-top: 1.5vw;
+  width: auto;
+  padding-top: 1vw;
   box-sizing: border-box;
 }
 
@@ -9,8 +9,7 @@
   border: 0.13vw solid #dedede;
   border-radius: 1vw;
   font-family: 'DM Sans', sans-serif;
-  width: calc(25% - 0.47vw);
-  margin: 0 0.5vw;
+  width: 100%;
   padding: 0.8vw;
   box-sizing: border-box;
   display: flex;
