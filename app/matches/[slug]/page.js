@@ -97,6 +97,52 @@ const MatchPage = () => {
     }
   }
 
+  /*
+    Point Auto Jump
+      -Purpose:
+        - When players finish watching a point, it should automatically jump to the next point
+        - Must be togglable
+        - Must play from between filtered points, or all points if no filters
+      -Requirements:
+        - Should be togglable(handled outside of this function, probably whats calling it)
+        - Purpose: autojump between point start and point finish
+        - if p1.end = 1 and p2.start = 3, then if time = 1, jump to 3
+      -Implementation Idea:
+        - Get the current time of the video
+        - Option 1:
+          - Get the current point.end
+          - Get the next point.start
+          - If the current time is greater than cur end jump to end
+        - Option 2:
+          - List of all points starts and end
+          - If outside range, jump to next valid start
+  */
+
+  const [autoJump, setAutoJump] = useState(false)
+  setAutoJump(true)
+
+  useEffect(() => {
+    if (!autoJump || !videoObject) return
+    let frameId
+    const checkTime = () => {
+      const currentTime = videoObject.getCurrentTime() * 1000
+      const points = returnFilteredPoints()
+      for (let i = 0; i < points.length - 1; i++) {
+        if (
+          currentTime >= points[i].end - 100 &&
+          currentTime < points[i + 1].start
+        ) {
+          console.log(`Jumping from ${points[i].end} to ${points[i + 1].start}`)
+          videoObject.seekTo(points[i + 1].start / 1000, true)
+          break
+        }
+      }
+      frameId = requestAnimationFrame(checkTime)
+    }
+    frameId = requestAnimationFrame(checkTime)
+    return () => cancelAnimationFrame(frameId)
+  }, [autoJump, videoObject, filterList])
+
   const handleBookmark = async (point) => {
     const updatedPoints = matchData.pointsJson.map((p) => {
       if (p.Name === point.Name) {
