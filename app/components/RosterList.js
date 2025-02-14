@@ -12,7 +12,9 @@ const RosterList = () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'teams'))
         const teamsData = querySnapshot.docs.map((doc) => doc.data())
-        const mensTeam = teamsData.find((team) => team.name === 'UCLA (M)')
+        const mensTeam = teamsData.find(
+          (team) => team.name === 'University of California, Los Angeles (M)'
+        )
         const playersArray = mensTeam.players.map((player) => ({
           firstName: player.firstName,
           lastName: player.lastName,

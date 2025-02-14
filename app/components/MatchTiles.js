@@ -34,6 +34,12 @@ const MatchTiles = ({
   const [clientLogo, setClientLogo] = useState('')
   const [opponentLogo, setOpponentLogo] = useState('')
 
+
+    // Remove (M) and (W) from team names
+  const changedClientTeam = clientTeam.replace(/\s*\(M\)|\s*\(W\)/g, '') 
+  const changedOpponentTeam = opponentTeam.replace(/\s*\(M\)|\s*\(W\)/g, '') 
+
+
   // to calculate the opcaity
   const player1Opacity = isOpaque(player1FinalScores, player2FinalScores)
 
@@ -156,8 +162,8 @@ const MatchTiles = ({
       {displaySections.matchup && (
         <div className={styles.matchInfoContainer}>
           <div className={styles.containerTitle}>Matchup</div>
-          <div className={styles.containerInfo}>{clientTeam}</div>
-          <div className={styles.containerInfo}>{opponentTeam}</div>
+          <div className={styles.containerInfo}>{changedClientTeam}</div>
+          <div className={styles.containerInfo}>{changedOpponentTeam}</div>
         </div>
       )}
     </div>

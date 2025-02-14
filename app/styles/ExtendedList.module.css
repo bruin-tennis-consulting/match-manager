@@ -1,50 +1,49 @@
-.table{
-    width: 100%;
-    border-collapse: collapse; 
+.table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.TH{
-    font-size: 1vw;
-    font-weight: 500;
-    text-align: left;
-    color: grey;
-    padding-left: 0.25vw;
-    padding-bottom: 1vw;
+.TH {
+  font-size: 1vw;
+  font-weight: 500;
+  text-align: left;
+  color: grey;
+  padding-left: 0.25vw;
+  padding-bottom: 1vw;
 }
 
-.TR{
-    border-bottom: solid 0.1vw #EDEDED;
+.TR {
+  border-bottom: solid 0.1vw #ededed;
 }
 
-.IMG{
-    max-width: 2.7vw;
-    height: auto; 
-    display: block; 
-    width: 100%;
+.IMG {
+  max-width: 2.7vw;
+  height: auto;
+  display: block;
+  width: 100%;
 }
 
-.TD{
-    font-size: 1.4vw;
-    font-weight: 600;
-    text-align: left;
-    padding: 0.8vw;
-    padding-top: 3.6vh;
-    padding-bottom: 3.6vh;
+.TD {
+  font-size: 1.4vw;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.8vw;
+  padding-top: 3.6vh;
+  padding-bottom: 3.6vh;
 }
 
-.TD2{
-    font-size: 1.4vw;
-    font-weight: 600;
-    text-align: left;
-    padding-top: 3.6vh;
-    padding-bottom: 3.6vh;
+.TD2 {
+  font-size: 1.4vw;
+  font-weight: 600;
+  text-align: left;
+  padding-top: 3.6vh;
+  padding-bottom: 3.6vh;
 }
 
-.button{
-    background-color: white;
-    border: none;
+.button {
+  background-color: white;
+  border: none;
 }
 .button svg {
-    cursor: pointer;
+  cursor: pointer;
 }
-
