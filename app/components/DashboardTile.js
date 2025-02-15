@@ -19,6 +19,7 @@ const DashboardTile = ({
   const { logos, loading } = useData()
   const [clientLogo, setClientLogo] = useState(null)
   const [opponentLogo, setOpponentLogo] = useState(null)
+  const [isMobile, setIsMobile] = useState(false)
 
   const isOpaque = (player1Scores, player2Scores) => {
     return player1Scores.map((score, index) => {
@@ -37,6 +38,19 @@ const DashboardTile = ({
   const player2Wins = player1Opacity.length - player1Wins // Total length - player1Wins
   const player1IsWinner = player1Wins > player2Wins
   const player2IsWinner = player2Wins > player1Wins
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768)
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  const formatName = (name) => {
+    if (!name) return ''
+    const [first, last] = name.split(' ')
+    return isMobile && last ? `${first} ${last[0]}.` : name
+  }
 
   useEffect(() => {
     setClientLogo(logos[clientTeam])
@@ -125,7 +139,7 @@ const DashboardTile = ({
             )}
           </div>
           <div className={styles.playerInfoName}>
-            {renderNameOpacity(player1Name, player1IsWinner)}{' '}
+            {renderNameOpacity(formatName(player1Name), player1IsWinner)}{' '}
             {isUnfinished && '(UF)'}
           </div>
           <div className={styles.playerInfoScore}>
@@ -150,7 +164,7 @@ const DashboardTile = ({
             )}
           </div>
           <div className={styles.playerInfoName}>
-            {renderNameOpacity(player2Name, player2IsWinner)}
+            {renderNameOpacity(formatName(player2Name), player2IsWinner)}
           </div>
           <div className={styles.playerInfoScore}>
             {player2FinalScores.map((score, index) =>

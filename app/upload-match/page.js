@@ -6,13 +6,15 @@ import validator from '@rjsf/validator-ajv8'
 import { dataURItoBlob } from '@rjsf/utils'
 
 import getTeams from '@/app/services/getTeams.js'
-import { initialSchema, uiSchema } from '@/app/services/matchSchemas.js'
+//import { initialSchema, uiSchema } from '@/app/services/matchSchemas.js'
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 
 import { useData } from '@/app/DataProvider.js'
 import { useAuth } from '@/app/AuthWrapper.js'
 
 import styles from '@/app/styles/Upload.module.css'
+
+import { initialSchema, uiSchema as baseUiSchema } from '@/app/services/matchSchemas.js'
 
 export default function UploadMatchForm() {
   const { createMatch } = useData() // Use the createMatch hook
@@ -21,6 +23,8 @@ export default function UploadMatchForm() {
   const [collections, setCollections] = useState([])
   const [formData, setFormData] = useState({})
   const [errors, setErrors] = useState([])
+
+  const [localUiSchema, setLocalUiSchema] = useState(baseUiSchema) // local uiSchema state to update the event field dynamically
 
   const { userProfile } = useAuth()
 
@@ -99,6 +103,15 @@ export default function UploadMatchForm() {
   const handleChange = ({ formData: newFormData }) => {
     setFormData(newFormData)
     updatePlayerOptions(newFormData)
+
+    // Update the event field's disabled state: if duel is not true, disable event.
+    setLocalUiSchema({
+      ...baseUiSchema,
+      event: {
+        'ui:disabled': !newFormData.duel
+      }
+    })
+
   }
 
   const validateFileType = (file, expectedType, fieldName) => {
@@ -166,6 +179,8 @@ export default function UploadMatchForm() {
         unfinished: formData.unfinished || false,
         duel: formData.duel || false
       }
+
+      
       // const sets = parseMatchScore(formData.matchScore);
       const sets = [
         formData.matchScore.set1,
@@ -206,7 +221,7 @@ export default function UploadMatchForm() {
         <Form
           key={JSON.stringify(schema)}
           schema={schema}
-          uiSchema={uiSchema}
+          uiSchema={localUiSchema}  //Changed to use out state variable
           formData={formData}
           onChange={handleChange}
           onSubmit={handleSubmit}
