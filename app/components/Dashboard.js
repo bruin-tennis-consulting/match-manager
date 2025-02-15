@@ -16,6 +16,10 @@ import Loading from './Loading'
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 import SearchIcon from '@/public/search'
 
+const cleanTeamName = (teamName) => {
+  return teamName.replace(/\s*\([MmWw]\)\s*$/, '').trim() // Remove (M) or (W) from team names
+}
+
 const formatMatches = (matches) => {
   return matches
     .filter((match) => match.version === 'v1') // Filter for version 'v1'
@@ -46,7 +50,8 @@ const Dashboard = () => {
     if (!searchTerm || !fuse) return []
     const result = fuse.search(searchTerm).map((result) => {
       const match = result.item
-      return `${match.matchDate}#${match.teams.opponentTeam}`
+      const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
+      return `${match.matchDate}#${cleanedOpponentTeam}`
     })
     return result
   }, [searchTerm, fuse])
@@ -81,11 +86,12 @@ const Dashboard = () => {
     // fetch all, arr(set(matches))
     return [
       ...new Set(
-        formattedMatches.map((match) =>
-          match.matchDetails.duel
-            ? `${match.matchDate}#${match.teams.opponentTeam}`
+        formattedMatches.map((match) => {
+          const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
+          return match.matchDetails.duel
+            ? `${match.matchDate}#${cleanedOpponentTeam}`
             : `_#${match.matchDetails.event}`
-        )
+        })
       )
     ]
   }, [searchTerm, filteredMatchSets, selectedMatchSets, formattedMatches])
@@ -123,30 +129,53 @@ const Dashboard = () => {
       </header>
 
       <div className={styles.carousel}>
-        {formattedMatches.map((match, index) => {
-          let matchKey = `${match.matchDate}#${match.teams.opponentTeam}`
-          if (!match.matchDetails.duel) {
-            console.log('EVENT')
-            matchKey = `_#${match.matchDetails.event}`
-          }
-
+        {console.log(formattedMatches)}
+        {(() => {
+          const uniqueKeys = new Set() // Track unique match keys
           return (
-            <div
-              key={index}
-              className={`${styles.card} ${selectedMatchSets.includes(matchKey) ? styles.active : ''}`}
-              onClick={() => handleCarouselClick(matchKey)}
-            >
-              <Image
-                src={logos[match.teams.opponentTeam]}
-                alt="Team Logo"
-                width={50}
-                height={50}
-                className={styles.logo}
-              />
-              <span className={styles.matchDate}>{match.matchDate}</span>
-            </div>
+            formattedMatches
+              // keep unique matchKeys
+              // note: [...new Set(formattedMatches)] won't work because formattedMatches is an Object
+              .filter((match) => {
+                const cleanedOpponentTeam = cleanTeamName(
+                  match.teams.opponentTeam
+                )
+                let matchKey = `${match.matchDate}#${cleanedOpponentTeam}`
+                if (!match.matchDetails.duel)
+                  matchKey = `_#${match.matchDetails.event}`
+
+                if (uniqueKeys.has(matchKey)) return false
+                uniqueKeys.add(matchKey)
+                return true
+              })
+              .map((match, index) => {
+                const cleanedOpponentTeam = cleanTeamName(
+                  match.teams.opponentTeam
+                )
+                let matchKey = `${match.matchDate}#${cleanedOpponentTeam}`
+                if (!match.matchDetails.duel) {
+                  matchKey = `_#${match.matchDetails.event}`
+                }
+
+                return (
+                  <div
+                    key={index}
+                    className={`${styles.card} ${selectedMatchSets.includes(matchKey) ? styles.active : ''}`}
+                    onClick={() => handleCarouselClick(matchKey)}
+                  >
+                    <Image
+                      src={logos[match.teams.opponentTeam]}
+                      alt="Team Logo"
+                      width={50}
+                      height={50}
+                      className={styles.logo}
+                    />
+                    <span className={styles.matchDate}>{match.matchDate}</span>
+                  </div>
+                )
+              })
           )
-        })}
+        })()}
       </div>
 
       <div className={styles.mainContent}>
@@ -160,7 +189,7 @@ const Dashboard = () => {
                   match.singles &&
                   ((match.matchDetails.duel &&
                     matchKey ===
-                      `${match.matchDate}#${match.teams.opponentTeam}`) ||
+                      `${match.matchDate}#${cleanTeamName(match.teams.opponentTeam)}`) ||
                     (!match.matchDetails.duel &&
                       matchKey === `_#${match.matchDetails.event}`))
               )
@@ -169,18 +198,25 @@ const Dashboard = () => {
                   !match.singles &&
                   ((match.matchDetails.duel &&
                     matchKey ===
-                      `${match.matchDate}#${match.teams.opponentTeam}`) ||
+                      `${match.matchDate}#${cleanTeamName(match.teams.opponentTeam)}`) ||
                     (!match.matchDetails.duel &&
                       matchKey === `_#${match.matchDetails.event}`))
               )
               const [matchDate, matchName] = matchKey.split('#')
-
+              const cleanedMatchName =
+                matchName === '_' ? matchName : cleanTeamName(matchName)
               return (
                 <div key={index} className={styles.matchSection}>
                   <div className={styles.matchContainer}>
                     <div className={styles.matchHeader}>
-                      <h3>{matchName}</h3>
-                      <span className={styles.date}>{matchDate}</span>
+                      <h3>{cleanedMatchName}</h3>
+                      <span className={styles.date}>
+                        {new Date(matchDate).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </span>
                     </div>
                     <DashTileContainer
                       matches={singlesMatches}
