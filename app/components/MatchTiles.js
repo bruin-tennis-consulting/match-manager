@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import Image from 'next/image'
 
 import styles from '@/app/styles/MatchTiles.module.css'
 import getTeams from '@/app/services/getTeams.js'
@@ -112,7 +113,13 @@ const MatchTiles = ({
         {/* Player 1 Information  */}
         <div className={styles.playerInfo}>
           <div className={styles.playerSchoolImgcontainerhome}>
-            <img src={clientLogo} alt={`${clientTeam} logo`} />
+            <Image
+              src={clientLogo}
+              alt={`${clientTeam} logo`}
+              width={50} // Adjust as needed
+              height={50}
+              layout="intrinsic"
+            />
           </div>
           <div className={styles.playerInfoName}>
             {player1Name} {isUnfinished && '(UF)'}
@@ -126,7 +133,13 @@ const MatchTiles = ({
         {/* Player 2 Information */}
         <div className={styles.playerInfo}>
           <div className={styles.playerSchoolImgcontainer}>
-            <img src={opponentLogo} alt={`${opponentTeam} logo`} />
+            <Image
+              src={opponentLogo}
+              alt={`${opponentTeam} logo`}
+              width={50} // Adjust as needed
+              height={50}
+              layout="intrinsic"
+            />
           </div>
           <div className={styles.playerInfoName}>{player2Name}</div>
           <div className={styles.playerInfoScore}>

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import Fuse from 'fuse.js'
 
@@ -162,9 +163,11 @@ const Dashboard = () => {
                     className={`${styles.card} ${selectedMatchSets.includes(matchKey) ? styles.active : ''}`}
                     onClick={() => handleCarouselClick(matchKey)}
                   >
-                    <img
+                    <Image
                       src={logos[match.teams.opponentTeam]}
                       alt="Team Logo"
+                      width={50}
+                      height={50}
                       className={styles.logo}
                     />
                     <span className={styles.matchDate}>{match.matchDate}</span>

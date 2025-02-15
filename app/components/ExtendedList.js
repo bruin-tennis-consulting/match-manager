@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import Image from 'next/image'
 
 import styles from '@/app/styles/ExtendedList.module.css'
 import getTeams from '@/app/services/getTeams.js'
@@ -86,12 +87,20 @@ const ExtendedList = ({
               {keys.map((key, cellIndex) => (
                 <td className={styles.TD} key={cellIndex}>
                   {cellIndex === 0 ? (
-                    <img
+                    <Image
                       src={
                         item.player1Name === item.serverName
                           ? clientLogo
                           : opponentLogo
                       }
+                      alt={
+                        item.player1Name === item.serverName
+                          ? `${clientTeam} logo`
+                          : `${opponentTeam} logo`
+                      }
+                      width={50} // Adjust width and height as needed
+                      height={50}
+                      layout="intrinsic"
                       className={styles.IMG}
                     />
                   ) : (
