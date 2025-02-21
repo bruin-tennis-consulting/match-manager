@@ -6,7 +6,8 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { useData } from '@/app/DataProvider'
 import {
   getSimpleTaggerButtonData,
-  simpleColumnNames
+  simpleColumnNames,
+  columnNames
 } from '@/app/services/taggerButtonData.js' // change this since our columnNames are not the same
 
 import VideoPlayer from '@/app/components/VideoPlayer'
@@ -184,25 +185,67 @@ export default function TagMatch() {
     })
   }
 
+  // const addNewRowAndSync = () => {
+  //   setTableState((oldTableState) => {
+  //     pullAndPushRows(oldTableState.rows, null)
+
+  //     let newTimestamp = getVideoTimestamp()
+
+  //     const newRow = simpleColumnNames.reduce((acc, columnName) => {
+  //       let existingRow = tableState.rows.find(
+  //         (row) => row.pointStartTime === newTimestamp
+  //       )
+
+  //       while (existingRow !== undefined) {
+  //         newTimestamp += 1
+  //         existingRow = tableState.rows.find(
+  //           (row) => row.pointStartTime === newTimestamp
+  //         )
+  //       }
+
+  //       acc[columnName] = columnName === 'pointStartTime' ? newTimestamp : ''
+  //       return acc
+  //     }, {})
+
+  //     const updatedTable = [...oldTableState.rows, newRow]
+  //     updatedTable.sort((a, b) => a.pointStartTime - b.pointStartTime)
+
+  //     const newIndex = updatedTable.findIndex(
+  //       (row) => row.pointStartTime === newTimestamp
+  //     )
+
+  //     setErrors(
+  //       validateTable(updatedTable, {
+  //         ...matchMetadata,
+  //         activeRowIndex: newIndex
+  //       })
+  //     )
+
+  //     return { rows: updatedTable, activeRowIndex: newIndex }
+  //   })
+  // }
+
   const addNewRowAndSync = () => {
     setTableState((oldTableState) => {
-      pullAndPushRows(oldTableState.rows, null)
+      const newTimestamp = getVideoTimestamp()
 
-      let newTimestamp = getVideoTimestamp()
-
-      const newRow = simpleColumnNames.reduce((acc, columnName) => {
-        let existingRow = tableState.rows.find(
-          (row) => row.pointStartTime === newTimestamp
-        )
-
-        while (existingRow !== undefined) {
-          newTimestamp += 1
-          existingRow = tableState.rows.find(
-            (row) => row.pointStartTime === newTimestamp
-          )
+      const newRow = columnNames.reduce((acc, columnName) => {
+        switch (columnName) {
+          case 'pointStartTime':
+            acc[columnName] = newTimestamp
+            break
+          case 'isPointStart':
+            acc[columnName] = 1 // Mark as point start
+            break
+          case 'shotInRally':
+            acc[columnName] = 1 // First shot in the rally
+            break
+          case 'serverName':
+            acc[columnName] = serverName // Set server
+            break
+          default:
+            acc[columnName] = '' // Default empty for unused fields
         }
-
-        acc[columnName] = columnName === 'pointStartTime' ? newTimestamp : ''
         return acc
       }, {})
 
@@ -213,12 +256,12 @@ export default function TagMatch() {
         (row) => row.pointStartTime === newTimestamp
       )
 
-      setErrors(
-        validateTable(updatedTable, {
-          ...matchMetadata,
-          activeRowIndex: newIndex
-        })
-      )
+      // Validate the table to ensure no errors
+      const validationErrors = validateTable(updatedTable, {
+        ...matchMetadata,
+        activeRowIndex: newIndex
+      })
+      setErrors(validationErrors)
 
       return { rows: updatedTable, activeRowIndex: newIndex }
     })
