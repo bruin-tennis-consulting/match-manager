@@ -229,22 +229,19 @@ export default function TagMatch() {
     setTableState((oldTableState) => {
       const newTimestamp = getVideoTimestamp()
 
+      const lastRow = oldTableState.rows[oldTableState.rows.length - 1] || {}
+
       const newRow = columnNames.reduce((acc, columnName) => {
-        switch (columnName) {
-          case 'pointStartTime':
-            acc[columnName] = newTimestamp
-            break
-          case 'isPointStart':
-            acc[columnName] = 1 // Mark as point start
-            break
-          case 'shotInRally':
-            acc[columnName] = 1 // First shot in the rally
-            break
-          case 'serverName':
-            acc[columnName] = serverName // Set server
-            break
-          default:
-            acc[columnName] = '' // Default empty for unused fields
+        if (Object.prototype.hasOwnProperty.call(lastRow, columnName)) {
+          acc[columnName] = lastRow[columnName] // Inherit from previous row
+        } else if (columnName === 'pointStartTime') {
+          acc[columnName] = newTimestamp
+        } else if (columnName === 'isPointStart') {
+          acc[columnName] = 1
+        } else if (columnName === 'shotInRally') {
+          acc[columnName] = 1
+        } else {
+          acc[columnName] = '' // Default empty
         }
         return acc
       }, {})
@@ -256,14 +253,14 @@ export default function TagMatch() {
         (row) => row.pointStartTime === newTimestamp
       )
 
-      // Validate the table to ensure no errors
+      // Reset activeRowIndex to the new row
       const validationErrors = validateTable(updatedTable, {
         ...matchMetadata,
         activeRowIndex: newIndex
       })
       setErrors(validationErrors)
 
-      return { rows: updatedTable, activeRowIndex: newIndex }
+      return { rows: updatedTable, activeRowIndex: newIndex } // Set activeRowIndex to the newly added row
     })
   }
 
