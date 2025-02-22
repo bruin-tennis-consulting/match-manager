@@ -232,35 +232,41 @@ export default function TagMatch() {
       const lastRow = oldTableState.rows[oldTableState.rows.length - 1] || {}
 
       const newRow = columnNames.reduce((acc, columnName) => {
-        if (Object.prototype.hasOwnProperty.call(lastRow, columnName)) {
-          acc[columnName] = lastRow[columnName] // Inherit from previous row
+        if (columnName === 'serverName') {
+          // Always use the latest serverName from state
+          acc[columnName] = serverName
         } else if (columnName === 'pointStartTime') {
           acc[columnName] = newTimestamp
         } else if (columnName === 'isPointStart') {
           acc[columnName] = 1
         } else if (columnName === 'shotInRally') {
           acc[columnName] = 1
+        } else if (Object.prototype.hasOwnProperty.call(lastRow, columnName)) {
+          // Inherit all other properties from the previous row
+          acc[columnName] = lastRow[columnName]
         } else {
-          acc[columnName] = '' // Default empty
+          acc[columnName] = '' // Default empty for new data
         }
         return acc
       }, {})
 
+      // Add the new row to the table
       const updatedTable = [...oldTableState.rows, newRow]
+
+      // Sort rows by pointStartTime to maintain order
       updatedTable.sort((a, b) => a.pointStartTime - b.pointStartTime)
 
-      const newIndex = updatedTable.findIndex(
-        (row) => row.pointStartTime === newTimestamp
-      )
+      // Set activeRowIndex to the most recently added row
+      const newIndex = updatedTable.length - 1 // Directly set to the last row
 
-      // Reset activeRowIndex to the new row
+      // Validate and update errors
       const validationErrors = validateTable(updatedTable, {
         ...matchMetadata,
         activeRowIndex: newIndex
       })
       setErrors(validationErrors)
 
-      return { rows: updatedTable, activeRowIndex: newIndex } // Set activeRowIndex to the newly added row
+      return { rows: updatedTable, activeRowIndex: newIndex } // Set active row correctly
     })
   }
 
@@ -449,6 +455,15 @@ export default function TagMatch() {
       serverName
     }
   )
+
+  // const buttonData = getSimpleTaggerButtonData(
+  //   updateActiveRow,
+  //   () => addNewRowAndSync(serverName), // Pass the latest serverName directly
+  //   setCurrentPage,
+  //   {
+  //     serverName
+  //   }
+  // )
 
   function getErrors(rowIndex, columnName) {
     const cellErrors = errors.filter((error) =>
