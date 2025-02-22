@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 
 import { useData } from '@/app/DataProvider'
 import {
@@ -16,11 +16,12 @@ import { validateTable } from '@/app/services/taggingValidator'
 import styles from '@/app/styles/TagMatch.module.css'
 
 export default function TagMatch() {
-  const pathname = usePathname()
-  const matchId = pathname.substring(pathname.lastIndexOf('/') + 1)
+  const searchParams = useSearchParams()
+  const matchId = searchParams.get('matchId')
+  console.log('Match ID:', matchId)
+
   const { matches, updateMatch, refresh } = useData()
   const match = matches.find((m) => m.id === matchId)
-  const searchParams = useSearchParams()
 
   const [videoObject, setVideoObject] = useState(null)
   const [videoId, setVideoId] = useState('')
@@ -229,39 +230,34 @@ export default function TagMatch() {
     setTableState((oldTableState) => {
       const newTimestamp = getVideoTimestamp()
 
-      // Create a new row from scratch without inheriting anything
       const newRow = columnNames.reduce((acc, columnName) => {
         if (columnName === 'serverName') {
-          acc[columnName] = serverName // Use the latest server name from state
+          acc[columnName] = serverName
         } else if (columnName === 'pointStartTime') {
-          acc[columnName] = newTimestamp // Set timestamp when point starts
+          acc[columnName] = newTimestamp // don't care abt timestamp for this simple tagger
         } else if (columnName === 'isPointStart') {
-          acc[columnName] = 1 // Mark as the start of a point
+          acc[columnName] = 1 // don't care abt start of a point
         } else if (columnName === 'shotInRally') {
-          acc[columnName] = 1 // Initialize rally shot count
+          acc[columnName] = 1 // don't care abt rally shot count
         } else {
-          acc[columnName] = '' // Default to empty for all other fields
+          acc[columnName] = '' // default to empty for all other fields
         }
         return acc
       }, {})
 
-      // Add the new row to the table
       const updatedTable = [...oldTableState.rows, newRow]
 
-      // Sort rows by pointStartTime to maintain order
       updatedTable.sort((a, b) => a.pointStartTime - b.pointStartTime)
 
-      // Set activeRowIndex to the most recently added row
       const newIndex = updatedTable.length - 1
 
-      // Validate and update errors
       const validationErrors = validateTable(updatedTable, {
         ...matchMetadata,
         activeRowIndex: newIndex
       })
       setErrors(validationErrors)
 
-      return { rows: updatedTable, activeRowIndex: newIndex } // Set active row correctly
+      return { rows: updatedTable, activeRowIndex: newIndex }
     })
   }
 
