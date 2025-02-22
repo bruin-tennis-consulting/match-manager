@@ -18,7 +18,6 @@ import styles from '@/app/styles/TagMatch.module.css'
 export default function TagMatch() {
   const searchParams = useSearchParams()
   const matchId = searchParams.get('matchId')
-  console.log('Match ID:', matchId)
 
   const { matches, updateMatch, refresh } = useData()
   const match = matches.find((m) => m.id === matchId)
