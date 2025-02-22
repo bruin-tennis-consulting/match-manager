@@ -229,23 +229,18 @@ export default function TagMatch() {
     setTableState((oldTableState) => {
       const newTimestamp = getVideoTimestamp()
 
-      const lastRow = oldTableState.rows[oldTableState.rows.length - 1] || {}
-
+      // Create a new row from scratch without inheriting anything
       const newRow = columnNames.reduce((acc, columnName) => {
         if (columnName === 'serverName') {
-          // Always use the latest serverName from state
-          acc[columnName] = serverName
+          acc[columnName] = serverName // Use the latest server name from state
         } else if (columnName === 'pointStartTime') {
-          acc[columnName] = newTimestamp
+          acc[columnName] = newTimestamp // Set timestamp when point starts
         } else if (columnName === 'isPointStart') {
-          acc[columnName] = 1
+          acc[columnName] = 1 // Mark as the start of a point
         } else if (columnName === 'shotInRally') {
-          acc[columnName] = 1
-        } else if (Object.prototype.hasOwnProperty.call(lastRow, columnName)) {
-          // Inherit all other properties from the previous row
-          acc[columnName] = lastRow[columnName]
+          acc[columnName] = 1 // Initialize rally shot count
         } else {
-          acc[columnName] = '' // Default empty for new data
+          acc[columnName] = '' // Default to empty for all other fields
         }
         return acc
       }, {})
@@ -257,7 +252,7 @@ export default function TagMatch() {
       updatedTable.sort((a, b) => a.pointStartTime - b.pointStartTime)
 
       // Set activeRowIndex to the most recently added row
-      const newIndex = updatedTable.length - 1 // Directly set to the last row
+      const newIndex = updatedTable.length - 1
 
       // Validate and update errors
       const validationErrors = validateTable(updatedTable, {
