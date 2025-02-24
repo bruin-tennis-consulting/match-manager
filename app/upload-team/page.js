@@ -21,7 +21,7 @@ export default function UploadVideo() {
 
   // prevents re-rendering of teams on other state change (useful when teams is expensive)
   // const memoizedTeams = useMemo(() => teams, [teams]);
-  
+
   useEffect(() => {
     const fetchTeams = async () => {
       try {
