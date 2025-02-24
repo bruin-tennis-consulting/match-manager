@@ -219,7 +219,7 @@ const FilterList = ({
           }}
         >
           <span style={{ marginRight: '0.8vw', width: '1.5vw' }}>
-            {isOpen(path) ? '▼' : '▶'}
+            {isOpen(path) ? '⌄' : '›'}
           </span>
           {category.title}
         </div>
@@ -248,7 +248,7 @@ const FilterList = ({
           }}
         >
           <span style={{ marginRight: '0.8vw', width: '1.5vw' }}>
-            {isOpen(path) ? '▼' : '▶'}
+            {isOpen(path) ? '⌄' : '›'}
           </span>
           {playerData.title}
         </div>
@@ -285,7 +285,7 @@ const FilterList = ({
               }}
             >
               <span style={{ marginRight: '0.8vw', width: '1.5vw' }}>
-                {isOpen(key) ? '▼' : '▶'}
+                {isOpen(key) ? '⌄' : '›'}
               </span>
               {group.title}
             </div>
