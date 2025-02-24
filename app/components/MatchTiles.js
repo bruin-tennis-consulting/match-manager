@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import Image from 'next/image'
 
 import styles from '@/app/styles/MatchTiles.module.css'
 import getTeams from '@/app/services/getTeams.js'
@@ -32,6 +33,10 @@ const MatchTiles = ({
 }) => {
   const [clientLogo, setClientLogo] = useState('')
   const [opponentLogo, setOpponentLogo] = useState('')
+
+  // Remove (M) and (W) from team names
+  const changedClientTeam = clientTeam.replace(/\s*\(M\)|\s*\(W\)/g, '')
+  const changedOpponentTeam = opponentTeam.replace(/\s*\(M\)|\s*\(W\)/g, '')
 
   // to calculate the opcaity
   const player1Opacity = isOpaque(player1FinalScores, player2FinalScores)
@@ -106,7 +111,13 @@ const MatchTiles = ({
         {/* Player 1 Information  */}
         <div className={styles.playerInfo}>
           <div className={styles.playerSchoolImgcontainerhome}>
-            <img src={clientLogo} alt={`${clientTeam} logo`} />
+            <Image
+              src={clientLogo}
+              alt={`${clientTeam} logo`}
+              width={50} // Adjust as needed
+              height={50}
+              layout="intrinsic"
+            />
           </div>
           <div className={styles.playerInfoName}>
             {player1Name} {isUnfinished && '(UF)'}
@@ -120,7 +131,13 @@ const MatchTiles = ({
         {/* Player 2 Information */}
         <div className={styles.playerInfo}>
           <div className={styles.playerSchoolImgcontainer}>
-            <img src={opponentLogo} alt={`${opponentTeam} logo`} />
+            <Image
+              src={opponentLogo}
+              alt={`${opponentTeam} logo`}
+              width={50} // Adjust as needed
+              height={50}
+              layout="intrinsic"
+            />
           </div>
           <div className={styles.playerInfoName}>{player2Name}</div>
           <div className={styles.playerInfoScore}>
@@ -143,8 +160,8 @@ const MatchTiles = ({
       {displaySections.matchup && (
         <div className={styles.matchInfoContainer}>
           <div className={styles.containerTitle}>Matchup</div>
-          <div className={styles.containerInfo}>{clientTeam}</div>
-          <div className={styles.containerInfo}>{opponentTeam}</div>
+          <div className={styles.containerInfo}>{changedClientTeam}</div>
+          <div className={styles.containerInfo}>{changedOpponentTeam}</div>
         </div>
       )}
     </div>

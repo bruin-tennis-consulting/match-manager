@@ -29,7 +29,7 @@ async function uploadTeam(teamName, logoFile) {
 
     // Then, save the match data along with the Logo URL to Firestore
     const mens = teamName + ' (M)'
-    const womens = teamName + ' (W)'
+    const womens = teamName + '(W)'
     const docRefM = await addDoc(collection(db, 'teams'), {
       name: mens,
       logoUrl,

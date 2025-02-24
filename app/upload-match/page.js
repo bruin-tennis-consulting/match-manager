@@ -6,7 +6,7 @@ import validator from '@rjsf/validator-ajv8'
 import { dataURItoBlob } from '@rjsf/utils'
 
 import getTeams from '@/app/services/getTeams.js'
-import { initialSchema, uiSchema } from '@/app/services/matchSchemas.js'
+// import { initialSchema, uiSchema } from '@/app/services/matchSchemas.js'
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 
 import { useData } from '@/app/DataProvider.js'
@@ -14,12 +14,20 @@ import { useAuth } from '@/app/AuthWrapper.js'
 
 import styles from '@/app/styles/Upload.module.css'
 
+import {
+  initialSchema,
+  uiSchema as baseUiSchema
+} from '@/app/services/matchSchemas.js'
+
 export default function UploadMatchForm() {
   const { createMatch } = useData() // Use the createMatch hook
   const [schema, setSchema] = useState(initialSchema)
   const [teams, setTeams] = useState([])
   const [collections, setCollections] = useState([])
   const [formData, setFormData] = useState({})
+  const [errors, setErrors] = useState([])
+
+  const [localUiSchema, setLocalUiSchema] = useState(baseUiSchema) // local uiSchema state to update the event field dynamically
 
   const { userProfile } = useAuth()
 
@@ -98,11 +106,38 @@ export default function UploadMatchForm() {
   const handleChange = ({ formData: newFormData }) => {
     setFormData(newFormData)
     updatePlayerOptions(newFormData)
+
+    // Update the event field's disabled state: if duel is not true, disable event.
+    setLocalUiSchema({
+      ...baseUiSchema,
+      event: {
+        'ui:disabled': !newFormData.duel
+      }
+    })
+  }
+
+  const validateFileType = (file, expectedType, fieldName) => {
+    if (file && file.split(';')[0].split(':')[1] !== expectedType) {
+      throw new Error(
+        `Invalid file type for ${fieldName}. Please upload a ${expectedType.split('/')[1]} file.`
+      )
+    }
   }
 
   const handleSubmit = async ({ formData }) => {
     try {
       let published = true
+      if (
+        !formData.opponentPlayer ||
+        formData.opponentPlayer.trim().split(/\s+/).length < 2
+      ) {
+        throw new Error(
+          'Opponent player must include both first and last name.'
+        )
+      }
+      // Validate the File types
+      validateFileType(formData.jsonFile, 'application/json', 'JSON file')
+      validateFileType(formData.pdfFile, 'application/pdf', 'PDF file')
       const pointsJson = formData.jsonFile
         ? JSON.parse(atob(formData.jsonFile.split(',')[1]))
         : []
@@ -146,6 +181,7 @@ export default function UploadMatchForm() {
         unfinished: formData.unfinished || false,
         duel: formData.duel || false
       }
+
       // const sets = parseMatchScore(formData.matchScore);
       const sets = [
         formData.matchScore.set1,
@@ -168,11 +204,11 @@ export default function UploadMatchForm() {
         version: 'v1', // Current version for new matches added
         published
       })
-
+      setErrors([])
       alert('Match uploaded successfully!')
     } catch (error) {
       console.error('Error uploading match:', error)
-      alert(`Error uploading match: ${error.message}`)
+      setErrors([`Error: ${error.message}`])
     }
   }
 
@@ -186,12 +222,22 @@ export default function UploadMatchForm() {
         <Form
           key={JSON.stringify(schema)}
           schema={schema}
-          uiSchema={uiSchema}
+          uiSchema={localUiSchema} // Changed to use out state variable
           formData={formData}
           onChange={handleChange}
           onSubmit={handleSubmit}
           validator={validator}
         />
+        {errors.length > 0 && (
+          <div className={styles.errorContainer}>
+            {errors.map((error, index) => (
+              <div key={index} className={styles.errorMessage}>
+                <span className={styles.errorIcon}>⚠️</span>
+                {error}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
