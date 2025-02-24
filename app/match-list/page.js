@@ -76,6 +76,12 @@ export default function MatchList() {
                   <Link href={`/timestamp-tagger?videoId=${match.videoId}`}>
                     <button>Tag Match - Timestamp</button>
                   </Link>
+                  <Link
+                    href={`/simple-tagger?videoId=${match.videoId}&matchId=${match.id}`}
+                  >
+                    <button>Tag Match - Simple</button>
+                  </Link>
+
                   {/* <br />
                   <input onChange={(e) => setNewName(e.target.value)} />
                   <button onClick={() => handleRename(match.id)}>Rename</button> */}

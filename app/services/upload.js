@@ -27,8 +27,6 @@ async function uploadTeam(teamName, logoFile) {
       logoUrl = await getDownloadURL(snapshot.ref)
     }
 
-   
-
     // Then, save the match data along with the Logo URL to Firestore
     const mens = teamName + ' (M)'
     const womens = teamName + '(W)'
