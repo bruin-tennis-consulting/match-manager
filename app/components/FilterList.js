@@ -306,8 +306,7 @@ const FilterList = ({
           </div>
         )
       })}
-
-<div style={{ 
+      <div style={{ 
         marginTop: '2vh',
         display: 'flex',
         justifyContent: 'center'
@@ -324,7 +323,7 @@ const FilterList = ({
             cursor: 'pointer'
           }}
         >
-          Apply Filters
+        Apply Filters
         </button>
       </div>
     </div>
