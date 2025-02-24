@@ -9,7 +9,7 @@ const FilterList = ({
   showCount
 }) => {
   const [openSections, setOpenSections] = useState({})
-
+  const [pendingList, setPendingList] = useState(filterList)
   // Calculate available filters from the actual data
   const availableFilters = useMemo(() => {
     const filters = {}
@@ -56,6 +56,10 @@ const FilterList = ({
     return false
   }
 
+  const handleSubmit = () => {
+    setFilterList(pendingList)
+  }
+
   const toggleSection = (path) => {
     setOpenSections((prev) => ({
       ...prev,
@@ -67,17 +71,17 @@ const FilterList = ({
 
   const addFilter = (key, value) => {
     if (
-      !filterList.some(
+      !pendingList.some(
         ([filterKey, filterValue]) => filterKey === key && filterValue === value
       )
     ) {
-      setFilterList([...filterList, [key, value]])
+      setPendingList([...pendingList, [key, value]])
     }
   }
 
   const removeFilter = (key, value) => {
-    setFilterList(
-      filterList.filter(
+    setPendingList(
+      pendingList.filter(
         ([filterKey, filterValue]) =>
           !(filterKey === key && filterValue === value)
       )
@@ -85,7 +89,7 @@ const FilterList = ({
   }
 
   const isActiveFilter = (key, value) => {
-    return filterList.some(
+    return pendingList.some(
       ([filterKey, filterValue]) => filterKey === key && filterValue === value
     )
   }
@@ -302,6 +306,27 @@ const FilterList = ({
           </div>
         )
       })}
+
+<div style={{ 
+        marginTop: '2vh',
+        display: 'flex',
+        justifyContent: 'center'
+      }}>
+        <button
+          onClick={handleSubmit}
+          style={{
+            padding: '1vh 2vw',
+            fontSize: '1.4vw',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '0.4vw',
+            cursor: 'pointer'
+          }}
+        >
+          Apply Filters
+        </button>
+      </div>
     </div>
   )
 }
