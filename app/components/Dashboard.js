@@ -28,17 +28,14 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
 
-  console.log('matches', matches)
-  console.log(matches.length)
   const formattedMatches = formatMatches(matches)
-  console.log(formattedMatches)
 
   // Fuzzy search
   const fuse = useMemo(() => {
     if (!formattedMatches.length) return null
     return new Fuse(formattedMatches, {
       keys: searchableProperties,
-      threshold: 0.3
+      threshold: 0.4
     })
   }, [formattedMatches])
 
@@ -46,9 +43,14 @@ const Dashboard = () => {
     if (!searchTerm || !fuse) return []
     const result = fuse.search(searchTerm).map((result) => {
       const match = result.item
+      // For non-dual matches, always use event format
+      if (!match.matchDetails.duel) {
+        return `_#${match.matchDetails.event}`
+      }
       return `${match.matchDate}#${match.teams.opponentTeam}`
     })
-    return result
+    // Remove duplicates
+    return [...new Set(result)]
   }, [searchTerm, fuse])
 
   const handleTileClick = (videoId) => {
@@ -148,7 +150,6 @@ const Dashboard = () => {
           )
         })}
       </div>
-
       <div className={styles.mainContent}>
         <div className={styles.matchesSection}>
           {matches.length === 0 ? (
@@ -162,8 +163,11 @@ const Dashboard = () => {
                     matchKey ===
                       `${match.matchDate}#${match.teams.opponentTeam}`) ||
                     (!match.matchDetails.duel &&
-                      matchKey === `_#${match.matchDetails.event}`))
+                      (matchKey === `_#${match.matchDetails.event}` ||
+                        matchKey ===
+                          `${match.matchDate}#${match.teams.opponentTeam}`)))
               )
+              console.log(matchKey)
               const doublesMatches = formattedMatches.filter(
                 (match) =>
                   !match.singles &&
@@ -171,15 +175,26 @@ const Dashboard = () => {
                     matchKey ===
                       `${match.matchDate}#${match.teams.opponentTeam}`) ||
                     (!match.matchDetails.duel &&
-                      matchKey === `_#${match.matchDetails.event}`))
+                      (matchKey === `_#${match.matchDetails.event}` ||
+                        matchKey ===
+                          `${match.matchDate}#${match.teams.opponentTeam}`)))
               )
               const [matchDate, matchName] = matchKey.split('#')
+
+              // Get the actual match event name for display
+              const displayName = matchKey.startsWith('_#')
+                ? matchName // If it starts with '_#', it's already an event name
+                : formattedMatches.find(
+                    (match) =>
+                      match.matchDate === matchDate &&
+                      match.teams.opponentTeam === matchName
+                  )?.matchDetails.event || matchName
 
               return (
                 <div key={index} className={styles.matchSection}>
                   <div className={styles.matchContainer}>
                     <div className={styles.matchHeader}>
-                      <h3>{matchName}</h3>
+                      <h3>{displayName}</h3>
                       <span className={styles.date}>{matchDate}</span>
                     </div>
                     <DashTileContainer
