@@ -1,4 +1,4 @@
-//import { initialSchema, uiSchema as baseUiSchema } from '@/app/services/matchSchemas.js'
+// Schema and uiSchema definitions
 
 const initialSchema = {
   title: 'Upload Match',
@@ -163,7 +163,6 @@ const initialSchema = {
     pdfFile: {
       type: 'string',
       title: 'PDF File'
-      // format: 'data-url'
     }
   },
   required: [
@@ -185,11 +184,9 @@ const uiSchema = {
   pdfFile: {
     'ui:widget': 'file'
   },
-
   event: {
-    'ui:disabled': (formData) => !formData.duel  // the "event" field is disabled when "dual" is not selected
+    'ui:disabled': (formData) => !formData.duel
   },
-
   matchScore: {
     set1: {
       clientTiebreak: {

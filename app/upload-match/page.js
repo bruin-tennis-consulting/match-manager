@@ -6,7 +6,6 @@ import validator from '@rjsf/validator-ajv8'
 import { dataURItoBlob } from '@rjsf/utils'
 
 import getTeams from '@/app/services/getTeams.js'
-//import { initialSchema, uiSchema } from '@/app/services/matchSchemas.js'
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 
 import { useData } from '@/app/DataProvider.js'
@@ -14,22 +13,22 @@ import { useAuth } from '@/app/AuthWrapper.js'
 
 import styles from '@/app/styles/Upload.module.css'
 
-import { initialSchema, uiSchema as baseUiSchema } from '@/app/services/matchSchemas.js'
+import {
+  initialSchema,
+  uiSchema as baseUiSchema
+} from '@/app/services/matchSchemas.js'
 
 export default function UploadMatchForm() {
-  const { createMatch } = useData() // Use the createMatch hook
+  const setCollections = useState([])[1]
+
+  const { createMatch } = useData()
   const [schema, setSchema] = useState(initialSchema)
   const [teams, setTeams] = useState([])
-  const [collections, setCollections] = useState([])
   const [formData, setFormData] = useState({})
   const [errors, setErrors] = useState([])
-
-  const [localUiSchema, setLocalUiSchema] = useState(baseUiSchema) // local uiSchema state to update the event field dynamically
+  const [localUiSchema, setLocalUiSchema] = useState(baseUiSchema)
 
   const { userProfile } = useAuth()
-
-  // TODO: remove this line used for linting
-  console.log(collections)
 
   useEffect(() => {
     const fetchCollectionsAndTeams = async () => {
@@ -40,7 +39,6 @@ export default function UploadMatchForm() {
 
         // Assuming userProfile.collections contains the collection names
         const userCollections = userProfile?.collections || []
-
         setCollections(userCollections)
 
         // Update schema with team and collection names
@@ -68,7 +66,7 @@ export default function UploadMatchForm() {
     }
 
     fetchCollectionsAndTeams()
-  }, [])
+  }, [userProfile, setCollections])
 
   const getPlayersForTeam = useCallback(
     (teamName) => {
@@ -83,9 +81,8 @@ export default function UploadMatchForm() {
   )
 
   const updatePlayerOptions = useCallback(
-    (formData) => {
-      const clientPlayers = getPlayersForTeam(formData.clientTeam)
-
+    (newFormData) => {
+      const clientPlayers = getPlayersForTeam(newFormData.clientTeam)
       setSchema((prevSchema) => ({
         ...prevSchema,
         properties: {
@@ -97,13 +94,12 @@ export default function UploadMatchForm() {
         }
       }))
     },
-
     [getPlayersForTeam]
   )
+
   const handleChange = ({ formData: newFormData }) => {
     setFormData(newFormData)
     updatePlayerOptions(newFormData)
-
     // Update the event field's disabled state: if duel is not true, disable event.
     setLocalUiSchema({
       ...baseUiSchema,
@@ -111,7 +107,6 @@ export default function UploadMatchForm() {
         'ui:disabled': !newFormData.duel
       }
     })
-
   }
 
   const validateFileType = (file, expectedType, fieldName) => {
@@ -146,7 +141,7 @@ export default function UploadMatchForm() {
         if (!result) throw new Error('Upload cancelled by user.')
         published = false
       }
-      const teams = {
+      const teamsData = {
         clientTeam: formData.clientTeam,
         opponentTeam: formData.opponentTeam
       }
@@ -180,27 +175,24 @@ export default function UploadMatchForm() {
         duel: formData.duel || false
       }
 
-      
-      // const sets = parseMatchScore(formData.matchScore);
       const sets = [
         formData.matchScore.set1,
         formData.matchScore.set2,
         formData.matchScore.set3 || {}
       ]
 
-      // Use the createMatch hook to upload the match
       await createMatch(formData.collection, {
         sets,
         videoId: formData.videoID,
         pointsJson,
         pdfFile: formData.pdfFile ? dataURItoBlob(formData.pdfFile) : null,
-        teams,
+        teams: teamsData,
         players,
         matchDate: formData.date,
         singles: formData.singlesDoubles === 'Singles',
         matchDetails,
         searchableProperties,
-        version: 'v1', // Current version for new matches added
+        version: 'v1',
         published
       })
       setErrors([])
@@ -219,9 +211,8 @@ export default function UploadMatchForm() {
           Make sure you add the player in &apos;Upload Team&apos; before this!
         </h3>
         <Form
-          key={JSON.stringify(schema)}
           schema={schema}
-          uiSchema={localUiSchema}  //Changed to use out state variable
+          uiSchema={localUiSchema}
           formData={formData}
           onChange={handleChange}
           onSubmit={handleSubmit}
