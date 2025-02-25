@@ -1,3 +1,5 @@
+//import { initialSchema, uiSchema as baseUiSchema } from '@/app/services/matchSchemas.js'
+
 const initialSchema = {
   title: 'Upload Match',
   type: 'object',
@@ -65,7 +67,8 @@ const initialSchema = {
               type: 'number',
               title: 'Opponent Tiebreak (if applicable)'
             }
-          }
+          },
+          required: ['clientGames', 'opponentGames']
         },
         set2: {
           type: 'object',
@@ -81,7 +84,8 @@ const initialSchema = {
               type: 'number',
               title: 'Opponent Tiebreak (if applicable)'
             }
-          }
+          },
+          required: ['clientGames', 'opponentGames']
         },
         set3: {
           type: 'object',
@@ -99,7 +103,8 @@ const initialSchema = {
             }
           }
         }
-      }
+      },
+      required: ['set1']
     },
     division: {
       type: 'string',
@@ -180,6 +185,11 @@ const uiSchema = {
   pdfFile: {
     'ui:widget': 'file'
   },
+
+  event: {
+    'ui:disabled': (formData) => !formData.duel  // the "event" field is disabled when "dual" is not selected
+  },
+
   matchScore: {
     set1: {
       clientTiebreak: {

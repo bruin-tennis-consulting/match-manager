@@ -90,3 +90,49 @@
   height: 100%;
   object-fit: contain;
 }
+
+@media (max-width: 768px) {
+  .containerHeader {
+    padding-bottom: 5px;
+    padding-top: 5px;
+    padding-left: 1px;
+  }
+  .matchInfoContainer {
+    border-radius: 10px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    padding-left: 10px;
+  }
+  .containerTitle {
+    font-size: 3.5vw;
+    font-weight: 400;
+  }
+
+  .taggedBadge {
+    font-size: 8px;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+
+  .playerInfo {
+    font-size: 1vw;
+  }
+
+  .playerInfoName {
+    font-size: 4vw;
+    padding-left: 6px;
+  }
+
+  .playerInfoScore {
+    font-size: 4vw;
+    letter-spacing: 5px;
+  }
+
+  @media (max-width: 768px) {
+    .playerSchoolImgcontainerhome,
+    .playerSchoolImgcontainer {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
