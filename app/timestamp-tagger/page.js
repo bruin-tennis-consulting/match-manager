@@ -309,8 +309,8 @@ export default function TagMatch() {
     const xFromCenter = x - widthOfCourt / 2
     const yFromCenter = y - heightOfCourt / 2
 
-    let xInches = Math.round(xFromCenter * inchesPerPixel)
-    let yInches = Math.round(yFromCenter * inchesPerPixel) * -1
+    let xInches = (xFromCenter * inchesPerPixel).toFixed(3)
+    let yInches = (yFromCenter * inchesPerPixel * -1).toFixed(3)
 
     // Normalize any negative zero values
     xInches = Object.is(xInches, -0) ? 0 : xInches
