@@ -167,7 +167,7 @@ const Dashboard = () => {
                         matchKey ===
                           `${match.matchDate}#${match.teams.opponentTeam}`)))
               )
-              console.log(matchKey)
+
               const doublesMatches = formattedMatches.filter(
                 (match) =>
                   !match.singles &&
