@@ -44,7 +44,7 @@ export default function PlayerProfile({ playerData, playerId }) {
             cols={4}
           />
         ) : (
-          <p>No matches found</p>
+          <p>Loading ... or No matches found</p>
         )}
       </div>
     </div>
