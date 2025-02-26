@@ -306,11 +306,13 @@ const FilterList = ({
           </div>
         )
       })}
-      <div style={{ 
-        marginTop: '2vh',
-        display: 'flex',
-        justifyContent: 'center'
-      }}>
+      <div
+        style={{
+          marginTop: '2vh',
+          display: 'flex',
+          justifyContent: 'center'
+        }}
+      >
         <button
           onClick={handleSubmit}
           style={{
@@ -323,7 +325,7 @@ const FilterList = ({
             cursor: 'pointer'
           }}
         >
-        Apply Filters
+          Apply Filters
         </button>
       </div>
     </div>
