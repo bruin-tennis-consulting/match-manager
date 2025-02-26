@@ -48,6 +48,7 @@ const MatchPage = () => {
   const [tab, setTab] = useState(1)
   const [bookmarks, setBookmarks] = useState([])
   const [triggerScroll, setTriggerScroll] = useState(false)
+  const [autoplayEnabled, setAutoplayEnabled] = useState(true)
   const tableRef = useRef(null)
   const iframeRef = useRef(null)
 
@@ -109,51 +110,39 @@ const MatchPage = () => {
     }
   }
 
-  /*
-    Point Auto Jump
-      -Purpose:
-        - When players finish watching a point, it should automatically jump to the next point
-        - Must be togglable
-        - Must play from between filtered points, or all points if no filters
-      -Requirements:
-        - Should be togglable(handled outside of this function, probably whats calling it)
-        - Purpose: autojump between point start and point finish
-        - if p1.end = 1 and p2.start = 3, then if time = 1, jump to 3
-      -Implementation Idea:
-        - Get the current time of the video
-        - Option 1:
-          - Get the current point.end
-          - Get the next point.start
-          - If the current time is greater than cur end jump to end
-        - Option 2:
-          - List of all points starts and end
-          - If outside range, jump to next valid start
-  */
-
-  const [autoJump, setAutoJump] = useState(false)
-  setAutoJump(true)
-
   useEffect(() => {
-    if (!autoJump || !videoObject) return
-    let frameId
-    const checkTime = () => {
-      const currentTime = videoObject.getCurrentTime() * 1000
-      const points = returnFilteredPoints()
-      for (let i = 0; i < points.length - 1; i++) {
-        if (
-          currentTime >= points[i].end - 100 &&
-          currentTime < points[i + 1].start
-        ) {
-          console.log(`Jumping from ${points[i].end} to ${points[i + 1].start}`)
-          videoObject.seekTo(points[i + 1].start / 1000, true)
-          break
+    if (!videoObject || !autoplayEnabled) return
+    const interval = setInterval(() => {
+      if (videoObject && typeof videoObject.getCurrentTime === 'function') {
+        const currentTime = videoObject.getCurrentTime() * 1000 // Convert to ms
+        const filteredPoints = returnFilteredPoints().sort(
+          (a, b) => a.Position - b.Position
+        )
+
+        if (!filteredPoints.length) return
+
+        const insideAnyPoint = filteredPoints.some(
+          (point) =>
+            currentTime + 2000 >= point.Position &&
+            currentTime - 2000 <= point.Position + point.Duration
+        )
+
+        if (!insideAnyPoint) {
+          const nextPoint = filteredPoints.find(
+            (point) => currentTime < point.Position
+          )
+          if (nextPoint) {
+            if (iframeRef.current) {
+              iframeRef.current.scrollIntoView({ behavior: 'smooth' })
+            }
+            videoObject.seekTo(nextPoint.Position / 1000, true)
+          }
         }
       }
-      frameId = requestAnimationFrame(checkTime)
-    }
-    frameId = requestAnimationFrame(checkTime)
-    return () => cancelAnimationFrame(frameId)
-  }, [autoJump, videoObject, filterList])
+    }, 2000)
+
+    return () => clearInterval(interval)
+  }, [videoObject, autoplayEnabled, filterList])
 
   const handleBookmark = async (point) => {
     const updatedPoints = matchData.pointsJson.map((p) => {
@@ -405,7 +394,7 @@ const MatchPage = () => {
                     : styles.toggle_button_neutral_inactive
                 }
               >
-                Filters
+                Filter
               </button>
               <button
                 onClick={() => setTab(1)}
@@ -427,6 +416,17 @@ const MatchPage = () => {
               >
                 Saved
               </button>
+              <button
+                onClick={() => setAutoplayEnabled((prev) => !prev)}
+                className={
+                  autoplayEnabled
+                    ? styles.toggle_button_autoplay_active
+                    : styles.toggle_button_neutral_inactive
+                }
+              >
+                Autoplay
+              </button>
+
               {tab === 0 && (
                 <div className={styles.sidebox}>
                   <div className={styles.sidecontent}>
