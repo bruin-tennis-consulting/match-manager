@@ -302,7 +302,7 @@
 
 @media (max-width: 768px) {
   .headerContent h2 {
-    font-size: 10vw;
+    display: none;
   }
   .container {
     padding-left: 20px;
@@ -323,5 +323,15 @@
   }
   .matchTileContainer {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .searchContainer {
+    position: relative;
+    width: 90vw;
+    display: flex;
+  }
+  .searchWrapper {
+    position: relative;
+    display: inline-block;
+    width: 90vw;
   }
 }
