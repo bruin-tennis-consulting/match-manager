@@ -394,7 +394,7 @@ const MatchPage = () => {
                     : styles.toggle_button_neutral_inactive
                 }
               >
-                Filter
+                Filters
               </button>
               <button
                 onClick={() => setTab(1)}
