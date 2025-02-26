@@ -326,12 +326,16 @@
   }
   .searchContainer {
     position: relative;
-    width: 90vw;
+    width: 70vw;
     display: flex;
   }
   .searchWrapper {
     position: relative;
     display: inline-block;
-    width: 90vw;
+    width: fit-content;
+  }
+  .searchInput {
+    padding-top: 15px;
+    padding-bottom: 15px;
   }
 }
