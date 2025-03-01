@@ -223,6 +223,16 @@
   font-weight: bold;
 }
 
+.toggle_button_autoplay_active {
+  font-size: 1vw;
+  width: 5vw;
+  height: 5vh;
+  background-color: #8bb8e8;
+  border: 1px solid #eaeaea;
+  cursor: pointer;
+  font-weight: bold;
+}
+
 .toggle_buttonb_active {
   font-size: 1vw;
   width: 12vw;
