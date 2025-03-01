@@ -1,23 +1,24 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 
 import { useData } from '@/app/DataProvider'
 import {
-  getTaggerButtonData,
+  getSimpleTaggerButtonData,
+  simpleColumnNames,
   columnNames
-} from '@/app/services/taggerButtonData.js'
+} from '@/app/services/taggerButtonData.js' // change this since our columnNames are not the same
 
 import VideoPlayer from '@/app/components/VideoPlayer'
-import TennisCourtSVG from '@/public/TennisCourtSVG'
 import { validateTable } from '@/app/services/taggingValidator'
 
 import styles from '@/app/styles/TagMatch.module.css'
 
 export default function TagMatch() {
-  const pathname = usePathname()
-  const matchId = pathname.substring(pathname.lastIndexOf('/') + 1)
+  const searchParams = useSearchParams()
+  const matchId = searchParams.get('matchId')
+
   const { matches, updateMatch, refresh } = useData()
   const match = matches.find((m) => m.id === matchId)
 
@@ -32,8 +33,6 @@ export default function TagMatch() {
   const [isPublished, setIsPublished] = useState(false)
   const [matchMetadata, setMatchMetadata] = useState({})
   const [serverName, setServerName] = useState('Player1')
-  const [serverFarNear, setServerFarNear] = useState('Near')
-  const [tiebreak, setTiebreak] = useState(false)
   const [initialLoad, setInitialLoad] = useState(true)
   const [errors, setErrors] = useState([])
 
@@ -48,6 +47,8 @@ export default function TagMatch() {
 
   useEffect(() => {
     if (match && initialLoad) {
+      console.log('Match object:', match) // Check if match is found
+      console.log('Extracted video ID:', match.videoId) // Check if videoId exists
       setVideoId(match.videoId)
       setIsPublished(match.published || false)
       setTableState((oldTableState) => ({
@@ -60,6 +61,11 @@ export default function TagMatch() {
       setInitialLoad(false)
     }
   }, [match, initialLoad])
+
+  useEffect(() => {
+    const initialVideoId = searchParams.get('videoId') || ''
+    setVideoId(initialVideoId)
+  }, [searchParams])
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown)
@@ -179,41 +185,76 @@ export default function TagMatch() {
     })
   }
 
+  // const addNewRowAndSync = () => {
+  //   setTableState((oldTableState) => {
+  //     pullAndPushRows(oldTableState.rows, null)
+
+  //     let newTimestamp = getVideoTimestamp()
+
+  //     const newRow = simpleColumnNames.reduce((acc, columnName) => {
+  //       let existingRow = tableState.rows.find(
+  //         (row) => row.pointStartTime === newTimestamp
+  //       )
+
+  //       while (existingRow !== undefined) {
+  //         newTimestamp += 1
+  //         existingRow = tableState.rows.find(
+  //           (row) => row.pointStartTime === newTimestamp
+  //         )
+  //       }
+
+  //       acc[columnName] = columnName === 'pointStartTime' ? newTimestamp : ''
+  //       return acc
+  //     }, {})
+
+  //     const updatedTable = [...oldTableState.rows, newRow]
+  //     updatedTable.sort((a, b) => a.pointStartTime - b.pointStartTime)
+
+  //     const newIndex = updatedTable.findIndex(
+  //       (row) => row.pointStartTime === newTimestamp
+  //     )
+
+  //     setErrors(
+  //       validateTable(updatedTable, {
+  //         ...matchMetadata,
+  //         activeRowIndex: newIndex
+  //       })
+  //     )
+
+  //     return { rows: updatedTable, activeRowIndex: newIndex }
+  //   })
+  // }
+
   const addNewRowAndSync = () => {
     setTableState((oldTableState) => {
-      pullAndPushRows(oldTableState.rows, null)
-
-      let newTimestamp = getVideoTimestamp()
+      const newTimestamp = getVideoTimestamp()
 
       const newRow = columnNames.reduce((acc, columnName) => {
-        let existingRow = tableState.rows.find(
-          (row) => row.pointStartTime === newTimestamp
-        )
-
-        while (existingRow !== undefined) {
-          newTimestamp += 1
-          existingRow = tableState.rows.find(
-            (row) => row.pointStartTime === newTimestamp
-          )
+        if (columnName === 'serverName') {
+          acc[columnName] = serverName
+        } else if (columnName === 'pointStartTime') {
+          acc[columnName] = newTimestamp // don't care abt timestamp for this simple tagger
+        } else if (columnName === 'isPointStart') {
+          acc[columnName] = 1 // don't care abt start of a point
+        } else if (columnName === 'shotInRally') {
+          acc[columnName] = 1 // don't care abt rally shot count
+        } else {
+          acc[columnName] = '' // default to empty for all other fields
         }
-
-        acc[columnName] = columnName === 'pointStartTime' ? newTimestamp : ''
         return acc
       }, {})
 
       const updatedTable = [...oldTableState.rows, newRow]
+
       updatedTable.sort((a, b) => a.pointStartTime - b.pointStartTime)
 
-      const newIndex = updatedTable.findIndex(
-        (row) => row.pointStartTime === newTimestamp
-      )
+      const newIndex = updatedTable.length - 1
 
-      setErrors(
-        validateTable(updatedTable, {
-          ...matchMetadata,
-          activeRowIndex: newIndex
-        })
-      )
+      const validationErrors = validateTable(updatedTable, {
+        ...matchMetadata,
+        activeRowIndex: newIndex
+      })
+      setErrors(validationErrors)
 
       return { rows: updatedTable, activeRowIndex: newIndex }
     })
@@ -396,42 +437,23 @@ export default function TagMatch() {
     }
   }
 
-  const buttonData = getTaggerButtonData(
+  const buttonData = getSimpleTaggerButtonData(
     updateActiveRow,
     addNewRowAndSync,
     setCurrentPage,
     {
-      serverName,
-      serverFarNear,
-      tiebreak
+      serverName
     }
   )
 
-  const handleImageClick = (event) => {
-    const courtWidthInInches = 432
-    const xRatio = 0.6
-
-    const rect = event.currentTarget.getBoundingClientRect()
-    const widthOfCourt = rect.width
-    const heightOfCourt = rect.height
-
-    const inchesPerPixel = courtWidthInInches / (widthOfCourt * xRatio)
-
-    const x = event.clientX - rect.left
-    const y = event.clientY - rect.top
-
-    const xFromCenter = x - widthOfCourt / 2
-    const yFromCenter = y - heightOfCourt / 2
-
-    let xInches = (xFromCenter * inchesPerPixel).toFixed(3)
-    let yInches = (yFromCenter * inchesPerPixel * -1).toFixed(3)
-
-    xInches = Object.is(xInches, -0) ? 0 : xInches
-    yInches = Object.is(yInches, -0) ? 0 : yInches
-
-    console.log('xInches: ' + xInches + ' yInches: ' + yInches)
-    return { x: xInches, y: yInches }
-  }
+  // const buttonData = getSimpleTaggerButtonData(
+  //   updateActiveRow,
+  //   () => addNewRowAndSync(serverName), // Pass the latest serverName directly
+  //   setCurrentPage,
+  //   {
+  //     serverName
+  //   }
+  // )
 
   function getErrors(rowIndex, columnName) {
     const cellErrors = errors.filter((error) =>
@@ -549,24 +571,6 @@ export default function TagMatch() {
               return button.courtImage ? (
                 <div key={index}>
                   <p>{button.label}</p>
-                  <TennisCourtSVG
-                    className={styles.courtImage}
-                    courtType={button.courtImage}
-                    handleImageClick={(event) => {
-                      setPopUp([])
-                      saveToHistory()
-                      const { x, y } = handleImageClick(event)
-                      const data = {
-                        ...matchMetadata,
-                        x,
-                        y,
-                        table: tableState.rows,
-                        activeRowIndex: tableState.activeRowIndex,
-                        videoTimestamp: getVideoTimestamp()
-                      }
-                      button.action(data)
-                    }}
-                  />
                 </div>
               ) : (
                 <button
@@ -605,7 +609,7 @@ export default function TagMatch() {
             </button>
           </div>
 
-          <div>
+          {/* <div>
             <p>Current Side: {serverFarNear}</p>
             <button
               onClick={() => {
@@ -616,9 +620,9 @@ export default function TagMatch() {
             >
               Toggle Side
             </button>
-          </div>
+          </div> */}
 
-          <div>
+          {/* <div>
             <p>Tiebreak: {tiebreak.toString()}</p>
             <button
               onClick={() => {
@@ -627,7 +631,7 @@ export default function TagMatch() {
             >
               Toggle Tiebreak
             </button>
-          </div>
+          </div> */}
 
           {isVisible && popUp.length > 0 && (
             <div className={styles.popUp}>
@@ -644,7 +648,7 @@ export default function TagMatch() {
         <thead>
           <tr>
             <th key={'delete_button'}>Delete</th>
-            {columnNames.map((columnName, index) => (
+            {simpleColumnNames.map((columnName, index) => (
               <th key={index}>{columnName}</th>
             ))}
           </tr>
@@ -659,7 +663,7 @@ export default function TagMatch() {
                   </i>
                 </button>
               </td>
-              {columnNames.map((columnName, colIndex) => {
+              {simpleColumnNames.map((columnName, colIndex) => {
                 const cellErrors = getErrors(rowIndex, columnName)
                 const errorDescriptions = cellErrors
                   ? cellErrors.map((error) => error.description).join(', ')

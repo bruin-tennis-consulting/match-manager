@@ -1543,3 +1543,252 @@ export const columnNames = [
   'Surface',
   'Notes'
 ]
+
+export const simpleColumnNames = [
+  'pointScore',
+  'serverName',
+  'firstServeIn',
+  'firstServeZone',
+  'secondServeIn',
+  'secondServeZone',
+  'isWinner'
+]
+
+export const getSimpleTaggerButtonData = (
+  updateActiveRow,
+  addNewRow,
+  setCurrentPage
+) => ({
+  PointScore: [
+    {
+      label: '0-0',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '0-0')
+        setCurrentPage('FirstServeResult')
+      }
+    },
+    {
+      label: '0-15',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '0-15')
+        setCurrentPage('FirstServeResult')
+      }
+    },
+    {
+      label: '15-0',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '15-0')
+        setCurrentPage('FirstServeResult')
+      }
+    },
+    {
+      label: '15-15',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '15-15')
+        setCurrentPage('FirstServeResult')
+      }
+    },
+    {
+      label: '30-0',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '30-0')
+        setCurrentPage('FirstServeResult')
+      }
+    },
+    {
+      label: '0-30',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '0-30')
+        setCurrentPage('FirstServeResult')
+      }
+    },
+    {
+      label: '30-15',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '30-15')
+        setCurrentPage('FirstServeResult')
+      }
+    },
+    {
+      label: '15-30',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '15-30')
+        setCurrentPage('FirstServeResult')
+      }
+    },
+    {
+      label: '0-40',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '0-40')
+        setCurrentPage('FirstServeResult')
+      }
+    },
+    {
+      label: '40-0',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '40-0')
+        setCurrentPage('FirstServeResult')
+      }
+    },
+    {
+      label: '30-30',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '30-30')
+        setCurrentPage('FirstServeResult')
+      }
+    },
+    {
+      label: '15-40',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '15-40')
+        setCurrentPage('FirstServeResult')
+      }
+    },
+    {
+      label: '40-15',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '40-15')
+        setCurrentPage('FirstServeResult')
+      }
+    },
+    {
+      label: '30-40',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '30-40')
+        setCurrentPage('FirstServeResult')
+      }
+    },
+    {
+      label: '40-30',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '40-30')
+        setCurrentPage('FirstServeResult')
+      }
+    },
+    {
+      label: '40-40 (Deuce Side)',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '40-40 (Deuce Side)')
+        setCurrentPage('FirstServeResult')
+      }
+    },
+    {
+      label: '40-40 (Ad Side)',
+      action: (data) => {
+        addNewRow()
+        updateActiveRow('pointScore', '40-40 (Ad Side)')
+        setCurrentPage('FirstServeResult')
+      }
+    }
+  ],
+  FirstServeResult: [
+    {
+      label: 'In',
+      action: (data) => {
+        updateActiveRow('firstServeIn', '1')
+        setCurrentPage('FirstServeZone')
+      }
+    },
+    {
+      label: 'Out',
+      action: (data) => {
+        updateActiveRow('firstServeIn', '0')
+        setCurrentPage('SecondServeResult')
+      }
+    }
+  ],
+  FirstServeZone: [
+    {
+      label: 'Body',
+      action: (data) => {
+        updateActiveRow('firstServeZone', 'Body')
+        setCurrentPage('PointWinner')
+      }
+    },
+    {
+      label: 'Wide',
+      action: (data) => {
+        updateActiveRow('firstServeZone', 'Wide')
+        setCurrentPage('PointWinner')
+      }
+    },
+    {
+      label: 'T',
+      action: (data) => {
+        updateActiveRow('firstServeZone', 'T')
+        setCurrentPage('PointWinner')
+      }
+    }
+  ],
+  SecondServeResult: [
+    {
+      label: 'In',
+      action: (data) => {
+        updateActiveRow('secondServeIn', '1')
+        setCurrentPage('SecondServeZone')
+      }
+    },
+    {
+      label: 'Out',
+      action: (data) => {
+        updateActiveRow('secondServeIn', '0')
+        setCurrentPage('PointWinner')
+      }
+    }
+  ],
+  SecondServeZone: [
+    {
+      label: 'Body',
+      action: (data) => {
+        updateActiveRow('secondServeZone', 'Body')
+        setCurrentPage('PointWinner')
+      }
+    },
+    {
+      label: 'Wide',
+      action: (data) => {
+        updateActiveRow('secondServeZone', 'Wide')
+        setCurrentPage('PointWinner')
+      }
+    },
+    {
+      label: 'T',
+      action: (data) => {
+        updateActiveRow('secondServeZone', 'T')
+        setCurrentPage('PointWinner')
+      }
+    }
+  ],
+  PointWinner: [
+    {
+      label: 'Player 1 Wins',
+      action: (data) => {
+        updateActiveRow('isWinner', 'Player1')
+        setCurrentPage('PointScore')
+      }
+    },
+    {
+      label: 'Player 2 Wins',
+      action: (data) => {
+        updateActiveRow('isWinner', 'Player2')
+        setCurrentPage('PointScore')
+      }
+    }
+  ]
+})
