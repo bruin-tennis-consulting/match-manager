@@ -1546,6 +1546,8 @@ export const columnNames = [
 
 export const simpleColumnNames = [
   'pointScore',
+  'gameScore',
+  'setScore',
   'serverName',
   'firstServeIn',
   'firstServeZone',
