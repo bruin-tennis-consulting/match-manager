@@ -49,3 +49,29 @@
 .noUnderline:hover {
   text-decoration: none;
 }
+
+.mobileContainer {
+  background-color: #5e9bff;
+  margin: 0 auto;
+  padding-left: 30px;
+  padding-right: 40px;
+  padding-top: 30px;
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+}
+.mobileNoUnderline {
+  color: #ececec;
+  font-size: 20px;
+  text-decoration: none;
+}
+.mobileTitleBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.iconButton {
+  background: transparent;
+  border: none;
+  padding-top: 15px;
+}
