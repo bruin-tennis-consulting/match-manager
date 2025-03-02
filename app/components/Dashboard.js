@@ -33,10 +33,7 @@ const Dashboard = () => {
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
   const [isMobile, setIsMobile] = useState(false)
 
-  console.log('matches', matches)
-  console.log(matches.length)
   const formattedMatches = formatMatches(matches)
-  console.log(formattedMatches)
 
   useEffect(() => {
     const checkIfMobile = () => setIsMobile(window.innerWidth < 400)
@@ -50,7 +47,7 @@ const Dashboard = () => {
     if (!formattedMatches.length) return null
     return new Fuse(formattedMatches, {
       keys: searchableProperties,
-      threshold: 0.3
+      threshold: 0.4
     })
   }, [formattedMatches])
 
@@ -61,7 +58,8 @@ const Dashboard = () => {
       const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
       return `${match.matchDate}#${cleanedOpponentTeam}`
     })
-    return result
+    // Remove duplicates
+    return [...new Set(result)]
   }, [searchTerm, fuse])
 
   const handleTileClick = (videoId) => {
@@ -185,7 +183,6 @@ const Dashboard = () => {
           )
         })()}
       </div>
-
       <div className={styles.mainContent}>
         <div className={styles.matchesSection}>
           {matches.length === 0 ? (
@@ -199,8 +196,11 @@ const Dashboard = () => {
                     matchKey ===
                       `${match.matchDate}#${cleanTeamName(match.teams.opponentTeam)}`) ||
                     (!match.matchDetails.duel &&
-                      matchKey === `_#${match.matchDetails.event}`))
+                      (matchKey === `_#${match.matchDetails.event}` ||
+                        matchKey ===
+                          `${match.matchDate}#${match.teams.opponentTeam}`)))
               )
+
               const doublesMatches = formattedMatches.filter(
                 (match) =>
                   !match.singles &&
@@ -208,7 +208,9 @@ const Dashboard = () => {
                     matchKey ===
                       `${match.matchDate}#${cleanTeamName(match.teams.opponentTeam)}`) ||
                     (!match.matchDetails.duel &&
-                      matchKey === `_#${match.matchDetails.event}`))
+                      (matchKey === `_#${match.matchDetails.event}` ||
+                        matchKey ===
+                          `${match.matchDate}#${match.teams.opponentTeam}`)))
               )
               const [matchDate, matchName] = matchKey.split('#')
               const cleanedMatchName =

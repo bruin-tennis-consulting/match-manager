@@ -48,6 +48,7 @@ const MatchPage = () => {
   const [tab, setTab] = useState(1)
   const [bookmarks, setBookmarks] = useState([])
   const [triggerScroll, setTriggerScroll] = useState(false)
+  const [autoplayEnabled, setAutoplayEnabled] = useState(true)
   const tableRef = useRef(null)
   const iframeRef = useRef(null)
 
@@ -108,6 +109,40 @@ const MatchPage = () => {
       videoObject.seekTo(time / 1000, true)
     }
   }
+
+  useEffect(() => {
+    if (!videoObject || !autoplayEnabled) return
+    const interval = setInterval(() => {
+      if (videoObject && typeof videoObject.getCurrentTime === 'function') {
+        const currentTime = videoObject.getCurrentTime() * 1000 // Convert to ms
+        const filteredPoints = returnFilteredPoints().sort(
+          (a, b) => a.Position - b.Position
+        )
+
+        if (!filteredPoints.length) return
+
+        const insideAnyPoint = filteredPoints.some(
+          (point) =>
+            currentTime + 2000 >= point.Position &&
+            currentTime - 2000 <= point.Position + point.Duration
+        )
+
+        if (!insideAnyPoint) {
+          const nextPoint = filteredPoints.find(
+            (point) => currentTime < point.Position
+          )
+          if (nextPoint) {
+            if (iframeRef.current) {
+              iframeRef.current.scrollIntoView({ behavior: 'smooth' })
+            }
+            videoObject.seekTo(nextPoint.Position / 1000, true)
+          }
+        }
+      }
+    }, 2000)
+
+    return () => clearInterval(interval)
+  }, [videoObject, autoplayEnabled, filterList])
 
   const handleBookmark = async (point) => {
     const updatedPoints = matchData.pointsJson.map((p) => {
@@ -381,6 +416,17 @@ const MatchPage = () => {
               >
                 Saved
               </button>
+              <button
+                onClick={() => setAutoplayEnabled((prev) => !prev)}
+                className={
+                  autoplayEnabled
+                    ? styles.toggle_button_autoplay_active
+                    : styles.toggle_button_neutral_inactive
+                }
+              >
+                Autoplay
+              </button>
+
               {tab === 0 && (
                 <div className={styles.sidebox}>
                   <div className={styles.sidecontent}>
