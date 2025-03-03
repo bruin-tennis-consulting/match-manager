@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Navbar from '@/app/components/Navbar'
-import NavbarMobile from '@/app/components/NavBarMobile'
+import NavbarMobile from '@/app/components/NavbarMobile'
 
 export default function ConditionalNavbar() {
   const [isMobile, setIsMobile] = useState(false)
