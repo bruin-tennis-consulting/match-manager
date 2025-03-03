@@ -29,7 +29,9 @@ const NavbarMobile = () => {
           </div>
         </header>
       </div>
-      <div>{showRoster && <RosterList />}</div>
+      <div className={styles.rosterContainer}>
+        {showRoster && <RosterList />}
+      </div>
     </div>
   )
 }

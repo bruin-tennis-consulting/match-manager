@@ -79,3 +79,9 @@
   border: none;
   padding-top: 15px;
 }
+
+.rosterContainer {
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-bottom: 20px;
+}
