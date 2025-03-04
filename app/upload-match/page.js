@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import Form from '@rjsf/core'
 import validator from '@rjsf/validator-ajv8'
 import { dataURItoBlob } from '@rjsf/utils'
@@ -27,6 +27,8 @@ export default function UploadMatchForm() {
   const [formData, setFormData] = useState({})
   const [errors, setErrors] = useState([])
   const [localUiSchema, setLocalUiSchema] = useState(baseUiSchema)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [isUploading, setIsUploading] = useState(false)
 
   const { userProfile } = useAuth()
 
@@ -99,14 +101,17 @@ export default function UploadMatchForm() {
 
   const handleChange = ({ formData: newFormData }) => {
     setFormData(newFormData)
-    updatePlayerOptions(newFormData)
+    if (newFormData.clientTeam) {
+      updatePlayerOptions(newFormData)
+    }
+
     // Update the event field's disabled state: if duel is not true, disable event.
-    setLocalUiSchema({
-      ...baseUiSchema,
+    setLocalUiSchema((prevUiSchema) => ({
+      ...prevUiSchema,
       event: {
         'ui:disabled': !newFormData.duel
       }
-    })
+    }))
   }
 
   const validateFileType = (file, expectedType, fieldName) => {
@@ -117,8 +122,60 @@ export default function UploadMatchForm() {
     }
   }
 
+  // Memoize the progress bar styles to avoid unnecessary recalculations
+  const progressBarStyles = useMemo(
+    () => ({
+      progressContainer: {
+        width: '100%',
+        backgroundColor: '#e0e0e0',
+        borderRadius: '4px',
+        marginTop: '20px',
+        marginBottom: '20px',
+        height: '20px',
+        position: 'relative',
+        overflow: 'hidden'
+      },
+      progressBar: {
+        height: '100%',
+        width: `${uploadProgress}%`,
+        backgroundColor: '#4CAF50',
+        borderRadius: '4px',
+        transition: 'width 0.3s ease'
+      },
+      progressText: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        color: uploadProgress > 50 ? 'white' : 'black',
+        fontWeight: 'bold'
+      }
+    }),
+    [uploadProgress]
+  )
+
+  const simulateProgress = useCallback(() => {
+    setUploadProgress(0)
+    const timer = setInterval(() => {
+      setUploadProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(timer)
+          return prev
+        }
+        return prev + 10
+      })
+    }, 500)
+    return timer
+  }, [])
+
   const handleSubmit = async ({ formData }) => {
     try {
+      setIsUploading(true)
+      setErrors([])
+
+      // Start progress simulation
+      const progressTimer = simulateProgress()
+
       let published = true
       if (
         !formData.opponentPlayer ||
@@ -128,40 +185,58 @@ export default function UploadMatchForm() {
           'Opponent player must include both first and last name.'
         )
       }
+
       // Validate the File types
       validateFileType(formData.jsonFile, 'application/json', 'JSON file')
       validateFileType(formData.pdfFile, 'application/pdf', 'PDF file')
+
       const pointsJson = formData.jsonFile
         ? JSON.parse(atob(formData.jsonFile.split(',')[1]))
         : []
+
       if (pointsJson.length === 0) {
         const result = confirm(
           "You're currently uploading an UNTAGGED match. Proceed?"
         )
-        if (!result) throw new Error('Upload cancelled by user.')
+        if (!result) {
+          clearInterval(progressTimer)
+          setIsUploading(false)
+          setUploadProgress(0)
+          throw new Error('Upload cancelled by user.')
+        }
         published = false
       }
+
+      // Parse player names once
+      const clientNameParts = formData.clientPlayer.split(' ')
+      const opponentNameParts = formData.opponentPlayer.split(' ')
+
       const teamsData = {
         clientTeam: formData.clientTeam,
         opponentTeam: formData.opponentTeam
       }
+
       const players = {
         client: {
-          firstName: formData.clientPlayer.split(' ')[0],
-          lastName: formData.clientPlayer.split(' ')[1],
+          firstName: clientNameParts[0],
+          lastName: clientNameParts[1],
           UTR: formData.clientUTR || null
         },
         opponent: {
-          firstName: formData.opponentPlayer.split(' ')[0],
-          lastName: formData.opponentPlayer.split(' ')[1],
+          firstName: opponentNameParts[0],
+          lastName: opponentNameParts[1],
           UTR: formData.opponentUTR || null
         }
       }
+
+      // Prepare weather data once
+      const weatherValue = formData.weather || []
       const weather = {
         temperature: formData.temperature || null,
-        cloudy: formData.weather ? formData.weather.includes('Cloudy') : null,
-        windy: formData.weather ? formData.weather.includes('Windy') : null
+        cloudy: weatherValue.includes('Cloudy'),
+        windy: weatherValue.includes('Windy')
       }
+
       const matchDetails = {
         weather: weather || null,
         division: formData.division || null,
@@ -169,7 +244,7 @@ export default function UploadMatchForm() {
         lineup: formData.lineup || null,
         matchVenue: formData.matchVenue || null,
         round: formData.round || null,
-        indoor: formData.court ? formData.court === 'Indoor' : null,
+        indoor: formData.court === 'Indoor',
         surface: formData.surface || null,
         unfinished: formData.unfinished || false,
         duel: formData.duel || false
@@ -195,11 +270,20 @@ export default function UploadMatchForm() {
         version: 'v1',
         published
       })
-      setErrors([])
-      alert('Match uploaded successfully!')
+
+      // Complete progress and show success message
+      setUploadProgress(100)
+      clearInterval(progressTimer)
+      setTimeout(() => {
+        setIsUploading(false)
+        setUploadProgress(0)
+        alert('Match uploaded successfully!')
+      }, 500)
     } catch (error) {
       console.error('Error uploading match:', error)
       setErrors([`Error: ${error.message}`])
+      setIsUploading(false)
+      setUploadProgress(0)
     }
   }
 
@@ -210,6 +294,14 @@ export default function UploadMatchForm() {
         <h3>
           Make sure you add the player in &apos;Upload Team&apos; before this!
         </h3>
+
+        {isUploading && (
+          <div style={progressBarStyles.progressContainer}>
+            <div style={progressBarStyles.progressBar}></div>
+            <div style={progressBarStyles.progressText}>{uploadProgress}%</div>
+          </div>
+        )}
+
         <Form
           schema={schema}
           uiSchema={localUiSchema}
@@ -217,7 +309,9 @@ export default function UploadMatchForm() {
           onChange={handleChange}
           onSubmit={handleSubmit}
           validator={validator}
+          disabled={isUploading}
         />
+
         {errors.length > 0 && (
           <div className={styles.errorContainer}>
             {errors.map((error, index) => (
