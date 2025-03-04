@@ -302,7 +302,7 @@
 
 @media (max-width: 768px) {
   .headerContent h2 {
-    font-size: 10vw;
+    display: none;
   }
   .container {
     padding-left: 20px;
@@ -323,5 +323,42 @@
   }
   .matchTileContainer {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .searchContainer {
+    width: 70vw;
+    display: flex;
+    justify-content: left;
+  }
+  .searchWrapper {
+    position: relative;
+    display: inline-block;
+    width: fit-content;
+  }
+  .searchInput {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    font-size: 14px;
+    height: 32px;
+    border-radius: 10px;
+  }
+  .searchInput input {
+    padding-top: 0px;
+    padding-bottom: 0px;
+  }
+  .matchTypeHeader h4 {
+    color: #a4a6b3;
+    font-size: 15px;
+  }
+  .matchSection h3 {
+    font-size: 24px;
+  }
+  .clearContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+
+  .carousel {
+    margin-bottom: 17px;
   }
 }
