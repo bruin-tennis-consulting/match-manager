@@ -1,8 +1,18 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 import { useData } from '@/app/DataProvider'
+import '../styles/MatchList.css'
+import {
+  aggregatePlayerStats,
+  exportStatsToCSV
+} from '@/app/services/playerAggregateScript.js'
+
+import {
+  calculateMatchStats,
+  exportMatchStatsToCSV
+} from '@/app/services/matchStatsScript.js'
 
 const formatMatches = (matches) => {
   return matches
@@ -12,16 +22,18 @@ const formatMatches = (matches) => {
 
 export default function MatchList() {
   const { matches, updateMatch, refresh } = useData()
-  // const [newName, setNewName] = useState('')
-
+  const [playerStatsProgress, setPlayerStatsProgress] = useState(0)
+  const [matchStatsProgress, setMatchStatsProgress] = useState(0)
   const formattedMatches = formatMatches(matches)
 
   const handleDelete = async (id) => {
-    try {
-      await updateMatch(id, { _deleted: true }) // Mark the match as deleted
-      refresh() // Refresh match data after deletion
-    } catch (error) {
-      console.error('Error deleting match:', error)
+    if (confirm('Are you sure you want to delete this match?')) {
+      try {
+        await updateMatch(id, { _deleted: true }) // Mark the match as deleted
+        refresh() // Refresh match data after deletion
+      } catch (error) {
+        console.error('Error deleting match:', error)
+      }
     }
   }
 
@@ -38,55 +50,133 @@ export default function MatchList() {
     URL.revokeObjectURL(url)
   }
 
-  // const handleRename = async (id) => {
-  //   try {
-  //     await updateMatch(id, { name: newName })
-  //   } catch (error) {
-  //     console.error('Error renaming match:', error)
-  //   }
-  // }
+  const handleDownloadPlayerStats = () => {
+    let progress = 0
+    const interval = setInterval(() => {
+      progress += 10
+      setPlayerStatsProgress(progress)
+      if (progress >= 100) {
+        clearInterval(interval)
+        const aggregated = aggregatePlayerStats(matches)
+        const csv = exportStatsToCSV(aggregated)
+        const blob = new Blob([csv], { type: 'text/csv' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'player_stats.csv'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        setPlayerStatsProgress(0)
+      }
+    }, 300)
+  }
+
+  const handleDownloadMatchStats = () => {
+    let progress = 0
+    const interval = setInterval(() => {
+      progress += 10
+      setMatchStatsProgress(progress)
+      if (progress >= 100) {
+        clearInterval(interval)
+        const stats = calculateMatchStats(matches)
+        const csv = exportMatchStatsToCSV(stats)
+        const blob = new Blob([csv], { type: 'text/csv' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'match_stats.csv'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        setMatchStatsProgress(0)
+      }
+    }, 300)
+  }
 
   return (
-    <div>
-      <h1>Match List</h1>
+    <div className="match-list-container">
+      <h1 className="list-title">Match List</h1>
+
       {formattedMatches.length > 0 ? (
-        <ul>
+        <div className="match-list">
           {formattedMatches.map((match) => {
-            const name = `${match.players.client.firstName} ${match.players.client.lastName} ${match.teams.clientTeam} vs. ${match.players.opponent.firstName} ${match.players.opponent.lastName} ${match.teams.opponentTeam} [${match.id}] `
+            const name = `${match.players.client.firstName} ${match.players.client.lastName} ${match.teams.clientTeam} vs. ${match.players.opponent.firstName} ${match.players.opponent.lastName} ${match.teams.opponentTeam}`
             return (
-              <div key={match.id}>
-                <li>
-                  <span>
-                    {name}
-                    <button onClick={() => handleDelete(match.id)}>
-                      Delete
-                    </button>
-                  </span>
-                  <span>
+              <div key={match.id} className="match-item">
+                <div className="match-header">
+                  <div className="match-name">{name}</div>
+                  <div className="match-id">[{match.id}]</div>
+                </div>
+
+                <div className="match-actions">
+                  <div className="action-group">
+                    <Link href={`/tag-match/${match.id}`}>
+                      <button className="action-btn primary">
+                        Tag Match - Full
+                      </button>
+                    </Link>
+                    <Link href={`/timestamp-tagger?videoId=${match.videoId}`}>
+                      <button className="action-btn primary">
+                        Tag Match - Timestamp
+                      </button>
+                    </Link>
+                  </div>
+
+                  <div className="action-group">
                     <button
+                      className="action-btn secondary"
                       onClick={() => handleDownload(match.pointsJson, match.id)}
                     >
                       Download JSON
                     </button>
-                  </span>
-                  <br />
-                  <Link href={`/tag-match/${match.id}`}>
-                    <button>Tag Match - Full</button>
-                  </Link>
-                  <Link href={`/timestamp-tagger?videoId=${match.videoId}`}>
-                    <button>Tag Match - Timestamp</button>
-                  </Link>
-                  {/* <br />
-                  <input onChange={(e) => setNewName(e.target.value)} />
-                  <button onClick={() => handleRename(match.id)}>Rename</button> */}
-                </li>
+                    <button
+                      className="action-btn danger"
+                      onClick={() => handleDelete(match.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
               </div>
             )
           })}
-        </ul>
+        </div>
       ) : (
-        <p>Loading...</p>
+        <div className="loading-message">
+          <p>Loading matches...</p>
+        </div>
       )}
+
+      <div className="stats-actions">
+        <div className="stats-download-container">
+          <button className="download-btn" onClick={handleDownloadPlayerStats}>
+            Download Player Stats
+          </button>
+          {playerStatsProgress > 0 && (
+            <progress
+              value={playerStatsProgress}
+              max="100"
+              className="download-progress"
+            />
+          )}
+        </div>
+
+        <div className="stats-download-container">
+          <button className="download-btn" onClick={handleDownloadMatchStats}>
+            Download Match Stats
+          </button>
+          {matchStatsProgress > 0 && (
+            <progress
+              value={matchStatsProgress}
+              max="100"
+              className="download-progress"
+            />
+          )}
+        </div>
+      </div>
     </div>
   )
 }

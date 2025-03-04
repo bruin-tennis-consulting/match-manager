@@ -1,7 +1,7 @@
 // Dashboard.jsx
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import Fuse from 'fuse.js'
@@ -15,11 +15,6 @@ import Loading from './Loading'
 
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 import SearchIcon from '@/public/search'
-
-import {
-  aggregateTennisStats,
-  exportStatsToCSV
-} from '../services/Aggregatescript'
 
 const cleanTeamName = (teamName) => {
   return teamName.replace(/\s*\([MmWw]\)\s*$/, '').trim()
@@ -36,7 +31,6 @@ const Dashboard = () => {
   const { matches, logos } = useData()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
-  const [aggregatedStats, setAggregatedStats] = useState(null)
 
   // Format the matches array.
   const formattedMatches = useMemo(() => formatMatches(matches), [matches])
@@ -78,15 +72,6 @@ const Dashboard = () => {
     ]
   }, [searchTerm, filteredMatchSets, selectedMatchSets, formattedMatches])
 
-  // Once matches are loaded, calculate the aggregated stats.
-  useEffect(() => {
-    if (formattedMatches.length > 0) {
-      // You can pass manual adjustments here if needed.
-      const stats = aggregateTennisStats(formattedMatches, {})
-      setAggregatedStats(stats)
-    }
-  }, [formattedMatches])
-
   const handleTileClick = (videoId) => {
     router.push(`/matches/${videoId}`)
   }
@@ -105,19 +90,6 @@ const Dashboard = () => {
         ? prevSelected.filter((m) => m !== item)
         : [...prevSelected, item]
     )
-  }
-
-  // Function to download the aggregated stats as a CSV file.
-  const downloadCSV = () => {
-    if (!aggregatedStats) return
-    const csvData = exportStatsToCSV(aggregatedStats)
-    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'tennis_stats.csv'
-    a.click()
-    URL.revokeObjectURL(url)
   }
 
   return (
@@ -245,20 +217,6 @@ const Dashboard = () => {
         <div className={styles.rosterContainer}>
           <RosterList />
         </div>
-      </div>
-
-      {/* Stats Section */}
-      <div className={styles.statsSection}>
-        <h2>Aggregated Tennis Stats</h2>
-        {aggregatedStats ? (
-          <div>
-            {/* enable this for Json Format */}
-            {/* <pre>{JSON.stringify(aggregatedStats, null, 2)}</pre> */}
-            <button onClick={downloadCSV}>Download CSV</button>
-          </div>
-        ) : (
-          <p>No stats available.</p>
-        )}
       </div>
     </div>
   )

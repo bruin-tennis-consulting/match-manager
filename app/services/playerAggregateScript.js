@@ -2,7 +2,7 @@
 // Contains functions to calculate a rich set of tennis match stats,
 // including detailed serve and return analysis.
 
-export function aggregateTennisStats(matches, manualStats = {}) {
+export function aggregatePlayerStats(matches, manualStats = {}) {
   const playerStats = {}
 
   // Filter matches to only include published ones
