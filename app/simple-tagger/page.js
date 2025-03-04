@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 import { useData } from '@/app/DataProvider'
@@ -72,66 +72,83 @@ export default function TagMatch() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [videoObject, videoId, tableState.rows, currentPage])
+  }, [handleKeyDown])
 
   useEffect(() => {
     sortTable()
   }, [tableState.rows])
 
-  const handleKeyDown = (event) => {
-    if (!videoObject) return
+  const handleKeyDown = useCallback(
+    (event) => {
+      if (!videoObject) return
 
-    const keyActions = {
-      ' ': () => {
-        const playing = videoObject.getPlayerState() === 1
-        playing ? videoObject.pauseVideo() : videoObject.playVideo()
-      },
-      d: () => {
-        const newTimestamp = getVideoTimestamp()
+      const keyActions = {
+        ' ': () => {
+          const playing = videoObject.getPlayerState() === 1
+          playing ? videoObject.pauseVideo() : videoObject.playVideo()
+        },
+        d: () => {
+          const newTimestamp = getVideoTimestamp()
 
-        if (
-          tableState.activeRowIndex !== null &&
-          tableState.rows[tableState.activeRowIndex].pointStartTime !== '' &&
-          tableState.rows[tableState.activeRowIndex].pointEndTime === ''
-        ) {
-          saveToHistory()
-          changeRowValue(
-            tableState.activeRowIndex,
-            'pointStartTime',
-            newTimestamp
-          )
-        } else {
-          saveToHistory()
-          addNewRowAndSync()
-        }
-        sortTable()
-      },
-      f: () => {
-        const newTimestamp = getVideoTimestamp()
-        if (tableState.activeRowIndex !== null) {
-          saveToHistory()
-          changeRowValue(
-            tableState.activeRowIndex,
-            'pointEndTime',
-            newTimestamp
-          )
-        }
-      },
-      r: () =>
-        videoObject.seekTo(videoObject.getCurrentTime() + 1 / FRAMERATE, true),
-      e: () =>
-        videoObject.seekTo(videoObject.getCurrentTime() - 1 / FRAMERATE, true),
-      w: () => videoObject.seekTo(videoObject.getCurrentTime() + 5, true),
-      q: () => videoObject.seekTo(videoObject.getCurrentTime() - 5, true),
-      s: () => videoObject.seekTo(videoObject.getCurrentTime() + 10, true),
-      a: () => videoObject.seekTo(videoObject.getCurrentTime() - 10, true),
-      2: () => videoObject.setPlaybackRate(2),
-      1: () => videoObject.setPlaybackRate(1)
-    }
+          if (
+            tableState.activeRowIndex !== null &&
+            tableState.rows[tableState.activeRowIndex].pointStartTime !== '' &&
+            tableState.rows[tableState.activeRowIndex].pointEndTime === ''
+          ) {
+            saveToHistory()
+            changeRowValue(
+              tableState.activeRowIndex,
+              'pointStartTime',
+              newTimestamp
+            )
+          } else {
+            saveToHistory()
+            addNewRowAndSync()
+          }
+          sortTable()
+        },
+        f: () => {
+          const newTimestamp = getVideoTimestamp()
+          if (tableState.activeRowIndex !== null) {
+            saveToHistory()
+            changeRowValue(
+              tableState.activeRowIndex,
+              'pointEndTime',
+              newTimestamp
+            )
+          }
+        },
+        r: () =>
+          videoObject.seekTo(
+            videoObject.getCurrentTime() + 1 / FRAMERATE,
+            true
+          ),
+        e: () =>
+          videoObject.seekTo(
+            videoObject.getCurrentTime() - 1 / FRAMERATE,
+            true
+          ),
+        w: () => videoObject.seekTo(videoObject.getCurrentTime() + 5, true),
+        q: () => videoObject.seekTo(videoObject.getCurrentTime() - 5, true),
+        s: () => videoObject.seekTo(videoObject.getCurrentTime() + 10, true),
+        a: () => videoObject.seekTo(videoObject.getCurrentTime() - 10, true),
+        2: () => videoObject.setPlaybackRate(2),
+        1: () => videoObject.setPlaybackRate(1)
+      }
 
-    const action = keyActions[event.key]
-    if (action) action()
-  }
+      const action = keyActions[event.key]
+      if (action) action()
+    },
+    [
+      videoObject,
+      tableState,
+      getVideoTimestamp,
+      saveToHistory,
+      changeRowValue,
+      addNewRowAndSync,
+      sortTable
+    ]
+  )
 
   const changeRowValue = (rowIndex, key, value) => {
     setTableState((oldTableState) => {
