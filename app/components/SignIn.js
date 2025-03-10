@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import styles from '@/app/styles/SignIn.module.css'
+import Image from 'next/image'
 
 const SignIn = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' })

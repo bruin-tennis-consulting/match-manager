@@ -142,7 +142,7 @@ const MatchPage = () => {
     }, 2000)
 
     return () => clearInterval(interval)
-  }, [videoObject, autoplayEnabled, filterList])
+  }, [videoObject, autoplayEnabled, filterList, returnFilteredPoints])
 
   const handleBookmark = async (point) => {
     const updatedPoints = matchData.pointsJson.map((p) => {
