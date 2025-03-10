@@ -48,6 +48,10 @@ const Dashboard = () => {
     const result = fuse.search(searchTerm).map((result) => {
       const match = result.item
       const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
+      // For non-dual matches (tournaments/events), use the event name
+      if (!match.matchDetails.duel) {
+        return `_#${match.matchDetails.event}`
+      }
       return `${match.matchDate}#${cleanedOpponentTeam}`
     })
     // Remove duplicates
@@ -181,37 +185,43 @@ const Dashboard = () => {
             <Loading prompt={'Fetching Matches...'} />
           ) : (
             displayMatchSets.map((matchKey, index) => {
-              const singlesMatches = formattedMatches.filter(
-                (match) =>
-                  match.singles &&
-                  ((match.matchDetails.duel &&
-                    matchKey ===
-                      `${match.matchDate}#${cleanTeamName(match.teams.opponentTeam)}`) ||
-                    (!match.matchDetails.duel &&
-                      (matchKey === `_#${match.matchDetails.event}` ||
-                        matchKey ===
-                          `${match.matchDate}#${match.teams.opponentTeam}`)))
-              )
+              const singlesMatches = formattedMatches.filter((match) => {
+                if (!match.singles) return false
 
-              const doublesMatches = formattedMatches.filter(
-                (match) =>
-                  !match.singles &&
-                  ((match.matchDetails.duel &&
-                    matchKey ===
-                      `${match.matchDate}#${cleanTeamName(match.teams.opponentTeam)}`) ||
-                    (!match.matchDetails.duel &&
-                      (matchKey === `_#${match.matchDetails.event}` ||
-                        matchKey ===
-                          `${match.matchDate}#${match.teams.opponentTeam}`)))
-              )
+                if (!match.matchDetails.duel) {
+                  return matchKey === `_#${match.matchDetails.event}`
+                }
+                const cleanedOpponentTeam = cleanTeamName(
+                  match.teams.opponentTeam
+                )
+                return matchKey === `${match.matchDate}#${cleanedOpponentTeam}`
+              })
+
+              const doublesMatches = formattedMatches.filter((match) => {
+                if (match.singles) return false
+
+                if (!match.matchDetails.duel) {
+                  return matchKey === `_#${match.matchDetails.event}`
+                }
+                const cleanedOpponentTeam = cleanTeamName(
+                  match.teams.opponentTeam
+                )
+                return matchKey === `${match.matchDate}#${cleanedOpponentTeam}`
+              })
               const [matchDate, matchName] = matchKey.split('#')
-              const cleanedMatchName =
-                matchName === '_' ? matchName : cleanTeamName(matchName)
+              const displayName =
+                matchName === '_'
+                  ? formattedMatches.find(
+                      (match) =>
+                        !match.matchDetails.duel &&
+                        match.matchDetails.event === matchName
+                    )?.matchDetails.event || matchName
+                  : cleanTeamName(matchName)
               return (
                 <div key={index} className={styles.matchSection}>
                   <div className={styles.matchContainer}>
                     <div className={styles.matchHeader}>
-                      <h3>{cleanedMatchName}</h3>
+                      <h3>{displayName}</h3>
                       <span className={styles.date}>
                         {new Date(matchDate).toLocaleDateString('en-US', {
                           year: 'numeric',
