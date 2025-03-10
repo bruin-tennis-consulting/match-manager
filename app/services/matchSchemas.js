@@ -1,4 +1,4 @@
-//import { initialSchema, uiSchema as baseUiSchema } from '@/app/services/matchSchemas.js'
+// import { initialSchema, uiSchema as baseUiSchema } from '@/app/services/matchSchemas.js'
 
 const initialSchema = {
   title: 'Upload Match',
@@ -47,7 +47,8 @@ const initialSchema = {
     },
     duel: {
       type: 'boolean',
-      title: 'Duel'
+      title: 'Duel',
+      default: true
     },
     matchScore: {
       type: 'object',
@@ -187,7 +188,7 @@ const uiSchema = {
   },
 
   event: {
-    'ui:disabled': (formData) => !formData.duel  // the "event" field is disabled when "dual" is not selected
+    'ui:disabled': (formData) => !formData.duel // the "event" field is disabled when "dual" is not selected
   },
 
   matchScore: {

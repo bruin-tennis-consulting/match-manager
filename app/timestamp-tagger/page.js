@@ -6,7 +6,6 @@ import VideoPlayer from '../components/VideoPlayer.js'
 import TennisCourtSVG from '@/public/TennisCourtSVG.js'
 import styles from '@/app/styles/Tagging.module.css'
 
-// TagTable Component remains unchanged
 const TagTable = ({
   pair,
   index,
@@ -292,45 +291,40 @@ export default function TagMatch() {
     }
   }, [videoObject])
 
-  // Updated handleCourtClick function remains unchanged
   const handleCourtClick = (event) => {
     if (!videoObject) return
 
     const rect = event.currentTarget.getBoundingClientRect()
     const widthOfCourt = rect.width
     const heightOfCourt = rect.height
-
-    // Assuming the court width in inches is 432 (36 feet)
     const courtWidthInInches = 432
-    const courtHeightInInches = 780 // 65 feet (common tennis court length)
+    const xRatio = 0.6
+    const inchesPerPixel = courtWidthInInches / (widthOfCourt * xRatio)
 
-    // Calculate the scale ratios
-    const xRatio = courtWidthInInches / widthOfCourt
-    const yRatio = courtHeightInInches / heightOfCourt
-
-    // Calculate click position relative to the SVG container
+    // Calculate the click position within the element
     const x = event.clientX - rect.left
     const y = event.clientY - rect.top
 
-    // Convert to inches
-    const xInches = Math.round(x * xRatio)
-    const yInches = Math.round(y * yRatio)
+    // Determine the offset from the center of the court
+    const xFromCenter = x - widthOfCourt / 2
+    const yFromCenter = y - heightOfCourt / 2
 
-    // Determine the quadrant
-    const midX = courtWidthInInches / 2
-    const midY = courtHeightInInches / 2
+    let xInches = (xFromCenter * inchesPerPixel).toFixed(3)
+    let yInches = (yFromCenter * inchesPerPixel * -1).toFixed(3)
+
+    // Normalize any negative zero values
+    xInches = Object.is(xInches, -0) ? 0 : xInches
+    yInches = Object.is(yInches, -0) ? 0 : yInches
+
+    // Determine quadrant based on center-relative offsets
     let quadrant = ''
+    if (xFromCenter < 0 && yFromCenter < 0) quadrant = 'Top-Left'
+    else if (xFromCenter >= 0 && yFromCenter < 0) quadrant = 'Top-Right'
+    else if (xFromCenter < 0 && yFromCenter >= 0) quadrant = 'Bottom-Left'
+    else if (xFromCenter >= 0 && yFromCenter >= 0) quadrant = 'Bottom-Right'
 
-    if (xInches < midX && yInches < midY) quadrant = 'Top-Left'
-    else if (xInches >= midX && yInches < midY) quadrant = 'Top-Right'
-    else if (xInches < midX && yInches >= midY) quadrant = 'Bottom-Left'
-    else if (xInches >= midX && yInches >= midY) quadrant = 'Bottom-Right'
-
-    // Update the state to display in the separate box
     setClickedQuadrant(quadrant)
     setClickedCoordinates({ x: xInches, y: yInches })
-
-    // Removed adding coordinates to timeList
   }
 
   return (
@@ -498,8 +492,8 @@ export default function TagMatch() {
                     <strong>Quadrant:</strong> {clickedQuadrant}
                   </p>
                   <p>
-                    <strong>Coordinates:</strong> (X: {clickedCoordinates.x}{' '}
-                    inches, Y: {clickedCoordinates.y} inches)
+                    <strong>Coordinates:</strong> (X: {clickedCoordinates.x} ,
+                    Y: {clickedCoordinates.y} )
                   </p>
                 </div>
               ) : (
