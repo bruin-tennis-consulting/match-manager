@@ -1,12 +1,6 @@
 'use client'
 
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  Suspense,
-  useCallback
-} from 'react'
+import React, { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import VideoPlayer from '../components/VideoPlayer.js'
 import TennisCourtSVG from '@/public/TennisCourtSVG.js'
@@ -143,76 +137,67 @@ export default function TagMatch() {
     // If using URL search params, you might need to update them
   }
 
-  const handleKeyDown = useCallback(
-    (event) => {
-      if (!videoObject) return
+  const handleKeyDown = (event) => {
+    if (!videoObject) return
 
-      if (inputRef.current === document.activeElement) {
-        if (event.key === ' ') {
-          event.preventDefault()
+    if (inputRef.current === document.activeElement) {
+      if (event.key === ' ') {
+        event.preventDefault()
+      }
+      return
+    }
+
+    const key = event.key.toLowerCase()
+
+    const keyActions = {
+      ' ': () => {
+        const playing = videoObject.getPlayerState() === 1
+        playing ? videoObject.pauseVideo() : videoObject.playVideo()
+      },
+      d: () => {
+        const newTimestamp = Math.round(videoObject.getCurrentTime() * 1000)
+        if (!timeList.some((pair) => pair[1] === 0)) {
+          setTimeList((prevList) =>
+            [...prevList, [newTimestamp, 0, '']].sort((a, b) => a[0] - b[0])
+          )
+          setCurTimeStart(newTimestamp)
         }
-        return
-      }
-
-      const key = event.key.toLowerCase()
-
-      const keyActions = {
-        ' ': () => {
-          const playing = videoObject.getPlayerState() === 1
-          playing ? videoObject.pauseVideo() : videoObject.playVideo()
-        },
-        d: () => {
-          const newTimestamp = Math.round(videoObject.getCurrentTime() * 1000)
-          if (!timeList.some((pair) => pair[1] === 0)) {
-            setTimeList((prevList) =>
-              [...prevList, [newTimestamp, 0, '']].sort((a, b) => a[0] - b[0])
-            )
-            setCurTimeStart(newTimestamp)
-          }
-        },
-        f: () => {
-          const newTimestamp = Math.round(videoObject.getCurrentTime() * 1000)
-          setTimeList((prevList) =>
-            prevList.map((pair) =>
-              pair[1] === 0 && newTimestamp >= pair[0]
-                ? [pair[0], newTimestamp, 'Player 1']
-                : pair
-            )
+      },
+      f: () => {
+        const newTimestamp = Math.round(videoObject.getCurrentTime() * 1000)
+        setTimeList((prevList) =>
+          prevList.map((pair) =>
+            pair[1] === 0 && newTimestamp >= pair[0]
+              ? [pair[0], newTimestamp, 'Player 1']
+              : pair
           )
-        },
-        g: () => {
-          const newTimestamp = Math.round(videoObject.getCurrentTime() * 1000)
-          setTimeList((prevList) =>
-            prevList.map((pair) =>
-              pair[1] === 0 && newTimestamp >= pair[0]
-                ? [pair[0], newTimestamp, 'Player 2']
-                : pair
-            )
+        )
+      },
+      g: () => {
+        const newTimestamp = Math.round(videoObject.getCurrentTime() * 1000)
+        setTimeList((prevList) =>
+          prevList.map((pair) =>
+            pair[1] === 0 && newTimestamp >= pair[0]
+              ? [pair[0], newTimestamp, 'Player 2']
+              : pair
           )
-        },
-        r: () =>
-          videoObject.seekTo(
-            videoObject.getCurrentTime() + 1 / FRAMERATE,
-            true
-          ),
-        e: () =>
-          videoObject.seekTo(
-            videoObject.getCurrentTime() - 1 / FRAMERATE,
-            true
-          ),
-        w: () => videoObject.seekTo(videoObject.getCurrentTime() + 5, true),
-        q: () => videoObject.seekTo(videoObject.getCurrentTime() - 5, true),
-        s: () => videoObject.seekTo(videoObject.getCurrentTime() + 10, true),
-        a: () => videoObject.seekTo(videoObject.getCurrentTime() - 10, true),
-        1: () => videoObject.setPlaybackRate(1),
-        2: () => videoObject.setPlaybackRate(2)
-      }
+        )
+      },
+      r: () =>
+        videoObject.seekTo(videoObject.getCurrentTime() + 1 / FRAMERATE, true),
+      e: () =>
+        videoObject.seekTo(videoObject.getCurrentTime() - 1 / FRAMERATE, true),
+      w: () => videoObject.seekTo(videoObject.getCurrentTime() + 5, true),
+      q: () => videoObject.seekTo(videoObject.getCurrentTime() - 5, true),
+      s: () => videoObject.seekTo(videoObject.getCurrentTime() + 10, true),
+      a: () => videoObject.seekTo(videoObject.getCurrentTime() - 10, true),
+      1: () => videoObject.setPlaybackRate(1),
+      2: () => videoObject.setPlaybackRate(2)
+    }
 
-      const action = keyActions[key]
-      if (action) action()
-    },
-    [videoObject, timeList, FRAMERATE, setCurTimeStart]
-  )
+    const action = keyActions[key]
+    if (action) action()
+  }
 
   const handleStartTimeChange = (index, value) => {
     const updatedTimeList = [...timeList]
@@ -237,12 +222,12 @@ export default function TagMatch() {
     videoObject.seekTo(newTime, true)
   }
 
-  const updateTimer = useCallback(() => {
+  const updateTimer = () => {
     if (videoObject && typeof videoObject.getCurrentTime === 'function') {
       const currentTime = Math.round(videoObject.getCurrentTime() * 1000)
       setTimerValue(currentTime)
     }
-  }, [videoObject, setTimerValue])
+  }
 
   const handleMillisecondsChange = (value) => {
     const milliseconds = parseInt(value)
@@ -289,7 +274,7 @@ export default function TagMatch() {
       window.removeEventListener('keydown', handleKeyDown)
       clearInterval(timerInterval)
     }
-  }, [handleKeyDown, updateTimer])
+  }, [videoObject, timeList])
 
   useEffect(() => {
     const handleArrowKeys = (event) => {

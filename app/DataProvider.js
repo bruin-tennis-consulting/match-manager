@@ -91,45 +91,42 @@ export const DataProvider = ({ children }) => {
     [fetchMatches, matches]
   )
 
-  const createMatch = useCallback(
-    async (collectionName, newMatchData) => {
-      try {
-        let pdfUrl = null
-        if (newMatchData.pdfFile) {
-          const pdfRef = ref(storage, `match-pdfs/${newMatchData.pdfFile.name}`)
-          const metadata = {
-            contentType: 'application/pdf'
-          }
-
-          const snapshot = await uploadBytes(
-            pdfRef,
-            newMatchData.pdfFile.blob,
-            metadata
-          )
-          pdfUrl = await getDownloadURL(snapshot.ref)
+  const createMatch = useCallback(async (collectionName, newMatchData) => {
+    try {
+      let pdfUrl = null
+      if (newMatchData.pdfFile) {
+        const pdfRef = ref(storage, `match-pdfs/${newMatchData.pdfFile.name}`)
+        const metadata = {
+          contentType: 'application/pdf'
         }
-        console.log(pdfUrl)
-        newMatchData.pdfFile = pdfUrl
 
-        const newMatch = {
-          id: 'temp-id',
-          collection: collectionName,
-          ...newMatchData
-        }
-        setMatches((prevMatches) => [...prevMatches, newMatch])
-
-        // Actual Firestore addition
-        const colRef = collection(db, collectionName)
-        await addDoc(colRef, newMatchData)
-        await fetchMatches()
-      } catch (err) {
-        setError(err)
-        console.error('DataProvider: Error creating new match:', err)
-        throw err
+        const snapshot = await uploadBytes(
+          pdfRef,
+          newMatchData.pdfFile.blob,
+          metadata
+        )
+        pdfUrl = await getDownloadURL(snapshot.ref)
       }
-    },
-    [fetchMatches]
-  )
+      console.log(pdfUrl)
+      newMatchData.pdfFile = pdfUrl
+
+      const newMatch = {
+        id: 'temp-id',
+        collection: collectionName,
+        ...newMatchData
+      }
+      setMatches((prevMatches) => [...prevMatches, newMatch])
+
+      // Actual Firestore addition
+      const colRef = collection(db, collectionName)
+      await addDoc(colRef, newMatchData)
+      await fetchMatches()
+    } catch (err) {
+      setError(err)
+      console.error('DataProvider: Error creating new match:', err)
+      throw err
+    }
+  }, [])
 
   const fetchLogos = useCallback(async () => {
     // Cache expiry time, currently 24 hours
