@@ -1,7 +1,14 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useCallback } from 'react'
 
 function VideoPlayer({ videoId, setVideoObject, onReady }) {
   const playerRef = useRef(null)
+
+  const onPlayerReady = useCallback(() => {
+    console.log('player is ready')
+    if (onReady) {
+      onReady()
+    }
+  }, [onReady])
 
   useEffect(() => {
     const initializePlayer = () => {
@@ -44,20 +51,13 @@ function VideoPlayer({ videoId, setVideoObject, onReady }) {
         playerRef.current.destroy()
       }
     }
-  }, [videoId, setVideoObject])
+  }, [videoId, setVideoObject, onPlayerReady])
 
   useEffect(() => {
     if (playerRef.current && playerRef.current.loadVideoById) {
       playerRef.current.loadVideoById(videoId)
     }
   }, [videoId])
-
-  const onPlayerReady = () => {
-    console.log('player is ready')
-    if (onReady) {
-      onReady()
-    }
-  }
 
   return <div id="player"></div>
 }
