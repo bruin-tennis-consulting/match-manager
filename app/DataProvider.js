@@ -128,7 +128,17 @@ export const DataProvider = ({ children }) => {
         throw err
       }
     },
-    [fetchMatches]
+    [
+      fetchMatches,
+      setMatches,
+      setError,
+      collection,
+      addDoc,
+      ref,
+      uploadBytes,
+      getDownloadURL,
+      storage
+    ]
   )
 
   const fetchLogos = useCallback(async () => {
