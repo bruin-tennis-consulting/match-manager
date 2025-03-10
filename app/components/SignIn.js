@@ -31,7 +31,7 @@ const SignIn = () => {
       <div className={styles.container}>
         <form onSubmit={handleSignIn}>
           <div className={styles.card}>
-            <img alt="logo">{/* Add logo if needed */}</img>
+            <Image alt="logo">{/* Add logo if needed */}</Image>
             {error && (
               <div
                 style={{
