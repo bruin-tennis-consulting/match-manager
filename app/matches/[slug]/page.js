@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation' // Updated import for usePathname
 
 import { useData } from '@/app/DataProvider'
@@ -110,7 +110,7 @@ const MatchPage = () => {
     }
   }
 
-  const returnFilteredPoints = () => {
+  const returnFilteredPoints = useCallback(() => {
     let filteredPoints = matchData.pointsJson
     const filterMap = new Map()
 
@@ -132,7 +132,7 @@ const MatchPage = () => {
     })
 
     return filteredPoints
-  }
+  }, [matchData, filterList])
 
   useEffect(() => {
     if (!videoObject || !autoplayEnabled) return
@@ -209,7 +209,7 @@ const MatchPage = () => {
 
       return () => clearInterval(intervalId)
     }
-  }, [videoObject, matchData])
+  }, [videoObject, matchData, returnFilteredPoints])
 
   useEffect(() => {
     if (triggerScroll && !showPDF) {
