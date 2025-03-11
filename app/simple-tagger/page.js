@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 import { useData } from '@/app/DataProvider'
@@ -72,13 +72,13 @@ export default function TagMatch() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [videoObject, videoId, tableState.rows, currentPage])
+  }, [videoObject, videoId, tableState.rows, currentPage, handleKeyDown])
 
   useEffect(() => {
     sortTable()
   }, [tableState.rows])
 
-  const handleKeyDown = (event) => {
+  const handleKeyDown = useCallback((event) => {
     if (!videoObject) return
 
     const keyActions = {
@@ -131,7 +131,7 @@ export default function TagMatch() {
 
     const action = keyActions[event.key]
     if (action) action()
-  }
+  })
 
   const changeRowValue = (rowIndex, key, value) => {
     setTableState((oldTableState) => {
