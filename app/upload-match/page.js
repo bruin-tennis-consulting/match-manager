@@ -71,7 +71,7 @@ export default function UploadMatchForm() {
     }
 
     fetchCollectionsAndTeams()
-  }, [])
+  }, [userProfile])
 
   const getPlayersForTeam = useCallback(
     (teamName) => {
