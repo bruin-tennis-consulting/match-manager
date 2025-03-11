@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import styles from '@/app/styles/Roster.module.css'
+// import styles from '@/app/styles/Roster.module.css' // no longer using imported css due to issues
 
 // Using inline styles instead of CSS modules to avoid HMR issues
 const RosterTile = ({ firstName, lastName, playerPhoto }) => {
