@@ -9,7 +9,7 @@ const FilterList = ({
   showCount
 }) => {
   const [openSections, setOpenSections] = useState({})
-
+  const [pendingList, setPendingList] = useState(filterList)
   // Calculate available filters from the actual data
   const availableFilters = useMemo(() => {
     const filters = {}
@@ -56,6 +56,10 @@ const FilterList = ({
     return false
   }
 
+  const handleSubmit = () => {
+    setFilterList(pendingList)
+  }
+
   const toggleSection = (path) => {
     setOpenSections((prev) => ({
       ...prev,
@@ -67,17 +71,17 @@ const FilterList = ({
 
   const addFilter = (key, value) => {
     if (
-      !filterList.some(
+      !pendingList.some(
         ([filterKey, filterValue]) => filterKey === key && filterValue === value
       )
     ) {
-      setFilterList([...filterList, [key, value]])
+      setPendingList([...pendingList, [key, value]])
     }
   }
 
   const removeFilter = (key, value) => {
-    setFilterList(
-      filterList.filter(
+    setPendingList(
+      pendingList.filter(
         ([filterKey, filterValue]) =>
           !(filterKey === key && filterValue === value)
       )
@@ -85,7 +89,7 @@ const FilterList = ({
   }
 
   const isActiveFilter = (key, value) => {
-    return filterList.some(
+    return pendingList.some(
       ([filterKey, filterValue]) => filterKey === key && filterValue === value
     )
   }
@@ -114,9 +118,9 @@ const FilterList = ({
       <div
         key={`${key}-${value}`}
         style={{
-          marginLeft: '30px',
-          fontSize: '20px',
-          padding: '6px 0',
+          marginLeft: '2.3vw',
+          fontSize: '1.5vw',
+          padding: '1vh 0',
           display: 'flex',
           alignItems: 'center'
         }}
@@ -131,11 +135,11 @@ const FilterList = ({
               addFilter(key, value)
             }
           }}
-          style={{ width: '20px', height: '20px', marginRight: '10px' }}
+          style={{ width: '1.5vw', height: '3.6vh', marginRight: '0.8vw' }}
         />
         <span style={{ flex: 1 }}>{value}</span>
         {showPercent && (
-          <span style={{ marginLeft: '10px' }}>
+          <span style={{ marginLeft: '0.8vw' }}>
             {Math.round(
               (countFilteredPointsForValue(key, value) /
                 countFilteredPointsTotal(key)) *
@@ -145,7 +149,7 @@ const FilterList = ({
           </span>
         )}
         {showCount && (
-          <span style={{ marginLeft: '10px' }}>
+          <span style={{ marginLeft: '0.8vw' }}>
             {countFilteredPointsForValue(key, value)} /{' '}
             {countFilteredPointsTotal(key)}
           </span>
@@ -162,9 +166,9 @@ const FilterList = ({
         <div
           key={key}
           style={{
-            marginLeft: '30px',
-            fontSize: '18px',
-            padding: '6px 0',
+            marginLeft: '2.3vw',
+            fontSize: '1.4vw',
+            padding: '0.5vw 0',
             display: 'flex',
             alignItems: 'center'
           }}
@@ -179,11 +183,11 @@ const FilterList = ({
                 addFilter(key, 'Yes')
               }
             }}
-            style={{ width: '20px', height: '20px', marginRight: '10px' }}
+            style={{ width: '1.5vw', height: '3.6vh', marginRight: '0.8vw' }}
           />
           <span>{category.title}</span>
           {showPercent && (
-            <span style={{ marginLeft: '10px' }}>
+            <span style={{ marginLeft: '0.8vw' }}>
               {Math.round(
                 (countFilteredPointsForValue(key, 'Yes') /
                   countFilteredPointsTotal(key)) *
@@ -193,7 +197,7 @@ const FilterList = ({
             </span>
           )}
           {showCount && (
-            <span style={{ marginLeft: '10px' }}>
+            <span style={{ marginLeft: '0.8vw' }}>
               {countFilteredPointsForValue(key, 'Yes')} /{' '}
               {countFilteredPointsTotal(key)}
             </span>
@@ -203,19 +207,19 @@ const FilterList = ({
     }
 
     return (
-      <div key={key} style={{ marginLeft: '30px' }}>
+      <div key={key} style={{ marginLeft: '2.3vw' }}>
         <div
           onClick={() => toggleSection(path)}
           style={{
             cursor: 'pointer',
-            fontSize: '20px',
-            padding: '6px 0',
+            fontSize: '1.5vw',
+            padding: '0.5vw 0',
             display: 'flex',
             alignItems: 'center'
           }}
         >
-          <span style={{ marginRight: '10px', width: '20px' }}>
-            {isOpen(path) ? '▼' : '▶'}
+          <span style={{ marginRight: '0.8vw', width: '1.5vw' }}>
+            {isOpen(path) ? '⌄' : '›'}
           </span>
           {category.title}
         </div>
@@ -232,19 +236,19 @@ const FilterList = ({
     if (!hasPlayerFilters) return null
 
     return (
-      <div style={{ marginLeft: '30px' }}>
+      <div style={{ marginLeft: '2.3vw' }}>
         <div
           onClick={() => toggleSection(path)}
           style={{
             cursor: 'pointer',
-            fontSize: '22px',
-            padding: '6px 0',
+            fontSize: '1.7vw',
+            padding: '0.5vw 0',
             display: 'flex',
             alignItems: 'center'
           }}
         >
-          <span style={{ marginRight: '10px', width: '20px' }}>
-            {isOpen(path) ? '▼' : '▶'}
+          <span style={{ marginRight: '0.8vw', width: '1.5vw' }}>
+            {isOpen(path) ? '⌄' : '›'}
           </span>
           {playerData.title}
         </div>
@@ -259,29 +263,29 @@ const FilterList = ({
   return (
     <div
       style={{
-        border: '1px solid #ccd0d4',
+        border: '0.1vh solid #ccd0d4',
         background: '#fff',
-        borderRadius: '4px',
-        padding: '15px 20px',
-        fontSize: '22px'
+        borderRadius: '0.7vw',
+        padding: '2.7vh 1.5vw',
+        fontSize: '1.7vw'
       }}
     >
       {Object.entries(filterGroups).map(([key, group]) => {
         if (!hasSectionFilters(group)) return null
 
         return (
-          <div key={key} style={{ marginBottom: '15px' }}>
+          <div key={key} style={{ marginBottom: '2.7vh' }}>
             <div
               onClick={() => toggleSection(key)}
               style={{
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                padding: '8px 0'
+                padding: '0.62vw 0'
               }}
             >
-              <span style={{ marginRight: '10px', width: '20px' }}>
-                {isOpen(key) ? '▼' : '▶'}
+              <span style={{ marginRight: '0.8vw', width: '1.5vw' }}>
+                {isOpen(key) ? '⌄' : '›'}
               </span>
               {group.title}
             </div>
@@ -302,6 +306,28 @@ const FilterList = ({
           </div>
         )
       })}
+      <div
+        style={{
+          marginTop: '2vh',
+          display: 'flex',
+          justifyContent: 'center'
+        }}
+      >
+        <button
+          onClick={handleSubmit}
+          style={{
+            padding: '1vh 2vw',
+            fontSize: '1.4vw',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '0.4vw',
+            cursor: 'pointer'
+          }}
+        >
+          Apply Filters
+        </button>
+      </div>
     </div>
   )
 }

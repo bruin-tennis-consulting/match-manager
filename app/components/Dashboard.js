@@ -32,17 +32,14 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
 
-  // Format the matches array.
   const formattedMatches = useMemo(() => formatMatches(matches), [matches])
-
-  console.log(formattedMatches)
 
   // Setup Fuse.js for fuzzy search.
   const fuse = useMemo(() => {
     if (!formattedMatches.length) return null
     return new Fuse(formattedMatches, {
       keys: searchableProperties,
-      threshold: 0.3
+      threshold: 0.4
     })
   }, [formattedMatches])
 
@@ -168,8 +165,11 @@ const Dashboard = () => {
                         match.teams.opponentTeam
                       )}`) ||
                     (!match.matchDetails.duel &&
-                      matchKey === `_#${match.matchDetails.event}`))
+                      (matchKey === `_#${match.matchDetails.event}` ||
+                        matchKey ===
+                          `${match.matchDate}#${match.teams.opponentTeam}`)))
               )
+
               const doublesMatches = formattedMatches.filter(
                 (match) =>
                   !match.singles &&
@@ -179,7 +179,9 @@ const Dashboard = () => {
                         match.teams.opponentTeam
                       )}`) ||
                     (!match.matchDetails.duel &&
-                      matchKey === `_#${match.matchDetails.event}`))
+                      (matchKey === `_#${match.matchDetails.event}` ||
+                        matchKey ===
+                          `${match.matchDate}#${match.teams.opponentTeam}`)))
               )
               const [matchDate, matchName] = matchKey.split('#')
               const cleanedMatchName =
