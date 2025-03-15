@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import styles from '@/app/styles/SignIn.module.css'
+import Image from 'next/image'
 
 const SignIn = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' })
@@ -31,7 +32,7 @@ const SignIn = () => {
       <div className={styles.container}>
         <form onSubmit={handleSignIn}>
           <div className={styles.card}>
-            <img>{/* Add logo if needed */}</img>
+            <Image alt="logo">{/* Add logo if needed */}</Image>
             {error && (
               <div
                 style={{
