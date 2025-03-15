@@ -47,7 +47,8 @@ const initialSchema = {
     },
     duel: {
       type: 'boolean',
-      title: 'Duel'
+      title: 'Duel',
+      default: true
     },
     matchScore: {
       type: 'object',
