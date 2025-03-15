@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import RosterTile from '@/app/components/RosterTile'
 import { db } from '@/app/services/initializeFirebase.js' // Ensure storage is exported from initializeFirebase.js
 import { collection, getDocs } from 'firebase/firestore'
+import styles from '@/app/styles/Roster.module.css'
 
 const RosterList = () => {
   // create roster list then loop through
@@ -31,7 +32,7 @@ const RosterList = () => {
 
   return (
     // entire container
-    <div>
+    <div className={styles.rosterContainer}>
       <h1>Roster</h1>
       <div>
         {/* Loop through roster  */}

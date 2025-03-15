@@ -1,7 +1,7 @@
 // Dashboard.jsx
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import Fuse from 'fuse.js'
@@ -31,10 +31,18 @@ const Dashboard = () => {
   const { matches, logos } = useData()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
+  const [isMobile, setIsMobile] = useState(false)
 
   const formattedMatches = useMemo(() => formatMatches(matches), [matches])
 
-  // Setup Fuse.js for fuzzy search.
+  useEffect(() => {
+    const checkIfMobile = () => setIsMobile(window.innerWidth < 400)
+    checkIfMobile()
+    window.addEventListener('resize', checkIfMobile)
+    return () => window.removeEventListener('resize', checkIfMobile)
+  }, [])
+
+  // Fuzzy search
   const fuse = useMemo(() => {
     if (!formattedMatches.length) return null
     return new Fuse(formattedMatches, {
@@ -217,7 +225,8 @@ const Dashboard = () => {
         </div>
 
         <div className={styles.rosterContainer}>
-          <RosterList />
+          {!isMobile && <RosterList />}
+          {/* <p>Roster being fixed ...</p> */}
         </div>
       </div>
     </div>

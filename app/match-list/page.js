@@ -163,6 +163,11 @@ export default function MatchList() {
                       Tag Match - Timestamp
                     </button>
                   </Link>
+                  <Link
+                    href={`/simple-tagger?videoId=${match.videoId}&matchId=${match.id}`}
+                  >
+                    <button>Tag Match - Simple</button>
+                  </Link>
                 </div>
 
                 <div className="action-group">
