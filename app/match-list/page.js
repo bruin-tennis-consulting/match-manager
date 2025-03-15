@@ -79,7 +79,9 @@ export default function MatchList() {
                   <Link
                     href={`/simple-tagger?videoId=${match.videoId}&matchId=${match.id}`}
                   >
-                    <button>Tag Match - Simple</button>
+                    <button className="action-btn primary">
+                      Tag Match - Simple
+                    </button>
                   </Link>
 
                   {/* <br />
