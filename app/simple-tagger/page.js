@@ -33,6 +33,10 @@ export default function TagMatch() {
   const [isPublished, setIsPublished] = useState(false)
   const [matchMetadata, setMatchMetadata] = useState({})
   const [serverName, setServerName] = useState('Player1')
+
+  const [customGameScore, setCustomGameScore] = useState('0-0')
+  const [customSetScore, setCustomSetScore] = useState('0-0')
+
   const [initialLoad, setInitialLoad] = useState(true)
   const [errors, setErrors] = useState([])
 
@@ -47,8 +51,9 @@ export default function TagMatch() {
 
   useEffect(() => {
     if (match && initialLoad) {
-      console.log('Match object:', match) // Check if match is found
-      console.log('Extracted video ID:', match.videoId) // Check if videoId exists
+      // // debug
+      // console.log('Match object:', match)
+      // console.log('Extracted video ID:', match.videoId)
       setVideoId(match.videoId)
       setIsPublished(match.published || false)
       setTableState((oldTableState) => ({
@@ -145,12 +150,39 @@ export default function TagMatch() {
     return Math.round(videoObject.getCurrentTime() * 1000)
   }
 
+  // this has all the columns (original)
+  // const convertToCSV = (data) => {
+  //   const headers = Object.keys(data[0])
+  //   const rows = data.map((obj) =>
+  //     headers.map((fieldName) => JSON.stringify(obj[fieldName])).join(',')
+  //   )
+  //   return [headers.join(','), ...rows].join('\n')
+  // }
+
+  // only has the necessary columns in the CSV
+  // issue: gameScore and setScore are interpretted as calendars in excel LOL
+  //  normal tagger was like that too so gonna leave it (looked into solutions but couldn't find)
   const convertToCSV = (data) => {
-    const headers = Object.keys(data[0])
-    const rows = data.map((obj) =>
-      headers.map((fieldName) => JSON.stringify(obj[fieldName])).join(',')
+    if (data.length === 0) return ''
+
+    const selectedColumns = [
+      'pointScore',
+      'gameScore',
+      'setScore',
+      'serverName',
+      'firstServeIn',
+      'firstServeZone',
+      'secondServeIn',
+      'secondServeZone',
+      'isWinner'
+    ]
+
+    const headers = selectedColumns.join(',')
+    const rows = data.map((row) =>
+      selectedColumns.map((field) => JSON.stringify(row[field] ?? '')).join(',')
     )
-    return [headers.join(','), ...rows].join('\n')
+
+    return [headers, ...rows].join('\n')
   }
 
   const handleCopy = () => {
@@ -185,59 +217,47 @@ export default function TagMatch() {
     })
   }
 
-  // const addNewRowAndSync = () => {
-  //   setTableState((oldTableState) => {
-  //     pullAndPushRows(oldTableState.rows, null)
+  const adjustGameScore = (p1Change, p2Change) => {
+    setCustomGameScore((prevScore) => {
+      const [p1, p2] = prevScore.split('-').map(Number)
+      return `${Math.max(0, p1 + p1Change)}-${Math.max(0, p2 + p2Change)}`
+    })
+  }
 
-  //     let newTimestamp = getVideoTimestamp()
+  const adjustSetScore = (p1Change, p2Change) => {
+    setCustomSetScore((prevScore) => {
+      const [p1, p2] = prevScore.split('-').map(Number)
+      return `${Math.max(0, p1 + p1Change)}-${Math.max(0, p2 + p2Change)}`
+    })
+  }
 
-  //     const newRow = simpleColumnNames.reduce((acc, columnName) => {
-  //       let existingRow = tableState.rows.find(
-  //         (row) => row.pointStartTime === newTimestamp
-  //       )
+  const resetGameScore = () => {
+    setCustomGameScore('0-0')
+  }
 
-  //       while (existingRow !== undefined) {
-  //         newTimestamp += 1
-  //         existingRow = tableState.rows.find(
-  //           (row) => row.pointStartTime === newTimestamp
-  //         )
-  //       }
-
-  //       acc[columnName] = columnName === 'pointStartTime' ? newTimestamp : ''
-  //       return acc
-  //     }, {})
-
-  //     const updatedTable = [...oldTableState.rows, newRow]
-  //     updatedTable.sort((a, b) => a.pointStartTime - b.pointStartTime)
-
-  //     const newIndex = updatedTable.findIndex(
-  //       (row) => row.pointStartTime === newTimestamp
-  //     )
-
-  //     setErrors(
-  //       validateTable(updatedTable, {
-  //         ...matchMetadata,
-  //         activeRowIndex: newIndex
-  //       })
-  //     )
-
-  //     return { rows: updatedTable, activeRowIndex: newIndex }
-  //   })
-  // }
+  const resetSetScore = () => {
+    setCustomSetScore('0-0')
+  }
 
   const addNewRowAndSync = () => {
     setTableState((oldTableState) => {
-      const newTimestamp = getVideoTimestamp()
+      // pullAndPushRows(oldTableState.rows, null) // if we want to store in backend, we should do it here
+      // will it conflict / override the backend data if there exists data for the full tagger for the same match?
+      // how do we want to handle this?
+      // right now, downloading from csv is the only option as it is local
+
+      const lastRow =
+        oldTableState.rows.length > 0
+          ? oldTableState.rows[oldTableState.rows.length - 1]
+          : {}
 
       const newRow = columnNames.reduce((acc, columnName) => {
         if (columnName === 'serverName') {
           acc[columnName] = serverName
-        } else if (columnName === 'pointStartTime') {
-          acc[columnName] = newTimestamp // don't care abt timestamp for this simple tagger
-        } else if (columnName === 'isPointStart') {
-          acc[columnName] = 1 // don't care abt start of a point
-        } else if (columnName === 'shotInRally') {
-          acc[columnName] = 1 // don't care abt rally shot count
+        } else if (columnName === 'gameScore') {
+          acc[columnName] = customGameScore ?? lastRow.gameScore ?? '0-0' // if customGameScore is set, use; if not inherit from last row; if no last row then 0-0
+        } else if (columnName === 'setScore') {
+          acc[columnName] = customSetScore ?? lastRow.setScore ?? '0-0' // if customSetScore is set, use; if not inherit from last row; if no last row then 0-0
         } else {
           acc[columnName] = '' // default to empty for all other fields
         }
@@ -245,16 +265,16 @@ export default function TagMatch() {
       }, {})
 
       const updatedTable = [...oldTableState.rows, newRow]
-
       updatedTable.sort((a, b) => a.pointStartTime - b.pointStartTime)
 
       const newIndex = updatedTable.length - 1
 
-      const validationErrors = validateTable(updatedTable, {
-        ...matchMetadata,
-        activeRowIndex: newIndex
-      })
-      setErrors(validationErrors)
+      setErrors(
+        validateTable(updatedTable, {
+          ...matchMetadata,
+          activeRowIndex: newIndex
+        })
+      )
 
       return { rows: updatedTable, activeRowIndex: newIndex }
     })
@@ -446,15 +466,6 @@ export default function TagMatch() {
     }
   )
 
-  // const buttonData = getSimpleTaggerButtonData(
-  //   updateActiveRow,
-  //   () => addNewRowAndSync(serverName), // Pass the latest serverName directly
-  //   setCurrentPage,
-  //   {
-  //     serverName
-  //   }
-  // )
-
   function getErrors(rowIndex, columnName) {
     const cellErrors = errors.filter((error) =>
       error.cells.some(
@@ -606,6 +617,34 @@ export default function TagMatch() {
               }}
             >
               Toggle Server
+            </button>
+          </div>
+
+          <div>
+            <p>Current Game Score: {customGameScore}</p>
+            <button onClick={() => adjustGameScore(1, 0)}>+1 Player 1</button>
+            <button onClick={() => adjustGameScore(0, 1)}>+1 Player 2</button>
+            <button onClick={() => adjustGameScore(-1, 0)}>-1 Player 1</button>
+            <button onClick={() => adjustGameScore(0, -1)}>-1 Player 2</button>
+            <button
+              onClick={resetGameScore}
+              style={{ backgroundColor: 'rgb(38,116,174)', color: 'white' }}
+            >
+              Reset Game Score
+            </button>
+          </div>
+
+          <div>
+            <p>Current Set Score: {customSetScore}</p>
+            <button onClick={() => adjustSetScore(1, 0)}>+1 Player 1</button>
+            <button onClick={() => adjustSetScore(0, 1)}>+1 Player 2</button>
+            <button onClick={() => adjustSetScore(-1, 0)}>-1 Player 1</button>
+            <button onClick={() => adjustSetScore(0, -1)}>-1 Player 2</button>
+            <button
+              onClick={resetSetScore}
+              style={{ backgroundColor: 'rgb(38,116,174)', color: 'white' }}
+            >
+              Reset Set Score
             </button>
           </div>
 
