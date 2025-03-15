@@ -295,13 +295,6 @@ export default function UploadMatchForm() {
           Make sure you add the player in &apos;Upload Team&apos; before this!
         </h3>
 
-        {isUploading && (
-          <div style={progressBarStyles.progressContainer}>
-            <div style={progressBarStyles.progressBar}></div>
-            <div style={progressBarStyles.progressText}>{uploadProgress}%</div>
-          </div>
-        )}
-
         <Form
           schema={schema}
           uiSchema={localUiSchema}
@@ -311,6 +304,13 @@ export default function UploadMatchForm() {
           validator={validator}
           disabled={isUploading}
         />
+
+        {isUploading && (
+          <div style={progressBarStyles.progressContainer}>
+            <div style={progressBarStyles.progressBar}></div>
+            <div style={progressBarStyles.progressText}>{uploadProgress}%</div>
+          </div>
+        )}
 
         {errors.length > 0 && (
           <div className={styles.errorContainer}>
