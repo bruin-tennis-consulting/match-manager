@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation' // Updated import for usePathname
 
 import { useData } from '@/app/DataProvider'
@@ -110,6 +110,30 @@ const MatchPage = () => {
     }
   }
 
+  const returnFilteredPoints = useCallback(() => {
+    let filteredPoints = matchData.pointsJson
+    const filterMap = new Map()
+
+    filterList.forEach((filter) => {
+      const [key, value] = filter
+      if (filterMap.has(key)) {
+        filterMap.get(key).push(value)
+      } else {
+        filterMap.set(key, [value])
+      }
+    })
+
+    filterMap.forEach((values, key) => {
+      filteredPoints = filteredPoints.filter((point) =>
+        values.length > 1
+          ? values.includes(point[key])
+          : point[key] === values[0]
+      )
+    })
+
+    return filteredPoints
+  }, [matchData, filterList])
+
   useEffect(() => {
     if (!videoObject || !autoplayEnabled) return
     const interval = setInterval(() => {
@@ -142,7 +166,7 @@ const MatchPage = () => {
     }, 2000)
 
     return () => clearInterval(interval)
-  }, [videoObject, autoplayEnabled, filterList])
+  }, [videoObject, autoplayEnabled, filterList, returnFilteredPoints])
 
   const handleBookmark = async (point) => {
     const updatedPoints = matchData.pointsJson.map((p) => {
@@ -185,7 +209,7 @@ const MatchPage = () => {
 
       return () => clearInterval(intervalId)
     }
-  }, [videoObject, matchData])
+  }, [videoObject, matchData, returnFilteredPoints])
 
   useEffect(() => {
     if (triggerScroll && !showPDF) {
@@ -195,30 +219,6 @@ const MatchPage = () => {
       setTriggerScroll(false)
     }
   }, [triggerScroll, showPDF])
-
-  const returnFilteredPoints = () => {
-    let filteredPoints = matchData.pointsJson
-    const filterMap = new Map()
-
-    filterList.forEach((filter) => {
-      const [key, value] = filter
-      if (filterMap.has(key)) {
-        filterMap.get(key).push(value)
-      } else {
-        filterMap.set(key, [value])
-      }
-    })
-
-    filterMap.forEach((values, key) => {
-      filteredPoints = filteredPoints.filter((point) =>
-        values.length > 1
-          ? values.includes(point[key])
-          : point[key] === values[0]
-      )
-    })
-
-    return filteredPoints
-  }
 
   const removeFilter = (key, value) => {
     const updatedFilterList = filterList.filter(

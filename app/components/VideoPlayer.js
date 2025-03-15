@@ -44,6 +44,7 @@ function VideoPlayer({ videoId, setVideoObject, onReady }) {
         playerRef.current.destroy()
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId, setVideoObject])
 
   useEffect(() => {
