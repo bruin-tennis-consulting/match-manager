@@ -54,15 +54,28 @@ const Dashboard = () => {
   // Create filtered match sets based on the search term.
   const filteredMatchSets = useMemo(() => {
     if (!searchTerm || !fuse) return []
-    return fuse.search(searchTerm).map((result) => {
-      const match = result.item
-      const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
-      // For non-dual matches (tournaments/events), use the event name
-      if (!match.matchDetails.duel) {
-        return `_#${match.matchDetails.event}`
-      }
-      return `${match.matchDate}#${cleanedOpponentTeam}`
-    })
+
+    // Create a Set to track unique matchKeys
+    const uniqueMatchKeys = new Set()
+
+    return fuse
+      .search(searchTerm)
+      .map((result) => {
+        const match = result.item
+        const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
+
+        // For non-dual matches (tournaments/events), use the event name
+        if (!match.matchDetails.duel) {
+          return `_#${match.matchDetails.event}`
+        }
+        return `${match.matchDate}#${cleanedOpponentTeam}`
+      })
+      .filter((matchKey) => {
+        // Only include if we haven't seen this matchKey before
+        if (uniqueMatchKeys.has(matchKey)) return false
+        uniqueMatchKeys.add(matchKey)
+        return true
+      })
   }, [searchTerm, fuse])
 
   // Determine which match sets to display.
