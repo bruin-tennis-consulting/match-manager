@@ -152,8 +152,8 @@ const MatchTiles = ({
       {displaySections.info && (
         <div className={styles.matchInfoContainer}>
           <div className={styles.containerTitle}>Match Information</div>
-          <div className={styles.containerInfo}>{matchDetails}</div>
           <div className={styles.containerInfo}>{date}</div>
+          <div className={styles.containerInfo}>{matchDetails}</div>
         </div>
       )}
       {/* School Info */}

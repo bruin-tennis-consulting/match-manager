@@ -297,7 +297,9 @@ const MatchPage = () => {
             matchName={matchData.matchDetails.event}
             clientTeam={matchData.teams.clientTeam}
             opponentTeam={matchData.teams.opponentTeam}
-            matchDetails={matchData.matchDetails.event}
+            matchDetails={
+              matchData.matchDetails.event ?? matchData.matchDetails.venue
+            }
             date={new Date(matchData.matchDate).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',
