@@ -298,7 +298,11 @@ const MatchPage = () => {
             clientTeam={matchData.teams.clientTeam}
             opponentTeam={matchData.teams.opponentTeam}
             matchDetails={matchData.matchDetails.event}
-            date={matchData.matchDetails.date}
+            date={new Date(matchData.matchDate).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}
             player1Name={
               matchData.players.client.firstName +
               ' ' +
@@ -341,36 +345,6 @@ const MatchPage = () => {
               </div>
             </div>
             <div className={styles.sidebar}>
-              <div className="scoreboard">
-                <ScoreBoard
-                  names={matchData.name}
-                  playData={playingPoint}
-                  player1Name={
-                    matchData.players.client.firstName +
-                    ' ' +
-                    matchData.players.client.lastName
-                  }
-                  player2Name={
-                    matchData.players.opponent.firstName +
-                    ' ' +
-                    matchData.players.opponent.lastName
-                  }
-                  player1FinalScores={matchScores.map((scores) => ({
-                    score: scores[0]
-                  }))}
-                  player2FinalScores={matchScores.map((scores) => ({
-                    score: scores[1]
-                  }))}
-                  player1TieScores={matchData.pointsJson.map(
-                    (point) => point.player1TiebreakScore
-                  )}
-                  player2TieScores={matchData.pointsJson.map(
-                    (point) => point.player2TiebreakScore
-                  )}
-                  isUnfinished={matchData.matchDetails.unfinished}
-                  displaySections={{ score: true, info: true, matchup: true }}
-                />
-              </div>
               <div className={filterListStyles.activeFilterListContainer}>
                 Active Filters:
                 <ul className={filterListStyles.activeFilterList}>
@@ -530,6 +504,36 @@ const MatchPage = () => {
                   </div>
                 </div>
               )}
+              <div className="scoreboard">
+                <ScoreBoard
+                  names={matchData.name}
+                  playData={playingPoint}
+                  player1Name={
+                    matchData.players.client.firstName +
+                    ' ' +
+                    matchData.players.client.lastName
+                  }
+                  player2Name={
+                    matchData.players.opponent.firstName +
+                    ' ' +
+                    matchData.players.opponent.lastName
+                  }
+                  player1FinalScores={matchScores.map((scores) => ({
+                    score: scores[0]
+                  }))}
+                  player2FinalScores={matchScores.map((scores) => ({
+                    score: scores[1]
+                  }))}
+                  player1TieScores={matchData.pointsJson.map(
+                    (point) => point.player1TiebreakScore
+                  )}
+                  player2TieScores={matchData.pointsJson.map(
+                    (point) => point.player2TiebreakScore
+                  )}
+                  isUnfinished={matchData.matchDetails.unfinished}
+                  displaySections={{ score: true, info: true, matchup: true }}
+                />
+              </div>
             </div>
           </div>
           <div className={styles.toggle}>
