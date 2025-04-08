@@ -297,14 +297,15 @@ const MatchPage = () => {
             matchName={matchData.matchDetails.event}
             clientTeam={matchData.teams.clientTeam}
             opponentTeam={matchData.teams.opponentTeam}
-            matchDetails={
-              matchData.matchDetails.event ?? matchData.matchDetails.venue
-            }
+            matchEvent={matchData.matchDetails.event}
+            matchDate={matchData.matchDetails.matchVenue}
             date={new Date(matchData.matchDate).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',
               day: 'numeric'
             })}
+            player1UTR={matchData.players.client.UTR}
+            player2UTR={matchData.players.opponent.UTR}
             player1Name={
               matchData.players.client.firstName +
               ' ' +
