@@ -19,8 +19,7 @@ const MatchTiles = ({
   // matchName,
   clientTeam,
   opponentTeam,
-  matchEvent,
-  matchVenue,
+  matchDetails,
   date,
   player1Name,
   player2Name,
@@ -159,8 +158,7 @@ const MatchTiles = ({
         <div className={styles.matchInfoContainer}>
           <div className={styles.containerTitle}>Match Information</div>
           <div className={styles.containerInfo}>{date}</div>
-          <div className={styles.containerInfo}>{matchEvent}</div>
-          <div className={styles.containerInfo}>{matchVenue}</div>
+          <div className={styles.containerInfo}>{matchDetails}</div>
         </div>
       )}
       {/* School Info */}
