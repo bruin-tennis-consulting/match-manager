@@ -18,6 +18,7 @@ export default function UploadVideo() {
   const [playerHeightFeet, setPlayerHeightFeet] = useState('')
   const [playerHeightInches, setPlayerHeightInches] = useState('')
   const [playerBio, setPlayerBio] = useState('')
+  const [teamError, setTeamError] = useState([])
 
   // prevents re-rendering of teams on other state change (useful when teams is expensive)
   // const memoizedTeams = useMemo(() => teams, [teams]);
@@ -38,13 +39,30 @@ export default function UploadVideo() {
   const handleUploadSubmit = async (e) => {
     e.preventDefault()
 
+    const teamExists = teams.some(
+      (team) => team.name.toLowerCase() === teamName.trim().toLowerCase()
+    )
+
     if (!teamName || !logoFile) {
-      console.error('Please fill in all fields.')
+      setTeamError('Please fill in all fields.')
+      return
+    }
+
+    if (teamExists) {
+      setTeamError(
+        `Team "${teamName}" already exists. Please use a different name.`
+      )
+      return
+    }
+
+    if (!teamName || !logoFile) {
+      setTeamError('Please fill in all fields.')
       return
     }
 
     try {
       await uploadTeam(teamName, logoFile)
+      setTeamError('') // clear error
       alert('done!')
     } catch (error) {
       console.error('Error uploading match:', error)
@@ -103,6 +121,7 @@ export default function UploadVideo() {
       </div>
       <div>
         <h1 className={styles.title}>Add Team</h1>
+        {teamError && <p style={{ color: 'red' }}>{teamError}</p>}
         <form className={styles.form} onSubmit={handleUploadSubmit}>
           <label>
             Team Name:
