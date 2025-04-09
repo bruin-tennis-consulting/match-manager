@@ -59,6 +59,9 @@ const Dashboard = () => {
     })
   }, [searchTerm, fuse])
 
+  // displayMatchSets is either:
+  // A) filteredMatchSets from the Search, or
+  // B) selectedMatchSets from Carousel
   const displayMatchSets = useMemo(() => {
     if (searchTerm) return filteredMatchSets
     if (selectedMatchSets.length > 0) return selectedMatchSets
@@ -94,6 +97,7 @@ const Dashboard = () => {
     )
   }
 
+  const uniqueKeys = new Set()
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -125,35 +129,42 @@ const Dashboard = () => {
           </div>
         </div>
       </header>
-
+      {console.log(formattedMatches)}
       {/* Carousel for match selection */}
       <div className={styles.carousel}>
-        {formattedMatches.map((match, index) => {
-          const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
-          const matchKey = match.matchDetails.duel
-            ? `${match.matchDate}#${cleanedOpponentTeam}`
-            : `_#${match.matchDetails.event}`
-          return (
-            <div
-              key={index}
-              className={`${styles.card} ${
-                selectedMatchSets.includes(matchKey) ? styles.active : ''
-              }`}
-              onClick={() => handleCarouselClick(matchKey)}
-            >
-              <Image
-                src={logos[match.teams.opponentTeam]}
-                alt="Team Logo"
-                width={50}
-                height={50}
-                className={styles.logo}
-              />
-              <span className={styles.matchDate}>{match.matchDate}</span>
-            </div>
-          )
-        })}
-      </div>
+        {formattedMatches
+          .filter((match) => {
+            const matchKey = match.matchDetails.duel
+              ? `${match.matchDate}#${match.teams.opponentTeam}`
+              : `_#${match.matchDetails.event}`
 
+            if (uniqueKeys.has(matchKey)) return false
+            uniqueKeys.add(matchKey)
+            return true
+          })
+          .map((match, index) => {
+            const matchKey = match.matchDetails.duel
+              ? `${match.matchDate}#${match.teams.opponentTeam}`
+              : `_#${match.matchDetails.event}`
+
+            return (
+              <div
+                key={index}
+                className={`${styles.card} ${selectedMatchSets.includes(matchKey) ? styles.active : ''}`}
+                onClick={() => handleCarouselClick(matchKey)}
+              >
+                <Image
+                  src={logos[match.teams.opponentTeam]}
+                  alt="Team Logo"
+                  width={50}
+                  height={50}
+                  className={styles.logo}
+                />
+                <span className={styles.matchDate}>{match.matchDate}</span>
+              </div>
+            )
+          })}
+      </div>
       {/* Main content: Match tiles and roster */}
       <div className={styles.mainContent}>
         <div className={styles.matchesSection}>
