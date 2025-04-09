@@ -54,11 +54,28 @@ const Dashboard = () => {
   // Create filtered match sets based on the search term.
   const filteredMatchSets = useMemo(() => {
     if (!searchTerm || !fuse) return []
-    return fuse.search(searchTerm).map((result) => {
-      const match = result.item
-      const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
-      return `${match.matchDate}#${cleanedOpponentTeam}`
-    })
+
+    // Create a Set to track unique matchKeys
+    const uniqueMatchKeys = new Set()
+
+    return fuse
+      .search(searchTerm)
+      .map((result) => {
+        const match = result.item
+        const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
+
+        // For non-dual matches (tournaments/events), use the event name
+        if (!match.matchDetails.duel) {
+          return `_#${match.matchDetails.event}`
+        }
+        return `${match.matchDate}#${cleanedOpponentTeam}`
+      })
+      .filter((matchKey) => {
+        // Only include if we haven't seen this matchKey before
+        if (uniqueMatchKeys.has(matchKey)) return false
+        uniqueMatchKeys.add(matchKey)
+        return true
+      })
   }, [searchTerm, fuse])
 
   // Determine which match sets to display.
@@ -192,13 +209,19 @@ const Dashboard = () => {
                           `${match.matchDate}#${match.teams.opponentTeam}`)))
               )
               const [matchDate, matchName] = matchKey.split('#')
-              const cleanedMatchName =
-                matchName === '_' ? matchName : cleanTeamName(matchName)
+              const displayName =
+                matchName === '_'
+                  ? formattedMatches.find(
+                      (match) =>
+                        !match.matchDetails.duel &&
+                        match.matchDetails.event === matchName
+                    )?.matchDetails.event || matchName
+                  : cleanTeamName(matchName)
               return (
                 <div key={index} className={styles.matchSection}>
                   <div className={styles.matchContainer}>
                     <div className={styles.matchHeader}>
-                      <h3>{cleanedMatchName}</h3>
+                      <h3>{displayName}</h3>
                       <span className={styles.date}>
                         {new Date(matchDate).toLocaleDateString('en-US', {
                           year: 'numeric',
