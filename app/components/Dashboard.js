@@ -52,11 +52,28 @@ const Dashboard = () => {
 
   const filteredMatchSets = useMemo(() => {
     if (!searchTerm || !fuse) return []
-    return fuse.search(searchTerm).map((result) => {
-      const match = result.item
-      const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
-      return `${match.matchDate}#${cleanedOpponentTeam}`
-    })
+
+    // Create a Set to track unique matchKeys
+    const uniqueMatchKeys = new Set()
+
+    return fuse
+      .search(searchTerm)
+      .map((result) => {
+        const match = result.item
+        const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
+
+        // For non-dual matches (tournaments/events), use the event name
+        if (!match.matchDetails.duel) {
+          return `_#${match.matchDetails.event}`
+        }
+        return `${match.matchDate}#${cleanedOpponentTeam}`
+      })
+      .filter((matchKey) => {
+        // Only include if we haven't seen this matchKey before
+        if (uniqueMatchKeys.has(matchKey)) return false
+        uniqueMatchKeys.add(matchKey)
+        return true
+      })
   }, [searchTerm, fuse])
 
   const displayMatchSets = useMemo(() => {
@@ -184,10 +201,15 @@ const Dashboard = () => {
                     (!match.matchDetails.duel &&
                       matchKey === `_#${match.matchDetails.event}`))
               )
-
-              const matchName = matchKey.split('#')[1]
-              const cleanedMatchName =
-                matchName === '_' ? matchName : cleanTeamName(matchName)
+              const [matchName] = matchKey.split('#')
+              const displayName =
+                matchName === '_'
+                  ? formattedMatches.find(
+                      (match) =>
+                        !match.matchDetails.duel &&
+                        match.matchDetails.event === matchName
+                    )?.matchDetails.event || matchName
+                  : cleanTeamName(matchName)
 
               const parseLocalDate = (dateString) => {
                 const [year, month, day] = dateString.split('-').map(Number)
@@ -244,7 +266,7 @@ const Dashboard = () => {
                 <div key={index} className={styles.matchSection}>
                   <div className={styles.matchContainer}>
                     <div className={styles.matchHeader}>
-                      <h3>{cleanedMatchName}</h3>
+                      <h3>{displayName}</h3>
                       <span className={styles.date}>{displayDate}</span>
                     </div>
                     <DashTileContainer
