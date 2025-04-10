@@ -274,6 +274,11 @@ const MatchPage = () => {
   // Usage in your component:
   console.log(matchData)
   const matchScores = matchData ? getMatchScores(matchData.pointsJson) : []
+  if (matchData) {
+    console.log('b')
+    console.log(matchData.matchDetails.event ?? matchData.matchDetails.venue)
+    console.log(matchData.matchDetails)
+  }
 
   return (
     <div className={styles.container}>
@@ -298,7 +303,7 @@ const MatchPage = () => {
             clientTeam={matchData.teams.clientTeam}
             opponentTeam={matchData.teams.opponentTeam}
             matchDetails={
-              matchData.matchDetails.event ?? matchData.matchDetails.venue
+              matchData.matchDetails.event ?? matchData.matchDetails.matchVenue
             }
             date={new Date(matchData.matchDate).toLocaleDateString('en-US', {
               year: 'numeric',
