@@ -54,23 +54,24 @@ const Dashboard = () => {
     if (!searchTerm || !fuse) return []
     return fuse.search(searchTerm).map((result) => {
       const match = result.item
-      const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
-      return `${match.matchDate}#${cleanedOpponentTeam}`
+      return match.matchDetails.duel
+        ? `${match.matchDate}#${match.teams.opponentTeam}`
+        : `_#${match.matchDetails.event}`
     })
   }, [searchTerm, fuse])
 
   // displayMatchSets is either:
   // A) filteredMatchSets from the Search, or
-  // B) selectedMatchSets from Carousel
+  // B) selectedMatchSets from Carousel, or
+  // C) default All Matches
   const displayMatchSets = useMemo(() => {
     if (searchTerm) return filteredMatchSets
     if (selectedMatchSets.length > 0) return selectedMatchSets
     return [
       ...new Set(
         formattedMatches.map((match) => {
-          const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
           return match.matchDetails.duel
-            ? `${match.matchDate}#${cleanedOpponentTeam}`
+            ? `${match.matchDate}#${match.teams.opponentTeam}`
             : `_#${match.matchDetails.event}`
         })
       )
@@ -177,9 +178,7 @@ const Dashboard = () => {
                   match.singles &&
                   ((match.matchDetails.duel &&
                     matchKey ===
-                      `${match.matchDate}#${cleanTeamName(
-                        match.teams.opponentTeam
-                      )}`) ||
+                      `${match.matchDate}#${match.teams.opponentTeam}`) ||
                     (!match.matchDetails.duel &&
                       matchKey === `_#${match.matchDetails.event}`))
               )
@@ -189,15 +188,13 @@ const Dashboard = () => {
                   !match.singles &&
                   ((match.matchDetails.duel &&
                     matchKey ===
-                      `${match.matchDate}#${cleanTeamName(
-                        match.teams.opponentTeam
-                      )}`) ||
+                      `${match.matchDate}#${match.teams.opponentTeam}`) ||
                     (!match.matchDetails.duel &&
                       matchKey === `_#${match.matchDetails.event}`))
               )
 
               const matchName = matchKey.split('#')[1]
-              const cleanedMatchName =
+              const displayName =
                 matchName === '_' ? matchName : cleanTeamName(matchName)
 
               const parseLocalDate = (dateString) => {
@@ -211,7 +208,9 @@ const Dashboard = () => {
                 .sort((a, b) => a - b)
 
               let displayDate = ''
-              if (
+              if (dates.length === 0) {
+                displayDate = 'Date unavailable'
+              } else if (
                 dates.length === 1 ||
                 dates[0].getTime() === dates[dates.length - 1].getTime()
               ) {
@@ -255,7 +254,7 @@ const Dashboard = () => {
                 <div key={index} className={styles.matchSection}>
                   <div className={styles.matchContainer}>
                     <div className={styles.matchHeader}>
-                      <h3>{cleanedMatchName}</h3>
+                      <h3>{displayName}</h3>
                       <span className={styles.date}>{displayDate}</span>
                     </div>
                     <DashTileContainer
