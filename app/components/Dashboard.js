@@ -52,12 +52,25 @@ const Dashboard = () => {
 
   const filteredMatchSets = useMemo(() => {
     if (!searchTerm || !fuse) return []
-    return fuse.search(searchTerm).map((result) => {
-      const match = result.item
-      return match.matchDetails.duel
-        ? `${match.matchDate}#${match.teams.opponentTeam}`
-        : `_#${match.matchDetails.event}`
-    })
+
+    // Create a Set to track unique matchKeys
+    const uniqueMatchKeys = new Set()
+
+    return fuse
+      .search(searchTerm)
+      .map((result) => {
+        const match = result.item
+
+        return match.matchDetails.duel
+          ? `${match.matchDate}#${match.teams.opponentTeam}`
+          : `_#${match.matchDetails.event}`
+      })
+      .filter((matchKey) => {
+        // Only include if we haven't seen this matchKey before
+        if (uniqueMatchKeys.has(matchKey)) return false
+        uniqueMatchKeys.add(matchKey)
+        return true
+      })
   }, [searchTerm, fuse])
 
   // displayMatchSets is either:
