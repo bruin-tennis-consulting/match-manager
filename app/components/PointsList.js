@@ -66,8 +66,8 @@ const PointsList = ({
                           : `${opponentTeam} logo`
                       }
                       className={styles.IMG}
-                      width={50} // Adjust size as needed
-                      height={50}
+                      width={30} // Adjust size as needed
+                      height={30}
                       layout="intrinsic"
                     />
                   </div>
