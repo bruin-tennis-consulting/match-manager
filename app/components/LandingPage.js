@@ -19,7 +19,7 @@ const Land = (setShowSignIn) => {
           onClick={() => setShowSignIn(true)}
           className={styles.startButton}
         >
-          Start Now
+          Demo Now
         </button>
       </div>
       <div className={styles.imageContainer}>
