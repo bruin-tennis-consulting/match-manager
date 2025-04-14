@@ -1,15 +1,19 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import styles from '@/app/styles/SignIn.module.css'
 
-const SignIn = () => {
-  const [credentials, setCredentials] = useState({ username: '', password: '' })
+// autoLogin triggers autoLogin with demoCredentials
+const SignIn = ({ autoLogin = false, demoCredentials = null }) => {
+  const [credentials, setCredentials] = useState({
+    username: demoCredentials?.username || '',
+    password: demoCredentials?.password || ''
+  })
   const [error, setError] = useState(null)
 
   console.log(error)
 
   const handleSignIn = async (e) => {
-    e.preventDefault()
+    if (e) e.preventDefault()
     try {
       const auth = getAuth()
       const email = `${credentials.username}@ucla.edu` // Append @ucla.edu to the username
@@ -17,7 +21,6 @@ const SignIn = () => {
       setError(null) // Clear any previous errors on successful sign-in
     } catch (error) {
       setError('The username or password is incorrect. Please try again.')
-      console.log(error.message)
     }
   }
 
@@ -25,6 +28,13 @@ const SignIn = () => {
     const { name, value } = e.target
     setCredentials({ ...credentials, [name]: value })
   }
+
+  // if autoLogin is true and we have credentials, use it
+  useEffect(() => {
+    if (autoLogin && demoCredentials) {
+      handleSignIn()
+    }
+  }, [autoLogin])
 
   return (
     <div>
