@@ -78,6 +78,7 @@
 
 .parentContainer {
   padding-bottom: 250px;
+  overflow: hidden; /* Prevent internal scroll */
 }
 
 .imageContainer {
@@ -170,36 +171,33 @@
     clip-path: polygon(0% 100%, 100% 100%, 100% 0%);
   }
 
-  .image1,
-  .image2,
-  .image3,
-  .image4 {
-    width: 50vw;
-    height: auto;
-    transform: scale(0.7);
-  }
-
   .image1 {
-    top: 20%;
-    right: 5%;
+    top: 65%;
+    right: 25%;
     z-index: 3;
   }
 
   .image2 {
-    top: 10%;
-    right: 10%;
+    top: 45%;
+    right: 45%;
     z-index: 2;
   }
 
   .image3 {
-    top: 15%;
+    top: 50%;
     right: -5%;
     z-index: 1;
   }
 
   .image4 {
-    top: 0%;
+    top: 30%;
     right: 8%;
     z-index: 0;
+  }
+
+  .logo {
+    position: absolute;
+    bottom: 65px;
+    right: 15px;
   }
 }
