@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import styles from '@/app/styles/SignIn.module.css'
+import Image from 'next/image'
+import { FiChevronLeft } from 'react-icons/fi'
 
 // autoLogin triggers autoLogin with demoCredentials
-const SignIn = ({ autoLogin = false, demoCredentials = null }) => {
+const SignIn = ({
+  autoLogin = false,
+  demoCredentials = null,
+  setShowSignIn,
+  setIsDemo
+}) => {
   const [credentials, setCredentials] = useState({
     username: demoCredentials?.username || '',
     password: demoCredentials?.password || ''
@@ -37,7 +44,47 @@ const SignIn = ({ autoLogin = false, demoCredentials = null }) => {
   }, [autoLogin])
 
   return (
-    <div>
+    <div className={styles.signInWrapper}>
+      {/* BLUE POLYGON (background layer) */}
+      <div className={styles.mobilePolygon}></div>
+
+      {/* IMAGE STACK (top-right corner) */}
+      <div className={styles.mobileImages}>
+        <Image
+          src="/images/Landing1.png"
+          alt="Player 1"
+          width={100}
+          height={100}
+          className={styles.mobileImage1}
+        />
+        <Image
+          src="/images/Landing2.png"
+          alt="Player 2"
+          width={100}
+          height={100}
+          className={styles.mobileImage2}
+        />
+      </div>
+      <div
+        className={styles.mobileBackButton}
+        onClick={() => {
+          // Navigate back to landing page
+          if (typeof window !== 'undefined') {
+            setShowSignIn(false)
+            setIsDemo(false)
+          }
+        }}
+      >
+        <FiChevronLeft />
+      </div>
+
+      <div className={styles.mobileHeader}>
+        <h2>
+          <span className={styles.welcome}>Welcome back,</span>
+          <br />
+          <span className={styles.continue}>Sign in to continue</span>
+        </h2>
+      </div>
       <div className={styles.container}>
         <form onSubmit={handleSignIn}>
           <div className={styles.card}>

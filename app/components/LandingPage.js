@@ -76,8 +76,11 @@ const LandingPage = () => {
 
   return (
     <div>
-      {/* STATIC NAVBAR: FOR SIGNIN */}
-      <div className={navStyles.container}>
+      <div
+        className={`${navStyles.container} ${
+          showSignIn ? navStyles.hideOnMobile : ''
+        }`}
+      >
         <header className={navStyles.header}>
           <div className={navStyles.titleBar}>
             <h1>BSA | Tennis Consulting</h1>
@@ -115,6 +118,8 @@ const LandingPage = () => {
           demoCredentials={
             isDemo ? { username: 'demo', password: 'demo123' } : null
           }
+          setShowSignIn={setShowSignIn}
+          setIsDemo={setIsDemo}
         />
       )}
     </div>
