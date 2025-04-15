@@ -22,7 +22,7 @@ const Land = ({ setShowSignIn, setIsDemo }) => {
           }}
           className={styles.startButton}
         >
-          Demo Now
+          DEMO NOW
         </button>
       </div>
       <div className={styles.imageContainer}>
@@ -89,7 +89,7 @@ const LandingPage = () => {
                     setShowSignIn(true)
                   }}
                 >
-                  Sign In
+                  SIGN IN
                 </button>
               ) : (
                 <button

@@ -139,14 +139,35 @@
 
 @media (max-width: 768px) {
   .mainText {
-    color: #000;
-    font-size: 3vw;
+    font-size: 1rem;
     letter-spacing: 0.1em;
-    font-weight: 100;
-    line-height: 1.1;
     text-align: left;
-    margin-left: 2%;
-    margin-top: 2%;
+    margin-left: 1rem;
+    margin-top: 1rem;
+  }
+
+  .subText {
+    font-size: 0.5rem;
+    text-align: left;
+    line-height: 0.4; /* Adjust this to increase spacing between lines */
+    margin-left: 1rem;
+  }
+
+  .startButton {
+    width: 4rem; /* Set width based on viewport width */
+    height: 1rem;
+    font-size: 0.4rem; /* Responsive font size */
+    font-weight: 500;
+    margin-top: 1.75rem;
+  }
+
+  .polygon {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 150vw;
+    height: 75vh;
+    clip-path: polygon(0% 100%, 100% 100%, 100% 0%);
   }
 
   .image1,
