@@ -45,10 +45,10 @@ const SignIn = ({
 
   return (
     <div className={styles.signInWrapper}>
-      {/* BLUE POLYGON (background layer) */}
+      {/* BLUE POLYGON */}
       <div className={styles.mobilePolygon}></div>
 
-      {/* IMAGE STACK (top-right corner) */}
+      {/* IMAGE STACK */}
       <div className={styles.mobileImages}>
         <Image
           src="/images/Landing1.png"
@@ -68,7 +68,6 @@ const SignIn = ({
       <div
         className={styles.mobileBackButton}
         onClick={() => {
-          // Navigate back to landing page
           if (typeof window !== 'undefined') {
             setShowSignIn(false)
             setIsDemo(false)
@@ -88,13 +87,12 @@ const SignIn = ({
       <div className={styles.container}>
         <form onSubmit={handleSignIn}>
           <div className={styles.card}>
-            <img>{/* Add logo if needed */}</img>
             {error && (
               <div
                 style={{
                   color: 'red',
                   marginBottom: '10px',
-                  textAlign: 'center' // Center the text
+                  textAlign: 'center'
                 }}
               >
                 {error}
@@ -120,7 +118,6 @@ const SignIn = ({
               />
             </div>
             <button type="submit">Sign In</button>
-            {/* <div style={{ color: 'grey', fontSize: '0.7rem' }}> */}
             <div className={styles.infoBox}>
               <p>
                 Need Help?{' '}
@@ -131,7 +128,6 @@ const SignIn = ({
                   <b>Contact Us</b>
                 </a>
               </p>
-              {/* add contact details */}
               <p>To demo this page, use:</p>
               <ul>Username: demo</ul>
               <ul>Password: demo123</ul>

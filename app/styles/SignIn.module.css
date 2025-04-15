@@ -6,16 +6,15 @@
 
 .container {
   display: flex;
-  justify-content: center; /* Centers horizontally */
-  align-items: center; /* Centers vertically */
-  height: 70vh; /* Full viewport height */
-  position: relative; /* <-- Add this */
+  justify-content: center;
+  align-items: center;
+  height: 70vh;
+  position: relative;
 }
 
 .card {
   background-color: #ffffff;
   border-radius: 8px;
-  /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
   border: 1px solid #dedede;
   padding: 20px;
   width: 35vw;
@@ -162,13 +161,13 @@
   }
 
   .welcome {
-    font-size: 1.25rem; /* ~20px */
+    font-size: 1.25rem;
     font-weight: 400;
     color: #000000;
   }
 
   .continue {
-    font-size: 1.5rem; /* ~24px */
+    font-size: 1.5rem;
     font-weight: 700;
     color: #000000;
     display: inline-block;
@@ -194,7 +193,7 @@
 
   .mobileImages {
     display: block;
-    position: relative; /* container for absolute children */
+    position: relative;
     z-index: 2;
   }
 
