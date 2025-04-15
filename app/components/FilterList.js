@@ -318,7 +318,7 @@ const FilterList = ({
           style={{
             padding: '1vh 2vw',
             fontSize: '1.4vw',
-            backgroundColor: '#007bff',
+            backgroundColor: '#2c61ab',
             color: 'white',
             border: 'none',
             borderRadius: '0.4vw',

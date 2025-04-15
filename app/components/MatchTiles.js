@@ -27,6 +27,8 @@ const MatchTiles = ({
   player2FinalScores,
   player1TieScores,
   player2TieScores,
+  player1UTR,
+  player2UTR,
   isUnfinished,
   tagged = { status: false },
   displaySections = { score: true, info: true, matchup: true } // default all true
@@ -121,6 +123,7 @@ const MatchTiles = ({
           </div>
           <div className={styles.playerInfoName}>
             {player1Name} {isUnfinished && '(UF)'}
+            {player1UTR && `(${player1UTR})`}
           </div>
           <div className={styles.playerInfoScore}>
             {player1FinalScores.map((score, index) =>
@@ -139,7 +142,9 @@ const MatchTiles = ({
               layout="intrinsic"
             />
           </div>
-          <div className={styles.playerInfoName}>{player2Name}</div>
+          <div className={styles.playerInfoName}>
+            {player2Name} {player2UTR && `(${player2UTR})`}
+          </div>
           <div className={styles.playerInfoScore}>
             {player2FinalScores.map((score, index) =>
               renderScore(score, index, false, player2TieScores)
@@ -152,8 +157,8 @@ const MatchTiles = ({
       {displaySections.info && (
         <div className={styles.matchInfoContainer}>
           <div className={styles.containerTitle}>Match Information</div>
-          <div className={styles.containerInfo}>{matchDetails}</div>
           <div className={styles.containerInfo}>{date}</div>
+          <div className={styles.containerInfo}>{matchDetails}</div>
         </div>
       )}
       {/* School Info */}
