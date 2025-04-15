@@ -49,3 +49,30 @@
 .noUnderline:hover {
   text-decoration: none;
 }
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem 1rem;
+  }
+
+  .titleBar {
+    height: auto;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .titleBar h1 {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .buttonBox button {
+    padding: 0.5rem 0.5rem;
+    font-size: 0.6rem;
+    width: auto;
+    height: auto;
+  }
+}

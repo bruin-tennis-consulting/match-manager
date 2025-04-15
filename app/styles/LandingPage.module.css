@@ -136,3 +136,49 @@
   width: 80px; /* Set width to match design */
   height: auto; /* Maintain aspect ratio */
 }
+
+@media (max-width: 768px) {
+  .mainText {
+    color: #000;
+    font-size: 3vw;
+    letter-spacing: 0.1em;
+    font-weight: 100;
+    line-height: 1.1;
+    text-align: left;
+    margin-left: 2%;
+    margin-top: 2%;
+  }
+
+  .image1,
+  .image2,
+  .image3,
+  .image4 {
+    width: 50vw;
+    height: auto;
+    transform: scale(0.7);
+  }
+
+  .image1 {
+    top: 20%;
+    right: 5%;
+    z-index: 3;
+  }
+
+  .image2 {
+    top: 10%;
+    right: 10%;
+    z-index: 2;
+  }
+
+  .image3 {
+    top: 15%;
+    right: -5%;
+    z-index: 1;
+  }
+
+  .image4 {
+    top: 0%;
+    right: 8%;
+    z-index: 0;
+  }
+}
