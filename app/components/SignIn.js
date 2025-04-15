@@ -73,7 +73,8 @@ const SignIn = ({ autoLogin = false, demoCredentials = null }) => {
               />
             </div>
             <button type="submit">Sign In</button>
-            <div style={{ color: 'grey', fontSize: '0.7rem' }}>
+            {/* <div style={{ color: 'grey', fontSize: '0.7rem' }}> */}
+            <div className={styles.infoBox}>
               <p>
                 Need Help?{' '}
                 <a

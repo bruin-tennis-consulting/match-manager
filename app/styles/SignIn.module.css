@@ -84,3 +84,43 @@
 .rightTitle button:hover {
   background-color: #0056b3;
 }
+
+.infoBox {
+  color: grey;
+  font-size: 0.7rem;
+  margin-top: 20px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.infoBox a {
+  color: inherit;
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.infoBox ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 4px 0;
+}
+
+/* Responsive styling */
+@media (max-width: 768px) {
+  .infoBox {
+    font-size: 0.6rem;
+    margin-top: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .card h2 {
+    font-size: 1rem;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+
+  .card {
+    width: 20rem;
+  }
+}
