@@ -82,7 +82,9 @@
 }
 
 .playerSchoolImgcontainer {
-  max-width: 2.9vw; /* Adjust max-width using viewport units */
+  width: 3vw; /* Set a fixed width relative to viewport */
+  max-height: 4vw; /* Adjust height accordingly */
+  position: relative; /* Required for Next.js Image when using 'fill' */
   padding-bottom: 0.4vw;
   display: flex;
   justify-content: center; /* Center the image vertically */
