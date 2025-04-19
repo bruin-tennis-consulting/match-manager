@@ -137,9 +137,8 @@ const MatchTiles = ({
             <Image
               src={opponentLogo}
               alt={`${opponentTeam} logo`}
-              width={50} // Adjust as needed
-              height={50}
-              layout="intrinsic"
+              layout="fill"
+              objectFit="contain"
             />
           </div>
           <div className={styles.playerInfoName}>

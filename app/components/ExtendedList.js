@@ -87,22 +87,23 @@ const ExtendedList = ({
               {keys.map((key, cellIndex) => (
                 <td className={styles.TD} key={cellIndex}>
                   {cellIndex === 0 ? (
-                    <Image
-                      src={
-                        item.player1Name === item.serverName
-                          ? clientLogo
-                          : opponentLogo
-                      }
-                      alt={
-                        item.player1Name === item.serverName
-                          ? `${clientTeam} logo`
-                          : `${opponentTeam} logo`
-                      }
-                      width={50} // Adjust width and height as needed
-                      height={50}
-                      layout="intrinsic"
-                      className={styles.IMG}
-                    />
+                    <div className={styles.imageWrapper}>
+                      <Image
+                        src={
+                          item.player1Name === item.serverName
+                            ? clientLogo
+                            : opponentLogo
+                        }
+                        alt={
+                          item.player1Name === item.serverName
+                            ? `${clientTeam} logo`
+                            : `${opponentTeam} logo`
+                        }
+                        layout="fill"
+                        objectFit="contain"
+                        className={styles.IMG}
+                      />
+                    </div>
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       {cellIndex === keys.length - 2 ? (

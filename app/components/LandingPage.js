@@ -4,7 +4,7 @@ import styles from '@/app/styles/LandingPage.module.css'
 import navStyles from '@/app/styles/Navbar.module.css'
 import SignIn from './SignIn'
 
-const Land = (setShowSignIn) => {
+const Land = ({ setShowSignIn, setIsDemo }) => {
   return (
     <div className={styles.parentContainer}>
       <div className={styles.mainText}>
@@ -16,10 +16,13 @@ const Land = (setShowSignIn) => {
         <p>Empowering Tennis Excellence</p>
         <p>through Data-Driven Insights</p>
         <button
-          onClick={() => setShowSignIn(true)}
+          onClick={() => {
+            setIsDemo(true)
+            setShowSignIn(true)
+          }}
           className={styles.startButton}
         >
-          Start Now
+          DEMO NOW
         </button>
       </div>
       <div className={styles.imageContainer}>
@@ -69,26 +72,56 @@ const Land = (setShowSignIn) => {
 
 const LandingPage = () => {
   const [showSignIn, setShowSignIn] = useState(false)
+  const [isDemo, setIsDemo] = useState(false)
 
   return (
     <div>
-      {/* STATIC NAVBAR: FOR SIGNIN */}
-      <div className={navStyles.container}>
+      <div
+        className={`${navStyles.container} ${
+          showSignIn ? navStyles.hideOnMobile : ''
+        }`}
+      >
         <header className={navStyles.header}>
           <div className={navStyles.titleBar}>
             <h1>BSA | Tennis Consulting</h1>
             <div className={navStyles.buttonBox}>
               {!showSignIn ? (
-                <button onClick={() => setShowSignIn(true)}>Sign In</button>
+                <button
+                  onClick={() => {
+                    setIsDemo(false)
+                    setShowSignIn(true)
+                  }}
+                >
+                  SIGN IN
+                </button>
               ) : (
-                <button onClick={() => setShowSignIn(false)}>Back</button>
+                <button
+                  onClick={() => {
+                    setIsDemo(false)
+                    setShowSignIn(false)
+                  }}
+                >
+                  Back
+                </button>
               )}
             </div>
           </div>
         </header>
       </div>
-      {/* show LandingPage or SignIn Page */}
-      {!showSignIn ? <Land setShowSignIn /> : <SignIn />}
+
+      {/* show Landing or SignIn */}
+      {!showSignIn ? (
+        <Land setShowSignIn={setShowSignIn} setIsDemo={setIsDemo} />
+      ) : (
+        <SignIn
+          autoLogin={isDemo}
+          demoCredentials={
+            isDemo ? { username: 'demo', password: 'demo123' } : null
+          }
+          setShowSignIn={setShowSignIn}
+          setIsDemo={setIsDemo}
+        />
+      )}
     </div>
   )
 }
