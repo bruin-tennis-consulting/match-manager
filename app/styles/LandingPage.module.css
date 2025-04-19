@@ -49,26 +49,26 @@
 .subText {
   color: #484848;
   font-size: 1.5vw;
-  font-weight: 600; /* Use a moderate weight instead of full bold if needed */
+  font-weight: 600;
   text-align: left;
-  line-height: 0.4; /* Adjust this to increase spacing between lines */
+  line-height: 0.4;
   margin-left: 2%;
   margin-top: 1.5%;
   max-width: 600px;
 }
 
 .startButton {
-  width: 10vw; /* Set width based on viewport width */
-  padding: 0.5vw; /* Use responsive padding */
+  width: 10vw;
+  padding: 0.5vw;
   background-color: #2c61ab;
   color: #ffffff;
   border: none;
   border-radius: 5px;
-  font-size: 1.2vw; /* Responsive font size */
+  font-size: 1.2vw;
   cursor: pointer;
   transition:
     background-color 0.3s,
-    transform 0.2s; /* Add smooth transition for shrinking effect */
+    transform 0.2s;
   font-weight: 700;
 }
 
@@ -78,6 +78,7 @@
 
 .parentContainer {
   padding-bottom: 250px;
+  overflow: hidden;
 }
 
 .imageContainer {
@@ -87,7 +88,7 @@
   transform: translateY(-50%);
   width: 50vw;
   height: 80vh;
-  perspective: 1000px; /* Adds perspective for 3D effect */
+  perspective: 1000px;
 }
 
 .image1 {
@@ -124,15 +125,79 @@
   right: 0;
   width: 70vw;
   height: 70vh;
-  background-color: #2c61ab; /* Color of the polygon */
-  clip-path: polygon(0% 100%, 100% 100%, 100% 0%); /* Adjusted points */
-  z-index: -1; /* Position it behind other content if needed */
+  background-color: #2c61ab;
+  clip-path: polygon(0% 100%, 100% 100%, 100% 0%);
+  z-index: -1;
 }
 
 .logo {
   position: absolute;
-  bottom: 100px; /* Adjust to control distance from the bottom */
-  right: 30px; /* Adjust to control distance from the right */
-  width: 80px; /* Set width to match design */
-  height: auto; /* Maintain aspect ratio */
+  bottom: 100px;
+  right: 30px;
+  width: 80px;
+  height: auto;
+}
+
+@media (max-width: 768px) {
+  .mainText {
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    text-align: left;
+    margin-left: 1rem;
+    margin-top: 1rem;
+  }
+
+  .subText {
+    font-size: 0.5rem;
+    text-align: left;
+    line-height: 0.4;
+    margin-left: 1rem;
+  }
+
+  .startButton {
+    width: 4rem;
+    height: 1rem;
+    font-size: 0.4rem;
+    font-weight: 500;
+    margin-top: 1.75rem;
+  }
+
+  .polygon {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 150vw;
+    height: 75vh;
+    clip-path: polygon(0% 100%, 100% 100%, 100% 0%);
+  }
+
+  .image1 {
+    top: 65%;
+    right: 25%;
+    z-index: 3;
+  }
+
+  .image2 {
+    top: 45%;
+    right: 45%;
+    z-index: 2;
+  }
+
+  .image3 {
+    top: 50%;
+    right: -5%;
+    z-index: 1;
+  }
+
+  .image4 {
+    top: 30%;
+    right: 8%;
+    z-index: 0;
+  }
+
+  .logo {
+    position: absolute;
+    bottom: 65px;
+    right: 15px;
+  }
 }

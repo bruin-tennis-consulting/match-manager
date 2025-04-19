@@ -1,14 +1,20 @@
+.signInWrapper {
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
 .container {
   display: flex;
-  justify-content: center; /* Centers horizontally */
-  align-items: center; /* Centers vertically */
-  height: 70vh; /* Full viewport height */
+  justify-content: center;
+  align-items: center;
+  height: 70vh;
+  position: relative;
 }
 
 .card {
   background-color: #ffffff;
   border-radius: 8px;
-  /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
   border: 1px solid #dedede;
   padding: 20px;
   width: 35vw;
@@ -83,4 +89,141 @@
 
 .rightTitle button:hover {
   background-color: #0056b3;
+}
+
+.infoBox {
+  color: grey;
+  font-size: 0.7rem;
+  margin-top: 20px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.infoBox a {
+  color: inherit;
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.infoBox ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 4px 0;
+}
+
+.mobilePolygon,
+.mobileImages,
+.mobileHeader,
+.mobileBackButton {
+  display: none;
+}
+
+.mobileHeader {
+  display: none;
+  padding: 1rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.welcome {
+  color: #000;
+  font-weight: 400;
+}
+
+.continue {
+  font-weight: 700;
+  color: #111;
+}
+
+@media (max-width: 768px) {
+  .card h2 {
+    font-size: 1rem;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+
+  .card {
+    width: 20rem;
+    margin-top: -4rem;
+  }
+
+  .mobileHeader {
+    display: block;
+    position: relative;
+    z-index: 3;
+    top: 6rem;
+    left: 0.7rem;
+  }
+
+  .mobileHeader p {
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .welcome {
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: #000000;
+  }
+
+  .continue {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #000000;
+    display: inline-block;
+    margin-top: 0.2rem;
+  }
+
+  .infoBox {
+    font-size: 0.6rem;
+    margin-top: 15px;
+  }
+
+  .mobilePolygon {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 80vw;
+    height: 40vh;
+    background-color: #2c61ab;
+    clip-path: polygon(0 0, 100% 0, 100% 60%);
+    z-index: 1;
+  }
+
+  .mobileImages {
+    display: block;
+    position: relative;
+    z-index: 2;
+  }
+
+  .mobileImage1 {
+    position: absolute;
+    top: 4rem;
+    right: 1.5rem;
+    border-radius: 8px;
+  }
+
+  .mobileImage2 {
+    position: absolute;
+    top: 6rem;
+    right: 0.5rem;
+    border-radius: 8px;
+  }
+
+  .mobileBackButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 4rem;
+    left: 1.3em;
+    width: 1.5rem;
+    height: 1.5rem;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.2s ease;
+  }
 }
