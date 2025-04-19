@@ -26,6 +26,7 @@ export default function UploadMatchForm() {
   const [teams, setTeams] = useState([])
   const [formData, setFormData] = useState({})
   const [errors, setErrors] = useState([])
+  const [successMessage, setSuccessMessage] = useState('')
   const [localUiSchema, setLocalUiSchema] = useState(baseUiSchema)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
@@ -277,13 +278,18 @@ export default function UploadMatchForm() {
       setTimeout(() => {
         setIsUploading(false)
         setUploadProgress(0)
-        alert('Match uploaded successfully!')
+        setSuccessMessage('Match uploaded successfully!')
+        // Clear success message after 5 seconds
+        setTimeout(() => {
+          setSuccessMessage('')
+        }, 5000)
       }, 500)
     } catch (error) {
       console.error('Error uploading match:', error)
       setErrors([`Error: ${error.message}`])
       setIsUploading(false)
       setUploadProgress(0)
+      setSuccessMessage('')
     }
   }
 
@@ -320,6 +326,15 @@ export default function UploadMatchForm() {
                 {error}
               </div>
             ))}
+          </div>
+        )}
+
+        {successMessage && (
+          <div className={styles.successContainer}>
+            <div className={styles.successMessage}>
+              <span className={styles.successIcon}>✓</span>
+              {successMessage}
+            </div>
           </div>
         )}
       </div>

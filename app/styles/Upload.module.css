@@ -53,3 +53,29 @@
 .errorIcon {
   margin-right: 8px;
 }
+
+.successContainer {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  padding: 16px;
+  background-color: #e8f5e9;
+  border-left: 4px solid #4caf50;
+  border-radius: 4px;
+}
+
+.successMessage {
+  color: #2e7d32;
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.successMessage:last-child {
+  margin-bottom: 0;
+}
+
+.successIcon {
+  margin-right: 8px;
+}
