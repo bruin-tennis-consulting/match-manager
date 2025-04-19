@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation' // Updated import for usePathname
 
 import { useData } from '@/app/DataProvider'
@@ -110,6 +110,30 @@ const MatchPage = () => {
     }
   }
 
+  const returnFilteredPoints = useCallback(() => {
+    let filteredPoints = matchData.pointsJson
+    const filterMap = new Map()
+
+    filterList.forEach((filter) => {
+      const [key, value] = filter
+      if (filterMap.has(key)) {
+        filterMap.get(key).push(value)
+      } else {
+        filterMap.set(key, [value])
+      }
+    })
+
+    filterMap.forEach((values, key) => {
+      filteredPoints = filteredPoints.filter((point) =>
+        values.length > 1
+          ? values.includes(point[key])
+          : point[key] === values[0]
+      )
+    })
+
+    return filteredPoints
+  }, [matchData, filterList])
+
   useEffect(() => {
     if (!videoObject || !autoplayEnabled) return
     const interval = setInterval(() => {
@@ -142,7 +166,7 @@ const MatchPage = () => {
     }, 2000)
 
     return () => clearInterval(interval)
-  }, [videoObject, autoplayEnabled, filterList])
+  }, [videoObject, autoplayEnabled, filterList, returnFilteredPoints])
 
   const handleBookmark = async (point) => {
     const updatedPoints = matchData.pointsJson.map((p) => {
@@ -185,7 +209,7 @@ const MatchPage = () => {
 
       return () => clearInterval(intervalId)
     }
-  }, [videoObject, matchData])
+  }, [videoObject, matchData, returnFilteredPoints])
 
   useEffect(() => {
     if (triggerScroll && !showPDF) {
@@ -195,30 +219,6 @@ const MatchPage = () => {
       setTriggerScroll(false)
     }
   }, [triggerScroll, showPDF])
-
-  const returnFilteredPoints = () => {
-    let filteredPoints = matchData.pointsJson
-    const filterMap = new Map()
-
-    filterList.forEach((filter) => {
-      const [key, value] = filter
-      if (filterMap.has(key)) {
-        filterMap.get(key).push(value)
-      } else {
-        filterMap.set(key, [value])
-      }
-    })
-
-    filterMap.forEach((values, key) => {
-      filteredPoints = filteredPoints.filter((point) =>
-        values.length > 1
-          ? values.includes(point[key])
-          : point[key] === values[0]
-      )
-    })
-
-    return filteredPoints
-  }
 
   const removeFilter = (key, value) => {
     const updatedFilterList = filterList.filter(
@@ -274,6 +274,11 @@ const MatchPage = () => {
   // Usage in your component:
   console.log(matchData)
   const matchScores = matchData ? getMatchScores(matchData.pointsJson) : []
+  if (matchData) {
+    console.log('b')
+    console.log(matchData.matchDetails.event ?? matchData.matchDetails.venue)
+    console.log(matchData.matchDetails)
+  }
 
   return (
     <div className={styles.container}>
@@ -297,8 +302,16 @@ const MatchPage = () => {
             matchName={matchData.matchDetails.event}
             clientTeam={matchData.teams.clientTeam}
             opponentTeam={matchData.teams.opponentTeam}
-            matchDetails={matchData.matchDetails.event}
-            date={matchData.matchDetails.date}
+            matchDetails={
+              matchData.matchDetails.event ?? matchData.matchDetails.matchVenue
+            }
+            date={new Date(matchData.matchDate).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}
+            player1UTR={matchData.players.client.UTR}
+            player2UTR={matchData.players.opponent.UTR}
             player1Name={
               matchData.players.client.firstName +
               ' ' +
@@ -341,36 +354,6 @@ const MatchPage = () => {
               </div>
             </div>
             <div className={styles.sidebar}>
-              <div className="scoreboard">
-                <ScoreBoard
-                  names={matchData.name}
-                  playData={playingPoint}
-                  player1Name={
-                    matchData.players.client.firstName +
-                    ' ' +
-                    matchData.players.client.lastName
-                  }
-                  player2Name={
-                    matchData.players.opponent.firstName +
-                    ' ' +
-                    matchData.players.opponent.lastName
-                  }
-                  player1FinalScores={matchScores.map((scores) => ({
-                    score: scores[0]
-                  }))}
-                  player2FinalScores={matchScores.map((scores) => ({
-                    score: scores[1]
-                  }))}
-                  player1TieScores={matchData.pointsJson.map(
-                    (point) => point.player1TiebreakScore
-                  )}
-                  player2TieScores={matchData.pointsJson.map(
-                    (point) => point.player2TiebreakScore
-                  )}
-                  isUnfinished={matchData.matchDetails.unfinished}
-                  displaySections={{ score: true, info: true, matchup: true }}
-                />
-              </div>
               <div className={filterListStyles.activeFilterListContainer}>
                 Active Filters:
                 <ul className={filterListStyles.activeFilterList}>
@@ -530,6 +513,36 @@ const MatchPage = () => {
                   </div>
                 </div>
               )}
+              <div className="scoreboard">
+                <ScoreBoard
+                  names={matchData.name}
+                  playData={playingPoint}
+                  player1Name={
+                    matchData.players.client.firstName +
+                    ' ' +
+                    matchData.players.client.lastName
+                  }
+                  player2Name={
+                    matchData.players.opponent.firstName +
+                    ' ' +
+                    matchData.players.opponent.lastName
+                  }
+                  player1FinalScores={matchScores.map((scores) => ({
+                    score: scores[0]
+                  }))}
+                  player2FinalScores={matchScores.map((scores) => ({
+                    score: scores[1]
+                  }))}
+                  player1TieScores={matchData.pointsJson.map(
+                    (point) => point.player1TiebreakScore
+                  )}
+                  player2TieScores={matchData.pointsJson.map(
+                    (point) => point.player2TiebreakScore
+                  )}
+                  isUnfinished={matchData.matchDetails.unfinished}
+                  displaySections={{ score: true, info: true, matchup: true }}
+                />
+              </div>
             </div>
           </div>
           <div className={styles.toggle}>

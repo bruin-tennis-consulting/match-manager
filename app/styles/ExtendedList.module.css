@@ -16,11 +16,11 @@
   border-bottom: solid 0.1vw #ededed;
 }
 
-.IMG {
-  max-width: 2.7vw;
-  height: auto;
-  display: block;
-  width: 100%;
+.imageWrapper {
+  position: relative; /* Required for layout="fill" */
+  width: 3.7vw;       /* Set your desired width */
+  height: 3.7vw;      /* Set your desired height */
+  overflow: hidden;   /* Ensures the image doesn't overflow the container */
 }
 
 .TD {

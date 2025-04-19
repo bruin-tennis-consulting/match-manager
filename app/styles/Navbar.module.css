@@ -9,7 +9,8 @@
 
 .header {
   text-align: left;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  margin-top: 10px;
 }
 
 .titleBar {
@@ -79,4 +80,38 @@
   .hideOnMobile {
     display: none !important;
   }
+}
+.mobileContainer {
+  background-color: #5e9bff;
+  margin: 0 auto;
+  padding-left: 30px;
+  padding-right: 40px;
+  padding-top: 25px;
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+}
+.mobileNoUnderline {
+  color: #ececec;
+  font-size: 18px;
+  text-decoration: none;
+}
+.mobileTitleBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.mobileTitleBar h1 {
+  margin: 0px;
+}
+
+.iconButton {
+  background: transparent;
+  border: none;
+  padding-top: 15px;
+}
+
+.rosterContainer {
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-bottom: 20px;
 }
