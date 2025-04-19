@@ -60,13 +60,10 @@ const Dashboard = () => {
       .search(searchTerm)
       .map((result) => {
         const match = result.item
-        const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
 
-        // For non-dual matches (tournaments/events), use the event name
-        if (!match.matchDetails.duel) {
-          return `_#${match.matchDetails.event}`
-        }
-        return `${match.matchDate}#${cleanedOpponentTeam}`
+        return match.matchDetails.duel
+          ? `${match.matchDate}#${match.teams.opponentTeam}`
+          : `_#${match.matchDetails.event}`
       })
       .filter((matchKey) => {
         // Only include if we haven't seen this matchKey before
@@ -76,15 +73,18 @@ const Dashboard = () => {
       })
   }, [searchTerm, fuse])
 
+  // displayMatchSets is either:
+  // A) filteredMatchSets from the Search, or
+  // B) selectedMatchSets from Carousel, or
+  // C) default All Matches
   const displayMatchSets = useMemo(() => {
     if (searchTerm) return filteredMatchSets
     if (selectedMatchSets.length > 0) return selectedMatchSets
     return [
       ...new Set(
         formattedMatches.map((match) => {
-          const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
           return match.matchDetails.duel
-            ? `${match.matchDate}#${cleanedOpponentTeam}`
+            ? `${match.matchDate}#${match.teams.opponentTeam}`
             : `_#${match.matchDetails.event}`
         })
       )
@@ -111,6 +111,7 @@ const Dashboard = () => {
     )
   }
 
+  const uniqueKeys = new Set()
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -142,35 +143,42 @@ const Dashboard = () => {
           </div>
         </div>
       </header>
-
+      {console.log(formattedMatches)}
       {/* Carousel for match selection */}
       <div className={styles.carousel}>
-        {formattedMatches.map((match, index) => {
-          const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
-          const matchKey = match.matchDetails.duel
-            ? `${match.matchDate}#${cleanedOpponentTeam}`
-            : `_#${match.matchDetails.event}`
-          return (
-            <div
-              key={index}
-              className={`${styles.card} ${
-                selectedMatchSets.includes(matchKey) ? styles.active : ''
-              }`}
-              onClick={() => handleCarouselClick(matchKey)}
-            >
-              <Image
-                src={logos[match.teams.opponentTeam]}
-                alt="Team Logo"
-                width={50}
-                height={50}
-                className={styles.logo}
-              />
-              <span className={styles.matchDate}>{match.matchDate}</span>
-            </div>
-          )
-        })}
-      </div>
+        {formattedMatches
+          .filter((match) => {
+            const matchKey = match.matchDetails.duel
+              ? `${match.matchDate}#${match.teams.opponentTeam}`
+              : `_#${match.matchDetails.event}`
 
+            if (uniqueKeys.has(matchKey)) return false
+            uniqueKeys.add(matchKey)
+            return true
+          })
+          .map((match, index) => {
+            const matchKey = match.matchDetails.duel
+              ? `${match.matchDate}#${match.teams.opponentTeam}`
+              : `_#${match.matchDetails.event}`
+
+            return (
+              <div
+                key={index}
+                className={`${styles.card} ${selectedMatchSets.includes(matchKey) ? styles.active : ''}`}
+                onClick={() => handleCarouselClick(matchKey)}
+              >
+                <Image
+                  src={logos[match.teams.opponentTeam]}
+                  alt="Team Logo"
+                  width={50}
+                  height={50}
+                  className={styles.logo}
+                />
+                <span className={styles.matchDate}>{match.matchDate}</span>
+              </div>
+            )
+          })}
+      </div>
       {/* Main content: Match tiles and roster */}
       <div className={styles.mainContent}>
         <div className={styles.matchesSection}>
@@ -183,9 +191,7 @@ const Dashboard = () => {
                   match.singles &&
                   ((match.matchDetails.duel &&
                     matchKey ===
-                      `${match.matchDate}#${cleanTeamName(
-                        match.teams.opponentTeam
-                      )}`) ||
+                      `${match.matchDate}#${match.teams.opponentTeam}`) ||
                     (!match.matchDetails.duel &&
                       matchKey === `_#${match.matchDetails.event}`))
               )
@@ -195,21 +201,14 @@ const Dashboard = () => {
                   !match.singles &&
                   ((match.matchDetails.duel &&
                     matchKey ===
-                      `${match.matchDate}#${cleanTeamName(
-                        match.teams.opponentTeam
-                      )}`) ||
+                      `${match.matchDate}#${match.teams.opponentTeam}`) ||
                     (!match.matchDetails.duel &&
                       matchKey === `_#${match.matchDetails.event}`))
               )
-              const [matchName] = matchKey.split('#')
+
+              const matchName = matchKey.split('#')[1]
               const displayName =
-                matchName === '_'
-                  ? formattedMatches.find(
-                      (match) =>
-                        !match.matchDetails.duel &&
-                        match.matchDetails.event === matchName
-                    )?.matchDetails.event || matchName
-                  : cleanTeamName(matchName)
+                matchName === '_' ? matchName : cleanTeamName(matchName)
 
               const parseLocalDate = (dateString) => {
                 const [year, month, day] = dateString.split('-').map(Number)
@@ -222,7 +221,9 @@ const Dashboard = () => {
                 .sort((a, b) => a - b)
 
               let displayDate = ''
-              if (
+              if (dates.length === 0) {
+                displayDate = 'Date unavailable'
+              } else if (
                 dates.length === 1 ||
                 dates[0].getTime() === dates[dates.length - 1].getTime()
               ) {
