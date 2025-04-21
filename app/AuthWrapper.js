@@ -12,6 +12,8 @@ import { auth } from '@/app/services/initializeFirebase'
 import { getUserProfile } from '@/app/services/userInfo'
 import LandingPage from '@/app/components/LandingPage'
 import Loading from './components/Loading'
+
+import styles from '@/app/styles/Navbar.module.css'
 const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
@@ -39,7 +41,14 @@ export const AuthProvider = ({ children }) => {
   if (loading) {
     return (
       <div>
-        <Loading prompt={'Logging In...'} />
+        <div className={styles.container} style={{ marginBottom: '100px' }}>
+          <header className={styles.header}>
+            <div className={styles.titleBar}>
+              <h1 className={styles.noUnderline}>BSA | Tennis Consulting</h1>
+            </div>
+            <Loading prompt={'Logging In...'} />
+          </header>
+        </div>
       </div>
     )
   }

@@ -14,6 +14,7 @@ const RosterTile = ({ firstName, lastName, playerPhoto }) => {
         <div className={styles.infoContainer}>
           <Image
             className={styles.playerImage}
+            loading="lazy"
             src={playerPhoto}
             alt={`Photo of ${firstName} ${lastName}`}
             width={50} // Adjust as needed
