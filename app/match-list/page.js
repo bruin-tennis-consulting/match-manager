@@ -129,7 +129,7 @@ export default function MatchList() {
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value)
   }
-  console.log(userProfile)
+
   return (
     <div className="match-list-container">
       <div className="list-header">
