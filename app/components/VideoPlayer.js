@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react'
+import styles from '../styles/VideoPlayer.module.css'
 
 function VideoPlayer({ videoId, setVideoObject, onReady }) {
   const playerRef = useRef(null)
@@ -60,7 +61,11 @@ function VideoPlayer({ videoId, setVideoObject, onReady }) {
     }
   }
 
-  return <div id="player"></div>
+  return (
+    <div className={styles.container}>
+      <div id="player" className={styles.player}></div>
+    </div>
+  )
 }
 
 export default VideoPlayer
