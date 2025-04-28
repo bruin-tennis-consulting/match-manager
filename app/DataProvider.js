@@ -41,31 +41,16 @@ export const DataProvider = ({ children }) => {
 
   const fetchMatches = useCallback(async () => {
     if (userProfile && userProfile.collections) {
-      console.log(`started fetching matches at ${new Date().toISOString()}`)
       setLoading(true)
       setError(null)
       const allMatches = []
 
       try {
         for (const col of userProfile.collections) {
-          console.log(`get collction ${new Date().toISOString()}`)
           const colRef = collection(db, col)
           const filteredQuery = query(colRef, where('_deleted', '==', false))
-          console.log(`get Docs ${new Date().toISOString()}`)
           const querySnapshot = await getDocs(filteredQuery)
 
-          console.log(`Begin filtering deleted at ${new Date().toISOString()}`)
-          /* querySnapshot.docs.forEach((doc) => {
-            const matchData = doc.data()
-            // Only add matches that are not marked as deleted
-            if (!matchData._deleted) {
-              allMatches.push({
-                id: doc.id,
-                collection: col, // Track which collection this match belongs to
-                ...matchData
-              })
-            }
-          }) */
           querySnapshot.docs.forEach((doc) => {
             const matchData = doc.data()
             allMatches.push({
@@ -77,7 +62,6 @@ export const DataProvider = ({ children }) => {
         }
 
         setMatches(allMatches)
-        console.log(`finished fetching matches at ${new Date().toISOString()}`)
       } catch (err) {
         setError(err)
       } finally {
@@ -132,6 +116,7 @@ export const DataProvider = ({ children }) => {
         }
         console.log(pdfUrl)
         newMatchData.pdfFile = pdfUrl
+        newMatchData._deleted = false
 
         const newMatch = {
           id: 'temp-id',
