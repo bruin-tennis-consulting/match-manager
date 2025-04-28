@@ -33,6 +33,16 @@ const Dashboard = () => {
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
   const [isMobile, setIsMobile] = useState(false)
 
+  /* const handleClick = async () => {
+    try {
+      await patchMissingDeletedField()
+      alert('Missing `_deleted` fields have been patched successfully.')
+    } catch (err) {
+      console.error('Error patching missing _deleted fields:', err)
+      alert('Failed to patch documents. See console for details.')
+    }
+  } */
+
   const formattedMatches = useMemo(() => formatMatches(matches), [matches])
 
   useEffect(() => {
@@ -180,6 +190,7 @@ const Dashboard = () => {
           })}
       </div>
       {/* Main content: Match tiles and roster */}
+      {/* <button onClick={handleClick}>Patch Missing `_deleted` Fields</button> */}
       <div className={styles.mainContent}>
         <div className={styles.matchesSection}>
           {matches.length === 0 ? (

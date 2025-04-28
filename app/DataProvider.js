@@ -6,7 +6,15 @@ import React, {
   useCallback,
   useContext
 } from 'react'
-import { collection, getDocs, doc, updateDoc, addDoc } from 'firebase/firestore'
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  addDoc,
+  query,
+  where
+} from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 import { db, storage } from '@/app/services/initializeFirebase.js'
@@ -33,16 +41,21 @@ export const DataProvider = ({ children }) => {
 
   const fetchMatches = useCallback(async () => {
     if (userProfile && userProfile.collections) {
+      console.log(`started fetching matches at ${new Date().toISOString()}`)
       setLoading(true)
       setError(null)
       const allMatches = []
 
       try {
         for (const col of userProfile.collections) {
+          console.log(`get collction ${new Date().toISOString()}`)
           const colRef = collection(db, col)
-          const querySnapshot = await getDocs(colRef)
+          const filteredQuery = query(colRef, where('_deleted', '==', false))
+          console.log(`get Docs ${new Date().toISOString()}`)
+          const querySnapshot = await getDocs(filteredQuery)
 
-          querySnapshot.docs.forEach((doc) => {
+          console.log(`Begin filtering deleted at ${new Date().toISOString()}`)
+          /* querySnapshot.docs.forEach((doc) => {
             const matchData = doc.data()
             // Only add matches that are not marked as deleted
             if (!matchData._deleted) {
@@ -52,10 +65,19 @@ export const DataProvider = ({ children }) => {
                 ...matchData
               })
             }
+          }) */
+          querySnapshot.docs.forEach((doc) => {
+            const matchData = doc.data()
+            allMatches.push({
+              id: doc.id,
+              collection: col,
+              ...matchData
+            })
           })
         }
 
         setMatches(allMatches)
+        console.log(`finished fetching matches at ${new Date().toISOString()}`)
       } catch (err) {
         setError(err)
       } finally {
@@ -168,6 +190,36 @@ export const DataProvider = ({ children }) => {
     }
   }, [])
 
+  /* const patchMissingDeletedField = async () => {
+    /* if (!userProfile || !userProfile.collections) {
+      console.warn('No collections found for user.')
+      return
+    }
+    const BATCH_SIZE = 500
+    for (const collectionName of userProfile.collections) {
+      const colRef = collection(db, collectionName)
+      const snapshot = await getDocs(colRef)
+      const docsToUpdate = snapshot.docs.filter((docSnap) => {
+        const data = docSnap.data()
+        return !('_deleted' in data)
+      })
+      console.log(
+        `Found ${docsToUpdate.length} documents missing _deleted in ${collectionName}`
+      )
+      for (let i = 0; i < docsToUpdate.length; i += BATCH_SIZE) {
+        const batch = writeBatch(db)
+        const chunk = docsToUpdate.slice(i, i + BATCH_SIZE)
+        chunk.forEach((docSnap) => {
+          batch.update(docSnap.ref, { _deleted: false })
+        })
+        await batch.commit()
+        console.log(
+          `Committed batch of ${chunk.length} updates in ${collectionName}`
+        )
+      }
+    } 
+  } */
+
   useEffect(() => {
     fetchMatches()
     fetchLogos()
@@ -201,5 +253,13 @@ export const useData = () => {
     context
 
   // Optionally keep `refresh` available for manual use in components
-  return { matches, logos, loading, error, refresh, updateMatch, createMatch }
+  return {
+    matches,
+    logos,
+    loading,
+    error,
+    refresh,
+    updateMatch,
+    createMatch
+  }
 }
