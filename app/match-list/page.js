@@ -3,12 +3,14 @@
 import React, { useState, useMemo } from 'react'
 import Link from 'next/link'
 import Fuse from 'fuse.js'
+import { useAuth } from '@/app/AuthWrapper.js'
 import { useData } from '@/app/DataProvider'
 import '../styles/MatchList.css'
 import {
   aggregatePlayerStats,
   exportStatsToCSV
 } from '@/app/services/playerAggregateScript.js'
+import { downloadCollectionAsZip } from '@/app/services/downloadCollectionAsZip'
 
 import {
   calculateMatchStats,
@@ -22,6 +24,7 @@ const formatMatches = (matches) => {
 }
 
 export default function MatchList() {
+  const { userProfile } = useAuth()
   const { matches, updateMatch, refresh } = useData()
   const [playerStatsProgress, setPlayerStatsProgress] = useState(0)
   const [matchStatsProgress, setMatchStatsProgress] = useState(0)
@@ -226,6 +229,11 @@ export default function MatchList() {
             />
           )}
         </div>
+        <button
+          onClick={() => downloadCollectionAsZip(userProfile.collections[0])}
+        >
+          Download Collection
+        </button>
       </div>
     </div>
   )
