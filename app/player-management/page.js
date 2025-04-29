@@ -1,6 +1,6 @@
 'use client'
-import React, { useState, useEffect } from 'react'
-import { collection, getDocs, query, where, doc, updateDoc } from 'firebase/firestore'
+import React, { useState, useEffect, useCallback } from 'react'
+import { collection, getDocs, query, where, doc, updateDoc, writeBatch } from 'firebase/firestore'
 import { db } from '@/app/services/initializeFirebase.js'
 import styles from '@/app/styles/PlayerManagement.module.css'
 import Image from 'next/image'
@@ -16,8 +16,29 @@ export default function PlayerManagement() {
   const [targetTeam, setTargetTeam] = useState('')
   const [filteredTeams, setFilteredTeams] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
+  const [collections] = useState(['UCLA (M)', 'UCLA (W)', 'demo', 'matches'])
+  const [selectedCollection, setSelectedCollection] = useState('UCLA (M)')
 
-  const fetchTeams = async () => {
+  const fetchPlayers = useCallback(async (teamId) => {
+    try {
+      setLoading(true)
+      const teamSnapshot = await getDocs(query(collection(db, 'teams'), where('__name__', '==', teamId)))
+      
+      if (!teamSnapshot.empty) {
+        const teamData = teamSnapshot.docs[0].data()
+        setPlayers(teamData.players || [])
+      } else {
+        setPlayers([])
+      }
+      setLoading(false)
+    } catch (err) {
+      console.error('Error fetching players:', err)
+      setError('Failed to load players')
+      setLoading(false)
+    }
+  }, []);
+
+  const fetchTeams = useCallback(async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'teams'))
       const teamsData = querySnapshot.docs.map((doc) => ({
@@ -39,26 +60,7 @@ export default function PlayerManagement() {
       setError('Failed to load teams')
       setLoading(false)
     }
-  }
-
-  const fetchPlayers = async (teamId) => {
-    try {
-      setLoading(true)
-      const teamSnapshot = await getDocs(query(collection(db, 'teams'), where('__name__', '==', teamId)))
-      
-      if (!teamSnapshot.empty) {
-        const teamData = teamSnapshot.docs[0].data()
-        setPlayers(teamData.players || [])
-      } else {
-        setPlayers([])
-      }
-      setLoading(false)
-    } catch (err) {
-      console.error('Error fetching players:', err)
-      setError('Failed to load players')
-      setLoading(false)
-    }
-  }
+  }, [selectedTeam, fetchPlayers]);
 
   const handleTeamChange = (e) => {
     const teamId = e.target.value
@@ -150,7 +152,8 @@ export default function PlayerManagement() {
 
   useEffect(() => {
     fetchTeams()
-  }, [])
+    fetchPlayers(selectedCollection)
+  }, [selectedCollection, fetchPlayers, fetchTeams]);
 
   return (
     <div className={styles.container}>

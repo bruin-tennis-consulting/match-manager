@@ -1,6 +1,6 @@
 'use client'
-import React, { useState, useEffect } from 'react'
-import { collection, getDocs, query, where, doc, updateDoc } from 'firebase/firestore'
+import React, { useState, useEffect, useCallback } from 'react'
+import { collection, getDocs } from 'firebase/firestore'
 import { db } from '@/app/services/initializeFirebase.js'
 import styles from '@/app/styles/TeamManagement.module.css'
 import Image from 'next/image'
@@ -8,12 +8,11 @@ import Image from 'next/image'
 export default function TeamManagement() {
   const [teams, setTeams] = useState([])
   const [selectedTeam, setSelectedTeam] = useState('')
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [message, setMessage] = useState('')
+  const [message] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
 
-  const fetchTeams = async () => {
+  const fetchTeams = useCallback(async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'teams'))
       const teamsData = querySnapshot.docs.map((doc) => ({
@@ -27,18 +26,15 @@ export default function TeamManagement() {
       if (!selectedTeam && sortedTeams.length > 0) {
         setSelectedTeam(sortedTeams[0].id)
       }
-      
-      setLoading(false)
     } catch (err) {
       console.error('Error fetching teams:', err)
       setError('Failed to load teams')
-      setLoading(false)
     }
-  }
+  }, [selectedTeam]);
 
   useEffect(() => {
     fetchTeams()
-  }, [])
+  }, [fetchTeams]);
 
   const handleTeamChange = (e) => {
     setSelectedTeam(e.target.value)

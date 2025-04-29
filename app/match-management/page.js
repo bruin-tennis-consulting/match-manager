@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { collection, getDocs, doc, updateDoc, query, where, writeBatch } from 'firebase/firestore'
 import { db } from '@/app/services/initializeFirebase.js'
 import styles from '@/app/styles/MatchManagement.module.css'
@@ -9,7 +9,7 @@ export default function MatchManagement() {
   const [matches, setMatches] = useState([])
   const [teams, setTeams] = useState([])
   const [filteredTeams, setFilteredTeams] = useState([])
-  const [collections, setCollections] = useState(['UCLA (M)', 'UCLA (W)', 'demo', 'matches'])
+  const [collections] = useState(['UCLA (M)', 'UCLA (W)', 'demo', 'matches'])
   const [selectedCollection, setSelectedCollection] = useState('UCLA (M)')
   const [selectedMatch, setSelectedMatch] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -30,37 +30,11 @@ export default function MatchManagement() {
   // JSON display state
   const [showRawJson, setShowRawJson] = useState(false)
   
-  const fetchTeams = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(db, 'teams'))
-      const teamsData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }))
-      const sortedTeams = teamsData.sort((a, b) => a.name.localeCompare(b.name))
-      setTeams(sortedTeams)
-      
-      // Set filtered teams to all teams initially
-      setFilteredTeams(sortedTeams)
-      
-      // Then apply collection-based filtering if needed
-      if (selectedCollection) {
-        filterTeamsByCollection(sortedTeams, selectedCollection)
-      }
-      
-      setLoading(false)
-    } catch (err) {
-      console.error('Error fetching teams:', err)
-      setError('Failed to load teams')
-      setLoading(false)
-    }
-  }
-  
-  const filterTeamsByCollection = (teamsList, collectionName) => {
+  const filterTeamsByCollection = useCallback((teamsList, collectionName) => {
     // Make sure we have teams to filter
     if (!teamsList || teamsList.length === 0) {
       console.log('No teams to filter')
-      return
+      return []
     }
     
     console.log(`Filtering teams for collection: ${collectionName}`)
@@ -71,19 +45,41 @@ export default function MatchManagement() {
       // For men's collection, show only men's teams (M)
       const menTeams = teamsList.filter(team => team.name.includes('(M)'))
       console.log(`Men's teams found: ${menTeams.length}`)
-      setFilteredTeams(menTeams.length > 0 ? menTeams : teamsList)
+      return menTeams.length > 0 ? menTeams : teamsList
     } else if (collectionName === 'UCLA (W)') {
       // For women's collection, show only women's teams (W)
       const womenTeams = teamsList.filter(team => team.name.includes('(W)'))
       console.log(`Women's teams found: ${womenTeams.length}`)
-      setFilteredTeams(womenTeams.length > 0 ? womenTeams : teamsList)
+      return womenTeams.length > 0 ? womenTeams : teamsList
     } else {
       // For other collections, show all teams
-      setFilteredTeams(teamsList)
+      return teamsList
     }
-  }
+  }, []);
+
+  const fetchTeams = useCallback(async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'teams'))
+      const teamsData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      const sortedTeams = teamsData.sort((a, b) => a.name.localeCompare(b.name))
+      setTeams(sortedTeams)
+      
+      // Filter teams based on selected collection
+      const filtered = filterTeamsByCollection(sortedTeams, selectedCollection)
+      setFilteredTeams(filtered)
+      
+      setLoading(false)
+    } catch (err) {
+      console.error('Error fetching teams:', err)
+      setError('Failed to load teams')
+      setLoading(false)
+    }
+  }, [selectedCollection, filterTeamsByCollection]);
   
-  const fetchMatches = async (collectionName) => {
+  const fetchMatches = useCallback(async (collectionName) => {
     try {
       setLoading(true)
       const matchesCollection = collection(db, collectionName)
@@ -101,16 +97,21 @@ export default function MatchManagement() {
       setMatches(matchesData)
       setSelectedMatch(null) // Reset selected match when collection changes
       
-      // Filter teams based on collection gender
-      filterTeamsByCollection(teams, collectionName)
-      
       setLoading(false)
     } catch (err) {
       console.error('Error fetching matches:', err)
       setError(`Failed to load matches from ${collectionName}`)
       setLoading(false)
     }
-  }
+  }, []);
+  
+  useEffect(() => {
+    fetchTeams()
+  }, [selectedCollection, fetchTeams]);
+  
+  useEffect(() => {
+    fetchMatches(selectedCollection)
+  }, [selectedCollection, fetchMatches]);
   
   const handleCollectionChange = (e) => {
     const collection = e.target.value
@@ -414,14 +415,6 @@ export default function MatchManagement() {
     const matchTitle = `${match.client || ''} vs ${match.opponent || ''}`.toLowerCase()
     return matchTitle.includes(searchQuery.toLowerCase())
   })
-  
-  useEffect(() => {
-    // First load all teams
-    fetchTeams().then(() => {
-      // Then fetch matches for selected collection
-      fetchMatches(selectedCollection)
-    })
-  }, [])
   
   // Count occurrences of each team name in matches
   const getTeamCounts = () => {
