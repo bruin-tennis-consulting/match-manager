@@ -16,10 +16,6 @@ import Loading from './Loading'
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 import SearchIcon from '@/public/search'
 
-const cleanTeamName = (teamName) => {
-  return teamName.replace(/\s*\([MmWw]\)\s*$/, '').trim()
-}
-
 const formatMatches = (matches) => {
   return matches
     .filter((match) => match.version === 'v1')
@@ -168,11 +164,18 @@ const Dashboard = () => {
                 onClick={() => handleCarouselClick(matchKey)}
               >
                 <Image
-                  src={logos[match.teams.opponentTeam]}
+                  src={logos[match.teams.opponentTeam] || '/images/default-logo.svg'}
                   alt="Team Logo"
                   width={50}
                   height={50}
                   className={styles.logo}
+                  onError={(e) => {
+                    if (e.target.src !== '/images/default-logo.svg') {
+                      e.target.src = '/images/default-logo.svg'
+                    } else {
+                      e.target.style.display = 'none'
+                    }
+                  }}
                 />
                 <span className={styles.matchDate}>{match.matchDate}</span>
               </div>
@@ -208,7 +211,7 @@ const Dashboard = () => {
 
               const matchName = matchKey.split('#')[1]
               const displayName =
-                matchName === '_' ? matchName : cleanTeamName(matchName)
+                matchName === '_' ? matchName : matchName
 
               const parseLocalDate = (dateString) => {
                 const [year, month, day] = dateString.split('-').map(Number)

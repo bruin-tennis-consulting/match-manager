@@ -3,6 +3,7 @@ import Image from 'next/image'
 
 import styles from '@/app/styles/DashboardTile.module.css'
 import { useData } from '@/app/DataProvider'
+import { getLogoFromCache, setLogoInCache } from '@/app/services/logoCache'
 
 const DashboardTile = ({
   clientTeam,
@@ -53,9 +54,27 @@ const DashboardTile = ({
   }
 
   useEffect(() => {
-    setClientLogo(logos[clientTeam])
-    setOpponentLogo(logos[opponentTeam])
+    // Check cache first
+    const cachedClientLogo = getLogoFromCache(clientTeam)
+    const cachedOpponentLogo = getLogoFromCache(opponentTeam)
+
+    if (cachedClientLogo && cachedOpponentLogo) {
+      setClientLogo(cachedClientLogo)
+      setOpponentLogo(cachedOpponentLogo)
+      return
+    }
+
+    // If not in cache, use the logos from DataProvider
+    if (logos[clientTeam]) {
+      setClientLogo(logos[clientTeam])
+      setLogoInCache(clientTeam, logos[clientTeam])
+    }
+    if (logos[opponentTeam]) {
+      setOpponentLogo(logos[opponentTeam])
+      setLogoInCache(opponentTeam, logos[opponentTeam])
+    }
   }, [clientTeam, opponentTeam, logos])
+
   // Render function for scores
   const renderScore = (score, index, isPlayer1, tieScores) => {
     const lastSetIndex =
@@ -129,10 +148,17 @@ const DashboardTile = ({
           <div className={styles.playerSchoolImgcontainerhome}>
             {clientLogo ? (
               <Image
-                src={clientLogo}
+                src={clientLogo || '/images/default-logo.svg'}
                 alt={`${clientTeam} logo`}
                 width={100}
                 height={100}
+                onError={(e) => {
+                  if (e.target.src !== '/images/default-logo.svg') {
+                    e.target.src = '/images/default-logo.svg'
+                  } else {
+                    e.target.style.display = 'none'
+                  }
+                }}
               />
             ) : (
               <p>Logo not available</p>
@@ -154,10 +180,17 @@ const DashboardTile = ({
           <div className={styles.playerSchoolImgcontainer}>
             {opponentLogo ? (
               <Image
-                src={opponentLogo}
+                src={opponentLogo || '/images/default-logo.svg'}
                 alt={`${opponentTeam} logo`}
                 width={100}
                 height={100}
+                onError={(e) => {
+                  if (e.target.src !== '/images/default-logo.svg') {
+                    e.target.src = '/images/default-logo.svg'
+                  } else {
+                    e.target.style.display = 'none'
+                  }
+                }}
               />
             ) : (
               <p>Logo not available</p>

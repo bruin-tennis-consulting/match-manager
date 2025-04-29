@@ -6,12 +6,13 @@ import React, {
   useCallback,
   useContext
 } from 'react'
-import { collection, getDocs, doc, updateDoc, addDoc } from 'firebase/firestore'
+import { collection, getDocs, doc, updateDoc, addDoc, getDoc } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 import { db, storage } from '@/app/services/initializeFirebase.js'
 import { useAuth } from '@/app/AuthWrapper.js'
 import getTeams from '@/app/services/getTeams.js'
+import { getLogoFromCache, setLogoInCache } from '@/app/services/logoCache'
 
 const DataContext = createContext()
 
@@ -46,10 +47,12 @@ export const DataProvider = ({ children }) => {
             const matchData = doc.data()
             // Only add matches that are not marked as deleted
             if (!matchData._deleted) {
+              // Only include essential match data, exclude points data
+              const { points, pointsJson, ...essentialData } = matchData
               allMatches.push({
                 id: doc.id,
                 collection: col, // Track which collection this match belongs to
-                ...matchData
+                ...essentialData
               })
             }
           })
@@ -63,6 +66,21 @@ export const DataProvider = ({ children }) => {
       }
     }
   }, [userProfile])
+
+  // Function to fetch detailed match data including points
+  const fetchMatchDetails = useCallback(async (matchId, collectionName) => {
+    try {
+      const matchRef = doc(db, collectionName, matchId)
+      const matchDoc = await getDoc(matchRef)
+      if (matchDoc.exists()) {
+        return matchDoc.data()
+      }
+      return null
+    } catch (error) {
+      console.error('Error fetching match details:', error)
+      return null
+    }
+  }, [])
 
   const updateMatch = useCallback(
     async (matchId, updatedData) => {
@@ -132,34 +150,25 @@ export const DataProvider = ({ children }) => {
   )
 
   const fetchLogos = useCallback(async () => {
-    // Cache expiry time, currently 24 hours
-    const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000
-    const storedLogos = localStorage.getItem('teamLogos')
-    const storedTimeStamp = localStorage.getItem('teamLogosTimestamp')
-
-    if (storedLogos && storedTimeStamp) {
-      // check if cache expired
-      const cacheAge = Date.now() - parseInt(storedTimeStamp, 10)
-      if (cacheAge < CACHE_EXPIRY_MS) {
-        setLogos(JSON.parse(storedLogos))
-        setLogosLoading(false)
-        return
-      }
-    }
-
     setLogosLoading(true)
     setLogosError(null)
 
     try {
       const teams = await getTeams()
       const logosMap = teams.reduce((acc, team) => {
-        acc[team.name] = team.logoUrl
+        // Check cache first
+        const cachedLogo = getLogoFromCache(team.name)
+        if (cachedLogo) {
+          acc[team.name] = cachedLogo
+        } else {
+          acc[team.name] = team.logoUrl
+          // Cache the logo
+          setLogoInCache(team.name, team.logoUrl)
+        }
         return acc
       }, {})
 
       setLogos(logosMap)
-      localStorage.setItem('teamLogos', JSON.stringify(logosMap))
-      localStorage.setItem('teamLogosTimestamp', Date.now().toString())
     } catch (err) {
       setLogosError(err)
       console.error('Error fetching team logos:', err)
@@ -181,6 +190,7 @@ export const DataProvider = ({ children }) => {
         loading: loading || logosLoading,
         error: error || logosError,
         refresh: fetchMatches,
+        fetchMatchDetails,
         updateMatch,
         createMatch
       }}
@@ -197,9 +207,9 @@ export const useData = () => {
     throw new Error('useData must be used within a MatchDataProvider')
   }
 
-  const { matches, logos, loading, error, refresh, updateMatch, createMatch } =
+  const { matches, logos, loading, error, refresh, fetchMatchDetails, updateMatch, createMatch } =
     context
 
   // Optionally keep `refresh` available for manual use in components
-  return { matches, logos, loading, error, refresh, updateMatch, createMatch }
+  return { matches, logos, loading, error, refresh, fetchMatchDetails, updateMatch, createMatch }
 }

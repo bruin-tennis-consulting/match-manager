@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import Image from 'next/image'
-
 import styles from '@/app/styles/ExtendedList.module.css'
-import getTeams from '@/app/services/getTeams.js'
-
+import { useTeamLogos } from '@/app/hooks/useTeamLogos'
 import Winner from '@/public/Winner.js'
 import Error from '@/public/Error.js'
 import DoubleFault from '@/public/DoubleFault'
@@ -16,29 +14,12 @@ const ExtendedList = ({
   onPointSelect,
   iframe
 }) => {
-  const [clientLogo, setClientLogo] = useState('')
-  const [opponentLogo, setOpponentLogo] = useState('')
+  const { clientLogo, opponentLogo, loading } = useTeamLogos(clientTeam, opponentTeam)
 
-  useEffect(() => {
-    const fetchLogos = async () => {
-      try {
-        const allTeams = await getTeams()
-        console.log(allTeams)
-        const clientLogoURL = allTeams.find(
-          (team) => team.name === clientTeam
-        ).logoUrl
-        const opponentLogoURL = allTeams.find(
-          (team) => team.name === opponentTeam
-        ).logoUrl
-        setClientLogo(clientLogoURL)
-        setOpponentLogo(opponentLogoURL)
-      } catch (error) {
-        console.error('Error fetching data:', error)
-      }
-    }
+  if (loading) {
+    return <div>Loading logos...</div>
+  }
 
-    fetchLogos()
-  })
   const keys = [
     '',
     'serverName',
@@ -62,7 +43,6 @@ const ExtendedList = ({
   ]
 
   const Scroll = (point) => {
-    // useref
     onPointSelect(point.Position)
     if (iframe.current) {
       iframe.current.scrollIntoView({ behavior: 'smooth' })
@@ -87,49 +67,70 @@ const ExtendedList = ({
               {keys.map((key, cellIndex) => (
                 <td className={styles.TD} key={cellIndex}>
                   {cellIndex === 0 ? (
-                    <div className={styles.imageWrapper}>
+                    <div className={styles.playerSchoolImg}>
                       <Image
                         src={
                           item.player1Name === item.serverName
-                            ? clientLogo
-                            : opponentLogo
+                            ? clientLogo || '/images/default-logo.svg'
+                            : opponentLogo || '/images/default-logo.svg'
                         }
                         alt={
                           item.player1Name === item.serverName
                             ? `${clientTeam} logo`
                             : `${opponentTeam} logo`
                         }
-                        layout="fill"
-                        objectFit="contain"
                         className={styles.IMG}
+                        width={30}
+                        height={30}
+                        onError={(e) => {
+                          if (e.target.src !== '/images/default-logo.svg') {
+                            e.target.src = '/images/default-logo.svg'
+                          } else {
+                            e.target.style.display = 'none'
+                          }
+                        }}
                       />
                     </div>
-                  ) : (
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      {cellIndex === keys.length - 2 ? (
-                        <>
-                          {item.lastShotResult === 'Winner' && <Winner />}
-                          {item.lastShotResult === 'Error' && <Error />}
-                          {item.lastShotResult === 'DoubleFault' && (
-                            <DoubleFault />
-                          )}
-                          <span style={{ marginLeft: '4px' }}>
-                            {item.lastShotResult}
-                          </span>
-                        </>
+                  ) : cellIndex === 1 ? (
+                    <div className={styles.serverIcon}>
+                      {item.serverName === item.player1Name ? (
+                        <PlayButton />
                       ) : (
-                        item[key]
+                        <PlayButton />
                       )}
                     </div>
+                  ) : cellIndex === 5 ? (
+                    <div className={styles.winnerIcon}>
+                      {item.pointWonBy === item.player1Name ? (
+                        <Winner />
+                      ) : (
+                        <Winner />
+                      )}
+                    </div>
+                  ) : cellIndex === 6 ? (
+                    <div className={styles.errorIcon}>
+                      {item.lastShotResult === 'Error' ? (
+                        <Error />
+                      ) : item.lastShotResult === 'Double Fault' ? (
+                        <DoubleFault />
+                      ) : null}
+                    </div>
+                  ) : cellIndex === 7 ? (
+                    <div className={styles.rallyCount}>
+                      {item.rallyCount}
+                    </div>
+                  ) : cellIndex === 8 ? (
+                    <button
+                      className={styles.scrollButton}
+                      onClick={() => Scroll(item)}
+                    >
+                      Go to Point
+                    </button>
+                  ) : (
+                    item[key]
                   )}
                 </td>
               ))}
-
-              <td className={styles.TD2}>
-                <button className={styles.button} onClick={() => Scroll(item)}>
-                  <PlayButton />
-                </button>
-              </td>
             </tr>
           ))}
         </tbody>

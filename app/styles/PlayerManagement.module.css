@@ -1,0 +1,197 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.title {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #333;
+  text-align: center;
+}
+
+.message {
+  padding: 0.75rem;
+  margin: 1rem 0;
+  border-radius: 4px;
+  background-color: #e7f3ff;
+  text-align: center;
+}
+
+.error {
+  color: #e53e3e;
+  font-weight: bold;
+}
+
+.createButton {
+  display: block;
+  margin: 0 auto 2rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.createButton:hover {
+  background-color: #3182ce;
+}
+
+.mainContent {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 2rem;
+}
+
+.teamsPanel, .playersPanel, .assignPanel {
+  background-color: #f7fafc;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.teamSelect, .searchInput {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.playersList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.playerCard {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 4px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.playerCard:hover {
+  background-color: #edf2f7;
+}
+
+.playerCard.selected {
+  background-color: #e6fffa;
+  border: 1px solid #4fd1c5;
+}
+
+.playerImage {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+}
+
+.noImage {
+  font-size: 0.8rem;
+  color: #718096;
+  text-align: center;
+}
+
+.playerInfo {
+  flex: 1;
+}
+
+.playerInfo h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+}
+
+.playerInfo p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #4a5568;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.assignPanel {
+  display: flex;
+  flex-direction: column;
+}
+
+.selectedPlayerCard {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.selectedPlayerCard h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.selectedPlayerCard img {
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.selectedPlayerCard p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.targetTeamSelect {
+  margin-top: auto;
+}
+
+.targetTeamSelect select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.assignButton {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #48bb78;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.assignButton:hover {
+  background-color: #38a169;
+}
+
+.assignButton:disabled {
+  background-color: #a0aec0;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1024px) {
+  .mainContent {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+} 

@@ -11,7 +11,7 @@ async function getPlayerData(playerId) {
     const querySnapshot = await getDocs(collection(db, 'teams'))
     const teamsData = querySnapshot.docs.map((doc) => doc.data())
     const mensTeam = teamsData.find(
-      (team) => team.name === 'University of California, Los Angeles (M)'
+      (team) => team.name === 'UCLA (M)'
     )
     const [firstName, lastName] = playerId.split('-')
     const targetPlayer = mensTeam?.players?.find(

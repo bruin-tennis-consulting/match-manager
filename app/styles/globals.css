@@ -160,3 +160,7 @@ img {
   max-width: 100%;
   height: auto;
 }
+
+.root {
+  width: 100%;
+}

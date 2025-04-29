@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import styles from '@/app/styles/PointsList.module.css'
-import getTeams from '@/app/services/getTeams.js'
 import Image from 'next/image'
+import { useTeamLogos } from '@/app/hooks/useTeamLogos'
 
 const PointsList = ({
   pointsData,
@@ -10,26 +10,11 @@ const PointsList = ({
   clientTeam,
   opponentTeam
 }) => {
-  const [clientLogo, setClientLogo] = useState('')
-  const [opponentLogo, setOpponentLogo] = useState('')
+  const { clientLogo, opponentLogo, loading } = useTeamLogos(clientTeam, opponentTeam)
 
-  useEffect(() => {
-    const fetchLogos = async () => {
-      try {
-        const allTeams = await getTeams()
-        const clientLogoURL =
-          allTeams.find((team) => team.name === clientTeam)?.logoUrl || ''
-        const opponentLogoURL =
-          allTeams.find((team) => team.name === opponentTeam)?.logoUrl || ''
-        setClientLogo(clientLogoURL)
-        setOpponentLogo(opponentLogoURL)
-      } catch (error) {
-        console.error('Error fetching data:', error)
-      }
-    }
-
-    fetchLogos()
-  }, [clientTeam, opponentTeam])
+  if (loading) {
+    return <div>Loading logos...</div>
+  }
 
   return (
     <div className={styles.pointsContainer}>
@@ -57,8 +42,8 @@ const PointsList = ({
                     <Image
                       src={
                         point.serverName === point.player1Name
-                          ? clientLogo
-                          : opponentLogo
+                          ? clientLogo || '/images/default-logo.svg'
+                          : opponentLogo || '/images/default-logo.svg'
                       }
                       alt={
                         point.serverName === point.player1Name
@@ -66,9 +51,15 @@ const PointsList = ({
                           : `${opponentTeam} logo`
                       }
                       className={styles.IMG}
-                      width={30} // Adjust size as needed
+                      width={30}
                       height={30}
-                      layout="intrinsic"
+                      onError={(e) => {
+                        if (e.target.src !== '/images/default-logo.svg') {
+                          e.target.src = '/images/default-logo.svg'
+                        } else {
+                          e.target.style.display = 'none'
+                        }
+                      }}
                     />
                   </div>
                 </div>

@@ -1,0 +1,161 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.title {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #333;
+  text-align: center;
+}
+
+.message {
+  padding: 0.75rem;
+  margin: 1rem 0;
+  border-radius: 4px;
+  background-color: #e7f3ff;
+  text-align: center;
+}
+
+.error {
+  color: #e53e3e;
+  font-weight: bold;
+}
+
+.mainContent {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+}
+
+.teamsPanel, .teamDetailsPanel {
+  background-color: #f7fafc;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.teamSelect, .searchInput {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.teamCard {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.teamCard h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 1.3rem;
+  color: #2d3748;
+}
+
+.logoContainer {
+  width: 150px;
+  height: 150px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f7fafc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.logoContainer img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.teamInfo {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background-color: #ebf8ff;
+  border-radius: 4px;
+}
+
+.teamInfo p {
+  margin: 0.5rem 0;
+  color: #2c5282;
+}
+
+.playersList {
+  margin-top: 1.5rem;
+}
+
+.playersList h4 {
+  margin-bottom: 1rem;
+  color: #4a5568;
+}
+
+.playersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.playerCard {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 4px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.playerImage {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 1rem;
+  background-color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.playerImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.playerInfo {
+  flex: 1;
+}
+
+.playerName {
+  margin: 0 0 0.3rem 0;
+  font-weight: 500;
+  color: #2b6cb0;
+}
+
+.playerUTR {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #4a5568;
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .playersGrid {
+    grid-template-columns: 1fr;
+  }
+} 

@@ -24,6 +24,26 @@
   font-weight: 550;
 }
 
+.navLinks {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.navLink {
+  text-decoration: none;
+  font-size: 16px;
+  color: #2c61ab;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.navLink:hover {
+  background-color: #f0f4fa;
+  color: #1a4890;
+}
+
 .buttonBox button {
   width: 100%;
   padding-top: 10px;
@@ -58,9 +78,10 @@
 
   .titleBar {
     height: auto;
-    flex-direction: row;
-    justify-content: space-between;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
+    gap: 10px;
   }
 
   .titleBar h1 {
@@ -68,6 +89,15 @@
     font-weight: 500;
     margin: 0;
     white-space: nowrap;
+  }
+
+  .navLinks {
+    gap: 10px;
+  }
+
+  .navLink {
+    font-size: 14px;
+    padding: 6px 8px;
   }
 
   .buttonBox button {

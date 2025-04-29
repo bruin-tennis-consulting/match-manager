@@ -49,9 +49,15 @@ const PlayerProfileHeader = ({ playerData }) => {
           src={playerData.largePlayerPhoto || defaultPhotoBig.src}
           alt={`${playerData.name}'s profile photo`}
           className={styles.profilePicture}
-          width={200} // Adjust dimensions as needed
+          width={200}
           height={200}
-          layout="intrinsic"
+          onError={(e) => {
+            if (e.target.src !== defaultPhotoBig.src) {
+              e.target.src = defaultPhotoBig.src
+            } else {
+              e.target.style.display = 'none'
+            }
+          }}
         />
       </div>
     </div>
