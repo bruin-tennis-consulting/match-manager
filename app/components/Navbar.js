@@ -11,10 +11,11 @@ const Navbar = () => {
   const pathname = usePathname()
 
   // Check if we're on a management-related page
-  const isManagementPage = pathname === '/match-list' || 
-                         pathname.startsWith('/match-list/') ||
-                         pathname === '/player-management' ||
-                         pathname === '/match-management'
+  const isManagementPage =
+    pathname === '/match-list' ||
+    pathname.startsWith('/match-list/') ||
+    pathname === '/player-management' ||
+    pathname === '/match-management'
 
   return (
     <div className={styles.container}>

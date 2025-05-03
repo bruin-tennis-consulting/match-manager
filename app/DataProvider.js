@@ -6,7 +6,14 @@ import React, {
   useCallback,
   useContext
 } from 'react'
-import { collection, getDocs, doc, updateDoc, addDoc, getDoc } from 'firebase/firestore'
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  addDoc,
+  getDoc
+} from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 import { db, storage } from '@/app/services/initializeFirebase.js'
@@ -207,9 +214,26 @@ export const useData = () => {
     throw new Error('useData must be used within a MatchDataProvider')
   }
 
-  const { matches, logos, loading, error, refresh, fetchMatchDetails, updateMatch, createMatch } =
-    context
+  const {
+    matches,
+    logos,
+    loading,
+    error,
+    refresh,
+    fetchMatchDetails,
+    updateMatch,
+    createMatch
+  } = context
 
   // Optionally keep `refresh` available for manual use in components
-  return { matches, logos, loading, error, refresh, fetchMatchDetails, updateMatch, createMatch }
+  return {
+    matches,
+    logos,
+    loading,
+    error,
+    refresh,
+    fetchMatchDetails,
+    updateMatch,
+    createMatch
+  }
 }

@@ -86,7 +86,7 @@ const MatchPage = ({ params }) => {
     const loadMatchData = async () => {
       try {
         setLoading(true)
-        const match = matches.find(m => m.id === params.slug)
+        const match = matches.find((m) => m.id === params.slug)
         if (!match) {
           setError('Match not found')
           return

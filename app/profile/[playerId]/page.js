@@ -10,9 +10,7 @@ async function getPlayerData(playerId) {
     const cleanString = (str) => str.toLowerCase().replace(/\s+/g, '')
     const querySnapshot = await getDocs(collection(db, 'teams'))
     const teamsData = querySnapshot.docs.map((doc) => doc.data())
-    const mensTeam = teamsData.find(
-      (team) => team.name === 'UCLA (M)'
-    )
+    const mensTeam = teamsData.find((team) => team.name === 'UCLA (M)')
     const [firstName, lastName] = playerId.split('-')
     const targetPlayer = mensTeam?.players?.find(
       (player) =>

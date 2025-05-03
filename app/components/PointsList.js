@@ -10,7 +10,10 @@ const PointsList = ({
   clientTeam,
   opponentTeam
 }) => {
-  const { clientLogo, opponentLogo, loading } = useTeamLogos(clientTeam, opponentTeam)
+  const { clientLogo, opponentLogo, loading } = useTeamLogos(
+    clientTeam,
+    opponentTeam
+  )
 
   if (loading) {
     return <div>Loading logos...</div>

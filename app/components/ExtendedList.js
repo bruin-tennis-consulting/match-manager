@@ -14,7 +14,10 @@ const ExtendedList = ({
   onPointSelect,
   iframe
 }) => {
-  const { clientLogo, opponentLogo, loading } = useTeamLogos(clientTeam, opponentTeam)
+  const { clientLogo, opponentLogo, loading } = useTeamLogos(
+    clientTeam,
+    opponentTeam
+  )
 
   if (loading) {
     return <div>Loading logos...</div>
@@ -116,9 +119,7 @@ const ExtendedList = ({
                       ) : null}
                     </div>
                   ) : cellIndex === 7 ? (
-                    <div className={styles.rallyCount}>
-                      {item.rallyCount}
-                    </div>
+                    <div className={styles.rallyCount}>{item.rallyCount}</div>
                   ) : cellIndex === 8 ? (
                     <button
                       className={styles.scrollButton}
