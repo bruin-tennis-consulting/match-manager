@@ -112,14 +112,17 @@
   gap: 2rem;
 }
 
-.collectionsPanel, .matchDetailsPanel {
+.collectionsPanel,
+.matchDetailsPanel {
   background-color: #f7fafc;
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-.collectionSelect, .searchInput, .teamSelect {
+.collectionSelect,
+.searchInput,
+.teamSelect {
   width: 100%;
   padding: 0.5rem;
   border: 1px solid #e2e8f0;
@@ -329,23 +332,23 @@
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
-  
+
   .teamsContainer {
     flex-direction: column;
     align-items: center;
     gap: 2rem;
   }
-  
+
   .teamDisplay {
     width: 100%;
     max-width: 300px;
   }
-  
+
   .teamSelectContainer {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .updateTypeSelector {
     flex-direction: column;
     align-items: flex-start;
@@ -570,18 +573,19 @@
   .statisticsSection {
     padding: 10px;
   }
-  
+
   .scoreTeamName {
     min-width: 80px;
     font-size: 12px;
   }
-  
-  .scoreCell, .finalScore {
+
+  .scoreCell,
+  .finalScore {
     width: 30px;
     padding: 6px;
     font-size: 12px;
   }
-  
+
   .statsRow {
     font-size: 12px;
   }
@@ -590,4 +594,4 @@
 .assignTeamsSection {
   margin-top: 20px;
   padding: 15px;
-} 
+}

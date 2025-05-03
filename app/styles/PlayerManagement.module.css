@@ -47,14 +47,17 @@
   gap: 2rem;
 }
 
-.teamsPanel, .playersPanel, .assignPanel {
+.teamsPanel,
+.playersPanel,
+.assignPanel {
   background-color: #f7fafc;
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-.teamSelect, .searchInput {
+.teamSelect,
+.searchInput {
   width: 100%;
   padding: 0.5rem;
   border: 1px solid #e2e8f0;
@@ -194,4 +197,4 @@
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
-} 
+}
