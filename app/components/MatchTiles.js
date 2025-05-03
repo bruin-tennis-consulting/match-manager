@@ -32,7 +32,10 @@ const MatchTiles = ({
   tagged = { status: false },
   displaySections = { score: true, info: true, matchup: true } // default all true
 }) => {
-  const { clientLogo, opponentLogo, loading } = useTeamLogos(clientTeam, opponentTeam)
+  const { clientLogo, opponentLogo, loading } = useTeamLogos(
+    clientTeam,
+    opponentTeam
+  )
 
   // to calculate the opacity
   const player1Opacity = isOpaque(player1FinalScores, player2FinalScores)
@@ -155,8 +158,12 @@ const MatchTiles = ({
       {displaySections.matchup && (
         <div className={styles.matchInfoContainer}>
           <div className={styles.containerTitle}>Matchup</div>
-          <div className={styles.containerInfo}>{clientTeam}</div>
-          <div className={styles.containerInfo}>{opponentTeam}</div>
+          <div className={styles.containerInfo}>
+            {clientTeam.replace(/\s+\([MW]\)$/, '')}
+          </div>
+          <div className={styles.containerInfo}>
+            {opponentTeam.replace(/\s+\([MW]\)$/, '')}
+          </div>
         </div>
       )}
     </div>

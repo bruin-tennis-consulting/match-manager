@@ -34,7 +34,7 @@ export default function MatchList() {
   // Generate match names for search
   const matchesWithNames = useMemo(() => {
     return formattedMatches.map((match) => {
-      const matchName = `${match.players.client.firstName} ${match.players.client.lastName} ${match.teams.clientTeam} vs. ${match.players.opponent.firstName} ${match.players.opponent.lastName} ${match.teams.opponentTeam}`
+      const matchName = `${match.players.client.firstName} ${match.players.client.lastName} [${match.teams.clientTeam} vs. ${match.players.opponent.firstName} ${match.players.opponent.lastName} ${match.teams.opponentTeam}`
       return { ...match, matchName }
     })
   }, [formattedMatches])
@@ -134,13 +134,13 @@ export default function MatchList() {
       <div className="list-header">
         <h1 className="list-title">Match List</h1>
         <div className="tabs">
-          <button 
+          <button
             className={`tab ${activeTab === 'matches' ? 'active' : ''}`}
             onClick={() => setActiveTab('matches')}
           >
             Matches
           </button>
-          <button 
+          <button
             className={`tab ${activeTab === 'teams' ? 'active' : ''}`}
             onClick={() => setActiveTab('teams')}
           >
@@ -194,7 +194,9 @@ export default function MatchList() {
                     <div className="action-group">
                       <button
                         className="action-btn secondary"
-                        onClick={() => handleDownload(match.pointsJson, match.id)}
+                        onClick={() =>
+                          handleDownload(match.pointsJson, match.id)
+                        }
                       >
                         Download JSON
                       </button>
@@ -221,7 +223,10 @@ export default function MatchList() {
 
           <div className="stats-actions">
             <div className="stats-download-container">
-              <button className="download-btn" onClick={handleDownloadPlayerStats}>
+              <button
+                className="download-btn"
+                onClick={handleDownloadPlayerStats}
+              >
                 Download Player Stats
               </button>
               {playerStatsProgress > 0 && (
@@ -234,7 +239,10 @@ export default function MatchList() {
             </div>
 
             <div className="stats-download-container">
-              <button className="download-btn" onClick={handleDownloadMatchStats}>
+              <button
+                className="download-btn"
+                onClick={handleDownloadMatchStats}
+              >
                 Download Match Stats
               </button>
               {matchStatsProgress > 0 && (

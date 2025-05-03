@@ -164,7 +164,10 @@ const Dashboard = () => {
                 onClick={() => handleCarouselClick(matchKey)}
               >
                 <Image
-                  src={logos[match.teams.opponentTeam] || '/images/default-logo.svg'}
+                  src={
+                    logos[match.teams.opponentTeam] ||
+                    '/images/default-logo.svg'
+                  }
                   alt="Team Logo"
                   width={50}
                   height={50}
@@ -211,7 +214,9 @@ const Dashboard = () => {
 
               const matchName = matchKey.split('#')[1]
               const displayName =
-                matchName === '_' ? matchName : matchName
+                matchName === '_'
+                  ? matchName
+                  : matchName.replace(/\s+\([MW]\)$/, '')
 
               const parseLocalDate = (dateString) => {
                 const [year, month, day] = dateString.split('-').map(Number)
