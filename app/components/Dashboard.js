@@ -34,7 +34,7 @@ const CarouselItem = React.memo(({ match, isSelected, onClick, logo }) => {
     : `_#${match.matchDetails.event}`
 
   // Use placeholder for image if logo is null/undefined? Currently no placeholder.
-  // const imageSrc = logo || ./placeholder.png
+  // const imageSrc = logo || ./placeholder.
   const imageSrc = logo
 
   return (

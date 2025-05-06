@@ -1,19 +1,13 @@
 'use client'
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useMemo
-} from 'react'
-import { onAuthStateChanged, signOut } from 'firebase/auth'
 
+import { createContext, useContext, useEffect, useState, useMemo } from 'react'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth } from '@/app/services/initializeFirebase'
 import { getUserProfile } from '@/app/services/userInfo'
 import LandingPage from '@/app/components/LandingPage'
 import Loading from './components/Loading'
-
 import styles from '@/app/styles/Navbar.module.css'
+
 const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
@@ -38,6 +32,17 @@ export const AuthProvider = ({ children }) => {
 
   const memoizedUserProfile = useMemo(() => userProfile, [userProfile])
 
+  const handleSignOut = () => {
+    signOut(auth)
+      .then(() => {
+        setAuthUser(null)
+        setUserProfile(null)
+      })
+      .catch((error) => {
+        console.error('Error signing out:', error)
+      })
+  }
+
   if (loading) {
     return (
       <div>
@@ -51,17 +56,6 @@ export const AuthProvider = ({ children }) => {
         </div>
       </div>
     )
-  }
-
-  const handleSignOut = () => {
-    signOut(auth)
-      .then(() => {
-        setAuthUser(null)
-        setUserProfile(null)
-      })
-      .catch((error) => {
-        console.error('Error signing out:', error)
-      })
   }
 
   return (
