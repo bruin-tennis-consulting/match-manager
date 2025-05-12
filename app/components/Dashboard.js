@@ -254,10 +254,11 @@ const Dashboard = () => {
       .search(searchTerm)
       .map((result) => {
         const match = result.item
-        const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
-        return !match.matchDetails.duel
-          ? `_#${match.matchDetails.event}`
-          : `${match.matchDate}#${cleanedOpponentTeam}`
+
+        return match.matchDetails.duel
+          ? `${match.matchDate}#${match.teams.opponentTeam}`
+          : `_#${match.matchDetails.event}`
+
       })
       .filter((matchKey) => {
         if (uniqueMatchKeys.has(matchKey)) return false
@@ -266,21 +267,23 @@ const Dashboard = () => {
       })
   }, [searchTerm, searchIndex])
 
-  // Display match sets calculation
+
+  // displayMatchSets is either:
+  // A) filteredMatchSets from the Search, or
+  // B) selectedMatchSets from Carousel, or
+  // C) default All Matches
   const displayMatchSets = useMemo(() => {
     if (searchTerm) return filteredMatchSets
     if (selectedMatchSets.length > 0) return selectedMatchSets
-
-    const uniqueKeys = new Set()
-    formattedMatches.forEach((match) => {
-      const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
-      const key = match.matchDetails.duel
-        ? `${match.matchDate}#${cleanedOpponentTeam}`
-        : `_#${match.matchDetails.event}`
-      uniqueKeys.add(key)
-    })
-
-    return Array.from(uniqueKeys)
+    return [
+      ...new Set(
+        formattedMatches.map((match) => {
+          return match.matchDetails.duel
+            ? `${match.matchDate}#${match.teams.opponentTeam}`
+            : `_#${match.matchDetails.event}`
+        })
+      )
+    ]
   }, [searchTerm, filteredMatchSets, selectedMatchSets, formattedMatches])
 
   const handleTileClick = useCallback(
@@ -304,6 +307,7 @@ const Dashboard = () => {
     )
   }, [])
 
+  const uniqueKeys = new Set()
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -343,8 +347,7 @@ const Dashboard = () => {
               />
             ))}
       </div>
-
-      {/* Main content with reserved space */}
+      
       <div className={styles.mainContent}>
         <div
           className={styles.matchesSection}
@@ -356,14 +359,105 @@ const Dashboard = () => {
           ) : displayMatchSets.length === 0 ? (
             <div className={styles.noMatches}>No matches found</div>
           ) : (
-            displayMatchSets.map((matchKey, index) => (
-              <MatchSection
-                key={index}
-                matchKey={matchKey}
-                formattedMatches={formattedMatches}
-                onTileClick={handleTileClick}
-              />
-            ))
+            displayMatchSets.map((matchKey, index) => {
+              const singlesMatches = formattedMatches.filter(
+                (match) =>
+                  match.singles &&
+                  ((match.matchDetails.duel &&
+                    matchKey ===
+                      `${match.matchDate}#${match.teams.opponentTeam}`) ||
+                    (!match.matchDetails.duel &&
+                      matchKey === `_#${match.matchDetails.event}`))
+              )
+
+              const doublesMatches = formattedMatches.filter(
+                (match) =>
+                  !match.singles &&
+                  ((match.matchDetails.duel &&
+                    matchKey ===
+                      `${match.matchDate}#${match.teams.opponentTeam}`) ||
+                    (!match.matchDetails.duel &&
+                      matchKey === `_#${match.matchDetails.event}`))
+              )
+
+              const matchName = matchKey.split('#')[1]
+              const displayName =
+                matchName === '_' ? matchName : cleanTeamName(matchName)
+
+              const parseLocalDate = (dateString) => {
+                const [year, month, day] = dateString.split('-').map(Number)
+                return new Date(year, month - 1, day)
+              }
+
+              const allDisplayedMatches = [...singlesMatches, ...doublesMatches]
+              const dates = allDisplayedMatches
+                .map((m) => parseLocalDate(m.matchDate))
+                .sort((a, b) => a - b)
+
+              let displayDate = ''
+              if (dates.length === 0) {
+                displayDate = 'Date unavailable'
+              } else if (
+                dates.length === 1 ||
+                dates[0].getTime() === dates[dates.length - 1].getTime()
+              ) {
+                displayDate = dates[0].toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })
+              } else {
+                const [startDate, endDate] = [dates[0], dates[dates.length - 1]]
+                const sameMonth = startDate.getMonth() === endDate.getMonth()
+                const sameYear =
+                  startDate.getFullYear() === endDate.getFullYear()
+
+                if (sameMonth && sameYear) {
+                  displayDate = `${startDate.toLocaleString('en-US', {
+                    month: 'long'
+                  })} ${startDate.getDate()}–${endDate.getDate()}, ${startDate.getFullYear()}`
+                } else if (sameYear) {
+                  displayDate = `${startDate.toLocaleString('en-US', {
+                    month: 'long',
+                    day: 'numeric'
+                  })} – ${endDate.toLocaleString('en-US', {
+                    month: 'long',
+                    day: 'numeric'
+                  })}, ${startDate.getFullYear()}`
+                } else {
+                  displayDate = `${startDate.toLocaleString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })} – ${endDate.toLocaleString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}`
+                }
+              }
+
+              return (
+                <div key={index} className={styles.matchSection}>
+                  <div className={styles.matchContainer}>
+                    <div className={styles.matchHeader}>
+                      <h3>{displayName}</h3>
+                      <span className={styles.date}>{displayDate}</span>
+                    </div>
+                    <DashTileContainer
+                      matches={singlesMatches}
+                      matchType="Singles"
+                      onTileClick={handleTileClick}
+                    />
+                    <DashTileContainer
+                      matches={doublesMatches}
+                      matchType="Doubles"
+                      onTileClick={handleTileClick}
+                    />
+                  </div>
+                </div>
+              )
+            })
           )}
         </div>
 
