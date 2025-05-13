@@ -11,15 +11,15 @@ const RosterTile = ({ firstName, lastName, playerPhoto }) => {
     <div className={styles.playerContainer}>
       <Link href={`/profile/${playerId}`} style={{ textDecoration: 'none' }}>
         <div className={styles.infoContainer}>
-          <Image
-            className={styles.playerImage}
-            loading="lazy"
-            src={playerPhoto}
-            alt={`Photo of ${firstName} ${lastName}`}
-            width={50} // Adjust as needed
-            height={50}
-            layout="intrinsic"
-          />
+          <div className={styles.imageWrapper}>
+            <Image
+              src={playerPhoto}
+              alt={`Photo of ${firstName} ${lastName}`}
+              width={50}
+              height={50}
+              className={styles.playerImage}
+            />
+          </div>
 
           <div className={styles.textContainer}>
             <div className={styles.playerName}>

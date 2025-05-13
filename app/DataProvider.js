@@ -6,7 +6,15 @@ import React, {
   useCallback,
   useContext
 } from 'react'
-import { collection, getDocs, doc, updateDoc, addDoc } from 'firebase/firestore'
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  addDoc,
+  query,
+  where
+} from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 import { db, storage } from '@/app/services/initializeFirebase.js'
@@ -42,16 +50,15 @@ export const DataProvider = ({ children }) => {
       // Create all promises at once instead of awaiting each one sequentially
       const collectionPromises = userProfile.collections.map(async (col) => {
         const colRef = collection(db, col)
-        const querySnapshot = await getDocs(colRef)
+        const filteredQuery = query(colRef, where('_deleted', '==', false))
+        const querySnapshot = await getDocs(filteredQuery)
 
         // Process documents in bulk rather than in forEach
-        return querySnapshot.docs
-          .filter((doc) => !doc.data()._deleted)
-          .map((doc) => ({
-            id: doc.id,
-            collection: col,
-            ...doc.data()
-          }))
+        return querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          collection: col,
+          ...doc.data()
+        }))
       })
 
       // Wait for all promises to resolve
@@ -113,6 +120,7 @@ export const DataProvider = ({ children }) => {
         }
         console.log(pdfUrl)
         newMatchData.pdfFile = pdfUrl
+        newMatchData._deleted = false
 
         const newMatch = {
           id: 'temp-id',
