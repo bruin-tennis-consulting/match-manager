@@ -1,5 +1,10 @@
 @import url('https://api.fontshare.com/css?f[]=clash-display@100,300,400,500&display=swap');
 
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
 /* :root {
   --max-width: 1100px;
   --border-radius: 12px;
