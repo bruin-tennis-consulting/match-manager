@@ -57,6 +57,7 @@ const CarouselItem = React.memo(({ match, isSelected, onClick, logo }) => {
     </div>
   )
 })
+CarouselItem.displayName = 'CarouselItem'
 
 const SearchBox = React.memo(({ searchTerm, onSearch, onClear }) => {
   const debouncedSearch = useCallback(
@@ -93,6 +94,8 @@ const SearchBox = React.memo(({ searchTerm, onSearch, onClear }) => {
     </div>
   )
 })
+
+SearchBox.displayName = 'SearchBox'
 
 // MatchSection with placeholder heights
 const MatchSection = React.memo(
@@ -199,6 +202,8 @@ const MatchSection = React.memo(
   }
 )
 
+MatchSection.displayName = 'MatchSection'
+
 // Main Dashboard component
 const Dashboard = () => {
   const router = useRouter()
@@ -258,7 +263,6 @@ const Dashboard = () => {
         return match.matchDetails.duel
           ? `${match.matchDate}#${match.teams.opponentTeam}`
           : `_#${match.matchDetails.event}`
-
       })
       .filter((matchKey) => {
         if (uniqueMatchKeys.has(matchKey)) return false
@@ -266,7 +270,6 @@ const Dashboard = () => {
         return true
       })
   }, [searchTerm, searchIndex])
-
 
   // displayMatchSets is either:
   // A) filteredMatchSets from the Search, or
@@ -307,7 +310,6 @@ const Dashboard = () => {
     )
   }, [])
 
-  const uniqueKeys = new Set()
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -347,7 +349,7 @@ const Dashboard = () => {
               />
             ))}
       </div>
-      
+
       <div className={styles.mainContent}>
         <div
           className={styles.matchesSection}
