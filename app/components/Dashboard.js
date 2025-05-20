@@ -28,9 +28,8 @@ const formatMatches = (matches) => {
 
 // Memoized CarouselItem with fixed dimensions but original logo container
 const CarouselItem = React.memo(({ match, isSelected, onClick, logo }) => {
-  const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
   const matchKey = match.matchDetails.duel
-    ? `${match.matchDate}#${cleanedOpponentTeam}`
+    ? `${match.matchDate}#${match.teams.opponentTeam}`
     : `_#${match.matchDetails.event}`
 
   // Use placeholder for image if logo is null/undefined? Currently no placeholder.
@@ -342,7 +341,7 @@ const Dashboard = () => {
                 logo={logos[match.teams.opponentTeam]}
                 isSelected={selectedMatchSets.includes(
                   match.matchDetails.duel
-                    ? `${match.matchDate}#${cleanTeamName(match.teams.opponentTeam)}`
+                    ? `${match.matchDate}#${match.teams.opponentTeam}`
                     : `_#${match.matchDetails.event}`
                 )}
                 onClick={handleCarouselClick}
