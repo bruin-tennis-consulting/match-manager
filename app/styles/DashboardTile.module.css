@@ -119,7 +119,7 @@
   }
 
   .playerInfoName {
-    font-size: 4vw;
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
     padding-left: 6px;
   }
 
