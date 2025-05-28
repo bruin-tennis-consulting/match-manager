@@ -6,7 +6,15 @@ import React, {
   useCallback,
   useContext
 } from 'react'
-import { collection, getDocs, doc, updateDoc, addDoc } from 'firebase/firestore'
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  addDoc,
+  query,
+  where
+} from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 import { db, storage } from '@/app/services/initializeFirebase.js'
@@ -31,36 +39,38 @@ export const DataProvider = ({ children }) => {
 
   const { userProfile } = useAuth()
 
+  // Optmized fetchMatches version
   const fetchMatches = useCallback(async () => {
-    if (userProfile && userProfile.collections) {
-      setLoading(true)
-      setError(null)
-      const allMatches = []
+    if (!userProfile?.collections?.length) return
 
-      try {
-        for (const col of userProfile.collections) {
-          const colRef = collection(db, col)
-          const querySnapshot = await getDocs(colRef)
+    setLoading(true)
+    setError(null)
 
-          querySnapshot.docs.forEach((doc) => {
-            const matchData = doc.data()
-            // Only add matches that are not marked as deleted
-            if (!matchData._deleted) {
-              allMatches.push({
-                id: doc.id,
-                collection: col, // Track which collection this match belongs to
-                ...matchData
-              })
-            }
-          })
-        }
+    try {
+      // Create all promises at once instead of awaiting each one sequentially
+      const collectionPromises = userProfile.collections.map(async (col) => {
+        const colRef = collection(db, col)
+        const filteredQuery = query(colRef, where('_deleted', '==', false))
+        const querySnapshot = await getDocs(filteredQuery)
 
-        setMatches(allMatches)
-      } catch (err) {
-        setError(err)
-      } finally {
-        setLoading(false)
-      }
+        // Process documents in bulk rather than in forEach
+        return querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          collection: col,
+          ...doc.data()
+        }))
+      })
+
+      // Wait for all promises to resolve
+      const matchesArrays = await Promise.all(collectionPromises)
+
+      // Flatten the array of arrays
+      setMatches(matchesArrays.flat())
+    } catch (err) {
+      console.error('Error fetching matches:', err)
+      setError(err)
+    } finally {
+      setLoading(false)
     }
   }, [userProfile])
 
@@ -110,6 +120,7 @@ export const DataProvider = ({ children }) => {
         }
         console.log(pdfUrl)
         newMatchData.pdfFile = pdfUrl
+        newMatchData._deleted = false
 
         const newMatch = {
           id: 'temp-id',

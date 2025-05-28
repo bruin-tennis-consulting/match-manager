@@ -2,7 +2,11 @@
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '@/app/services/initializeFirebase'
 import { notFound } from 'next/navigation'
-import PlayerProfile from '@/app/components/PlayerProfile'
+import dynamic from 'next/dynamic'
+
+const PlayerProfile = dynamic(() => import('@/app/components/PlayerProfile'), {
+  ssr: false
+})
 
 // Server Side Rendering to fetch player data
 async function getPlayerData(playerId) {

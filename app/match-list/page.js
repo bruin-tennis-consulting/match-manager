@@ -28,6 +28,7 @@ export default function MatchList() {
   const { matches, updateMatch, refresh } = useData()
   const [playerStatsProgress, setPlayerStatsProgress] = useState(0)
   const [matchStatsProgress, setMatchStatsProgress] = useState(0)
+  const [collectionProgress, setCollectionProgress] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
 
   const formattedMatches = formatMatches(matches)
@@ -122,6 +123,30 @@ export default function MatchList() {
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
         setMatchStatsProgress(0)
+      }
+    }, 300)
+  }
+
+  const handleDownloadCollectionAsZip = () => {
+    if (
+      !userProfile ||
+      !userProfile.collections ||
+      userProfile.collections.length === 0
+    ) {
+      return
+    }
+
+    const collectionName = userProfile.collections[0]
+    let progress = 0
+
+    const interval = setInterval(() => {
+      progress += 10
+      setCollectionProgress(progress)
+      if (progress >= 100) {
+        clearInterval(interval)
+        downloadCollectionAsZip(collectionName).finally(() => {
+          setCollectionProgress(0)
+        })
       }
     }, 300)
   }
@@ -229,11 +254,22 @@ export default function MatchList() {
             />
           )}
         </div>
-        <button
-          onClick={() => downloadCollectionAsZip(userProfile.collections[0])}
-        >
-          Download Collection
-        </button>
+
+        <div className="stats-download-container">
+          <button
+            className="download-btn"
+            onClick={handleDownloadCollectionAsZip}
+          >
+            Download Collection As Zip
+          </button>
+          {collectionProgress > 0 && (
+            <progress
+              value={collectionProgress}
+              max="100"
+              className="download-progress"
+            />
+          )}
+        </div>
       </div>
     </div>
   )
