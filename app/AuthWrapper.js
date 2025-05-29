@@ -1,17 +1,13 @@
 'use client'
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useMemo
-} from 'react'
-import { onAuthStateChanged, signOut } from 'firebase/auth'
 
+import { createContext, useContext, useEffect, useState, useMemo } from 'react'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth } from '@/app/services/initializeFirebase'
 import { getUserProfile } from '@/app/services/userInfo'
 import LandingPage from '@/app/components/LandingPage'
 import Loading from './components/Loading'
+import styles from '@/app/styles/Navbar.module.css'
+
 const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
@@ -36,14 +32,6 @@ export const AuthProvider = ({ children }) => {
 
   const memoizedUserProfile = useMemo(() => userProfile, [userProfile])
 
-  if (loading) {
-    return (
-      <div>
-        <Loading prompt={'Logging In...'} />
-      </div>
-    )
-  }
-
   const handleSignOut = () => {
     signOut(auth)
       .then(() => {
@@ -53,6 +41,21 @@ export const AuthProvider = ({ children }) => {
       .catch((error) => {
         console.error('Error signing out:', error)
       })
+  }
+
+  if (loading) {
+    return (
+      <div>
+        <div className={styles.container} style={{ marginBottom: '100px' }}>
+          <header className={styles.header}>
+            <div className={styles.titleBar}>
+              <h1 className={styles.noUnderline}>BSA | Tennis Consulting</h1>
+            </div>
+            <Loading prompt={'Logging In...'} />
+          </header>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -7,6 +7,7 @@ import styles from '@/app/styles/Roster.module.css'
 const RosterList = () => {
   // create roster list then loop through
   const [mensRoster, setMensRoster] = useState([]) // State to hold the fetched teams
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -29,6 +30,8 @@ const RosterList = () => {
         setMensRoster(playersArray)
       } catch (error) {
         console.error('Error retrieving teams:', error)
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -41,14 +44,23 @@ const RosterList = () => {
       <h1>Roster</h1>
       <div>
         {/* Loop through roster  */}
-        {mensRoster.map((player, index) => (
-          <RosterTile
-            key={index}
-            firstName={player.firstName}
-            lastName={player.lastName}
-            playerPhoto={player.photoUrl}
-          />
-        ))}
+        {loading
+          ? Array(8)
+              .fill(0)
+              .map((_, i) => (
+                <div
+                  key={i}
+                  className={`${styles.rosterTile} ${styles.placeholderTile}`}
+                />
+              ))
+          : mensRoster.map((player, index) => (
+              <RosterTile
+                key={index}
+                firstName={player.firstName}
+                lastName={player.lastName}
+                playerPhoto={player.photoUrl}
+              />
+            ))}
       </div>
     </div>
   )

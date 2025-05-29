@@ -17,6 +17,7 @@
     "firebase": "^10.7.1",
     "firebase-admin": "^13.1.0",
     "fuse.js": "^7.0.0",
+    "jszip": "^3.10.1",
     "libraries": "^0.0.3",
     "next": "^14.1.0",
     "react": "^18.2.0",
@@ -37,7 +38,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-promise": "^6.6.0",
-    "husky": "^9.1.5",
+    "husky": "^9.1.7",
     "lint-staged": "^15.2.9",
     "prettier": "^3.3.3"
   },

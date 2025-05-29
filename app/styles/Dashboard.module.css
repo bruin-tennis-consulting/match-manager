@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'DM Sans';
+  src: url('/fonts/dm-sans.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap; /* THIS is key */
+}
+
 .container {
   padding: 20px;
   margin: 0 auto;
@@ -360,5 +368,24 @@
 
   .carousel {
     margin-bottom: 17px;
+  }
+}
+
+.placeholderCard {
+  width: 70px;
+  height: 30px;
+  background: #f0f0f0;
+  animation: pulse 0.6s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0.6;
   }
 }

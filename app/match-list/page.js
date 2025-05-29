@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react'
 import Link from 'next/link'
 import Fuse from 'fuse.js'
+import { useAuth } from '@/app/AuthWrapper.js'
 import { useData } from '@/app/DataProvider'
 import '../styles/MatchList.css'
 import TeamManagement from '@/app/components/TeamManagement'
@@ -10,6 +11,7 @@ import {
   aggregatePlayerStats,
   exportStatsToCSV
 } from '@/app/services/playerAggregateScript.js'
+import { downloadCollectionAsZip } from '@/app/services/downloadCollectionAsZip'
 
 import {
   calculateMatchStats,
@@ -23,9 +25,11 @@ const formatMatches = (matches) => {
 }
 
 export default function MatchList() {
+  const { userProfile } = useAuth()
   const { matches, updateMatch, refresh } = useData()
   const [playerStatsProgress, setPlayerStatsProgress] = useState(0)
   const [matchStatsProgress, setMatchStatsProgress] = useState(0)
+  const [collectionProgress, setCollectionProgress] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
   const [activeTab, setActiveTab] = useState('matches') // 'matches' or 'teams'
 
@@ -121,6 +125,30 @@ export default function MatchList() {
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
         setMatchStatsProgress(0)
+      }
+    }, 300)
+  }
+
+  const handleDownloadCollectionAsZip = () => {
+    if (
+      !userProfile ||
+      !userProfile.collections ||
+      userProfile.collections.length === 0
+    ) {
+      return
+    }
+
+    const collectionName = userProfile.collections[0]
+    let progress = 0
+
+    const interval = setInterval(() => {
+      progress += 10
+      setCollectionProgress(progress)
+      if (progress >= 100) {
+        clearInterval(interval)
+        downloadCollectionAsZip(collectionName).finally(() => {
+          setCollectionProgress(0)
+        })
       }
     }, 300)
   }
@@ -248,6 +276,22 @@ export default function MatchList() {
               {matchStatsProgress > 0 && (
                 <progress
                   value={matchStatsProgress}
+                  max="100"
+                  className="download-progress"
+                />
+              )}
+            </div>
+
+            <div className="stats-download-container">
+              <button
+                className="download-btn"
+                onClick={handleDownloadCollectionAsZip}
+              >
+                Download Collection As Zip
+              </button>
+              {collectionProgress > 0 && (
+                <progress
+                  value={collectionProgress}
                   max="100"
                   className="download-progress"
                 />
