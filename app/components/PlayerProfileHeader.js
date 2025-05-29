@@ -5,6 +5,10 @@ import StatBox from '@/app/components/StatBox'
 import Image from 'next/image'
 
 const PlayerProfileHeader = ({ playerData }) => {
+  // Use largePlayerPhoto if available, otherwise use regular photo, then fallback to default
+  const photoToUse =
+    playerData.largePlayerPhoto || playerData.photo || defaultPhotoBig.src
+
   return (
     <div className={styles.profileHeader}>
       {/* Player Basic Information */}
@@ -46,7 +50,7 @@ const PlayerProfileHeader = ({ playerData }) => {
 
       <div className={styles.profilePictureContainer}>
         <Image
-          src={playerData.largePlayerPhoto || defaultPhotoBig.src}
+          src={photoToUse}
           alt={`${playerData.name}'s profile photo`}
           className={styles.profilePicture}
           width={200}

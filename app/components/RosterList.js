@@ -25,7 +25,8 @@ const RosterList = () => {
         const playersArray = mensTeam.players.map((player) => ({
           firstName: player.firstName || '',
           lastName: player.lastName || '',
-          photoUrl: player.photo || ''
+          photo: player.photo || null,
+          largePlayerPhoto: player.largePlayerPhoto || null
         }))
         setMensRoster(playersArray)
       } catch (error) {
@@ -58,7 +59,8 @@ const RosterList = () => {
                 key={index}
                 firstName={player.firstName}
                 lastName={player.lastName}
-                playerPhoto={player.photoUrl}
+                photo={player.photo}
+                largePlayerPhoto={player.largePlayerPhoto}
               />
             ))}
       </div>
