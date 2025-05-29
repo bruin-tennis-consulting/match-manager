@@ -20,6 +20,19 @@ const cleanTeamName = (teamName) => {
   return teamName.replace(/\s*\([MmWw]\)\s*$/, '').trim()
 }
 
+const getUniqueMatches = (matches, cleanTeamName) => {
+  const uniqueKeys = new Set()
+  return matches.filter((match) => {
+    const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
+    let matchKey = `${match.matchDate}#${cleanedOpponentTeam}`
+    if (!match.matchDetails.duel) matchKey = `_#${match.matchDetails.event}`
+
+    if (uniqueKeys.has(matchKey)) return false
+    uniqueKeys.add(matchKey)
+    return true
+  })
+}
+
 const formatMatches = (matches) => {
   return matches
     .filter((match) => match.version === 'v1')
@@ -223,6 +236,11 @@ const Dashboard = () => {
     return formatted
   }, [matches, isLoaded])
 
+  const uniqueMatches = useMemo(
+    () => getUniqueMatches(formattedMatches, cleanTeamName),
+    [formattedMatches]
+  )
+
   // Mobile detection useEffect
   useEffect(() => {
     const checkIfMobile = () => setIsMobile(window.innerWidth < 400)
@@ -324,8 +342,7 @@ const Dashboard = () => {
 
       <div className={styles.carousel}>
         {!formattedMatches.length
-          ? // Placeholder skeletons for carousel items
-            Array(10)
+          ? Array(10)
               .fill(0)
               .map((_, i) => (
                 <div
@@ -333,20 +350,21 @@ const Dashboard = () => {
                   className={`${styles.card} ${styles.placeholderCard}`}
                 />
               ))
-          : // Map over formattedMatches to render each CarouselItem
-            formattedMatches.map((match, index) => (
-              <CarouselItem
-                key={index}
-                match={match}
-                logo={logos[match.teams.opponentTeam]}
-                isSelected={selectedMatchSets.includes(
-                  match.matchDetails.duel
-                    ? `${match.matchDate}#${match.teams.opponentTeam}`
-                    : `_#${match.matchDetails.event}`
-                )}
-                onClick={handleCarouselClick}
-              />
-            ))}
+          : uniqueMatches.map((match) => {
+              const matchKey = match.matchDetails.duel
+                ? `${match.matchDate}#${match.teams.opponentTeam}`
+                : `_#${match.matchDetails.event}`
+
+              return (
+                <CarouselItem
+                  key={matchKey}
+                  match={match}
+                  logo={logos[match.teams.opponentTeam]}
+                  isSelected={selectedMatchSets.includes(matchKey)}
+                  onClick={handleCarouselClick}
+                />
+              )
+            })}
       </div>
 
       <div className={styles.mainContent}>
