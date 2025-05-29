@@ -38,7 +38,7 @@ export default function MatchList() {
   // Generate match names for search
   const matchesWithNames = useMemo(() => {
     return formattedMatches.map((match) => {
-      const matchName = `${match.players.client.firstName} ${match.players.client.lastName} [${match.teams.clientTeam} vs. ${match.players.opponent.firstName} ${match.players.opponent.lastName} ${match.teams.opponentTeam}`
+      const matchName = `${match.players.client.firstName} ${match.players.client.lastName} [${match.teams.clientTeam} vs. ${match.players.opponent.firstName} ${match.players.opponent.lastName}] ${match.teams.opponentTeam}`
       return { ...match, matchName }
     })
   }, [formattedMatches])
