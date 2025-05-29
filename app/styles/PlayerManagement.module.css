@@ -198,3 +198,197 @@
     gap: 1.5rem;
   }
 }
+
+/* Modal styles */
+.modal {
+  position: fixed;
+  z-index: 1000; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalContent {
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 500px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+  position: relative;
+}
+
+.closeButton {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  position: absolute;
+  top: 10px;
+  right: 20px;
+}
+
+.closeButton:hover,
+.closeButton:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.modalInput,
+.modalTextarea {
+  width: calc(100% - 20px);
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.modalTextarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.modalButton {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.modalButton:hover {
+  background-color: #0056b3;
+}
+
+.actionButton {
+  background-color: #28a745; /* Green for create/add actions */
+  color: white;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px; /* Space from the select dropdown or list */
+  transition: background-color 0.3s ease;
+}
+
+.actionButton:hover {
+  background-color: #218838;
+}
+
+.actionButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Input error style for modals */
+.inputError {
+  color: #e53e3e; /* Red color for errors */
+  font-size: 0.875rem; /* Smaller font size */
+  margin-top: -10px; /* Adjust to position it nicely below the input */
+  margin-bottom: 10px;
+  text-align: left; /* Align to the left under the input */
+}
+
+.fileInputLabel {
+  display: block; /* Make it a block to take full width if needed */
+  margin-top: 10px; /* Space above the label */
+  margin-bottom: 5px; /* Space between label and input */
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #333;
+  text-align: left;
+}
+
+.fileNameDisplay {
+  font-size: 0.8rem;
+  color: #555;
+  margin-top: -5px; /* Adjust to be closer to the file input */
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+/* Styles for grouped inputs and specific input sizes in modals */
+.inputGroup {
+  display: flex;
+  align-items: center; /* Vertically align items in the group */
+  justify-content: space-between; /* Distribute space for items like Age/Class */
+  margin-bottom: 15px;
+  gap: 10px; /* Add some space between elements in a group */
+}
+
+.inputGroup .inputLabel {
+  margin-bottom: 0; /* Remove bottom margin if label is part of a group */
+  flex-basis: auto; /* Allow label to take its content size */
+}
+
+.inputGroup > label { /* For direct label children of inputGroup like Age/Class labels */
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.inputLabel { /* General label style if not already covered */
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #333;
+  text-align: left;
+}
+
+.radioGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Space between radio buttons */
+}
+
+.radioGroup label {
+  font-weight: normal;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.modalInputSmall {
+  width: 80px; /* Smaller width for inputs like height feet/inches */
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.editButton {
+  background-color: #4a90e2; /* Blue color for edit action */
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 15px;
+  transition: background-color 0.3s ease;
+}
+
+.editButton:hover {
+  background-color: #357abd;
+}
+
+.editButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}

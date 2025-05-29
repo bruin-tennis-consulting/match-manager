@@ -30,7 +30,7 @@ const Navbar = () => {
             {isManagementPage && (
               <>
                 <Link href="/player-management" className={styles.navLink}>
-                  Player Management
+                  Player/Team Upload
                 </Link>
                 <Link href="/match-management" className={styles.navLink}>
                   Match Management
