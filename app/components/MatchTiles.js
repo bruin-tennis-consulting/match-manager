@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import Image from 'next/image'
-
 import styles from '@/app/styles/MatchTiles.module.css'
-import getTeams from '@/app/services/getTeams.js'
+import { useTeamLogos } from '@/app/hooks/useTeamLogos'
 
 // Calculate opacity for individual scores
 const isOpaque = (player1Scores, player2Scores) => {
@@ -33,35 +32,17 @@ const MatchTiles = ({
   tagged = { status: false },
   displaySections = { score: true, info: true, matchup: true } // default all true
 }) => {
-  const [clientLogo, setClientLogo] = useState('')
-  const [opponentLogo, setOpponentLogo] = useState('')
+  const { clientLogo, opponentLogo, loading } = useTeamLogos(
+    clientTeam,
+    opponentTeam
+  )
 
-  // Remove (M) and (W) from team names
-  const changedClientTeam = clientTeam.replace(/\s*\(M\)|\s*\(W\)/g, '')
-  const changedOpponentTeam = opponentTeam.replace(/\s*\(M\)|\s*\(W\)/g, '')
-
-  // to calculate the opcaity
+  // to calculate the opacity
   const player1Opacity = isOpaque(player1FinalScores, player2FinalScores)
 
-  useEffect(() => {
-    const fetchLogos = async () => {
-      try {
-        const allTeams = await getTeams()
-        const clientLogoURL = allTeams.find(
-          (team) => team.name === clientTeam
-        ).logoUrl
-        const opponentLogoURL = allTeams.find(
-          (team) => team.name === opponentTeam
-        ).logoUrl
-        setClientLogo(clientLogoURL)
-        setOpponentLogo(opponentLogoURL)
-      } catch (error) {
-        console.error('Error fetching data:', error)
-      }
-    }
-
-    fetchLogos()
-  }, [clientTeam, opponentTeam])
+  if (loading) {
+    return <div>Loading logos...</div>
+  }
 
   // Render function for scores
   const renderScore = (score, index, isPlayer1, tieScores) => {
@@ -114,11 +95,17 @@ const MatchTiles = ({
         <div className={styles.playerInfo}>
           <div className={styles.playerSchoolImgcontainerhome}>
             <Image
-              src={clientLogo}
+              src={clientLogo || '/images/default-logo.svg'}
               alt={`${clientTeam} logo`}
-              width={50} // Adjust as needed
+              width={50}
               height={50}
-              layout="intrinsic"
+              onError={(e) => {
+                if (e.target.src !== '/images/default-logo.svg') {
+                  e.target.src = '/images/default-logo.svg'
+                } else {
+                  e.target.style.display = 'none'
+                }
+              }}
             />
           </div>
           <div className={styles.playerInfoName}>
@@ -135,10 +122,17 @@ const MatchTiles = ({
         <div className={styles.playerInfo}>
           <div className={styles.playerSchoolImgcontainer}>
             <Image
-              src={opponentLogo}
+              src={opponentLogo || '/images/default-logo.svg'}
               alt={`${opponentTeam} logo`}
-              layout="fill"
-              objectFit="contain"
+              width={50}
+              height={50}
+              onError={(e) => {
+                if (e.target.src !== '/images/default-logo.svg') {
+                  e.target.src = '/images/default-logo.svg'
+                } else {
+                  e.target.style.display = 'none'
+                }
+              }}
             />
           </div>
           <div className={styles.playerInfoName}>
@@ -164,8 +158,12 @@ const MatchTiles = ({
       {displaySections.matchup && (
         <div className={styles.matchInfoContainer}>
           <div className={styles.containerTitle}>Matchup</div>
-          <div className={styles.containerInfo}>{changedClientTeam}</div>
-          <div className={styles.containerInfo}>{changedOpponentTeam}</div>
+          <div className={styles.containerInfo}>
+            {clientTeam.replace(/\s+\([MW]\)$/, '')}
+          </div>
+          <div className={styles.containerInfo}>
+            {opponentTeam.replace(/\s+\([MW]\)$/, '')}
+          </div>
         </div>
       )}
     </div>

@@ -11,30 +11,57 @@ const PlayerProfile = dynamic(() => import('@/app/components/PlayerProfile'), {
 // Server Side Rendering to fetch player data
 async function getPlayerData(playerId) {
   try {
-    const cleanString = (str) => str.toLowerCase().replace(/\s+/g, '')
+    // Format name for URL - handle special characters, multiple spaces, and accents
+    const cleanString = (str) => {
+      return (
+        str
+          .toLowerCase()
+          // Replace accented characters with non-accented versions
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          // Replace multiple spaces with single dash
+          .replace(/\s+/g, '-')
+          // Remove any non-alphanumeric characters except dashes
+          .replace(/[^a-z0-9-]/g, '')
+          // Remove multiple consecutive dashes
+          .replace(/-+/g, '-')
+          // Remove leading/trailing dashes
+          .replace(/^-+|-+$/g, '')
+      )
+    }
+
     const querySnapshot = await getDocs(collection(db, 'teams'))
     const teamsData = querySnapshot.docs.map((doc) => doc.data())
     const mensTeam = teamsData.find(
       (team) => team.name === 'University of California, Los Angeles (M)'
     )
+
+    if (!mensTeam?.players) {
+      console.error("Men's team or players not found")
+      return null
+    }
+
+    // Find player by matching the cleaned versions of first and last names
     const [firstName, lastName] = playerId.split('-')
-    const targetPlayer = mensTeam?.players?.find(
+    const targetPlayer = mensTeam.players.find(
       (player) =>
-        cleanString(player.firstName) === cleanString(firstName) &&
-        cleanString(player.lastName) === cleanString(lastName)
+        cleanString(player.firstName) === firstName &&
+        cleanString(player.lastName) === lastName
     )
 
     if (!targetPlayer) {
+      console.error('Player not found:', playerId)
       return null
     }
 
     return {
       name: `${targetPlayer.firstName} ${targetPlayer.lastName}`,
-      bio: targetPlayer.bio || 'No bio available', // Default value
+      bio: targetPlayer.bio || 'No bio available',
       height: targetPlayer.height,
       class: targetPlayer.class,
       age: targetPlayer.age,
-      largePlayerPhoto: targetPlayer.largePlayerPhoto, // Add default image
+      photo: targetPlayer.photo || null,
+      largePlayerPhoto: targetPlayer.largePlayerPhoto || null,
       overallWins: targetPlayer.stats?.overallWins || 0,
       singleWins: targetPlayer.stats?.singleWins || 0,
       doubleWins: targetPlayer.stats?.doubleWins || 0

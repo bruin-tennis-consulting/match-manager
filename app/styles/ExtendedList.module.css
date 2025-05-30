@@ -18,9 +18,9 @@
 
 .imageWrapper {
   position: relative; /* Required for layout="fill" */
-  width: 3.7vw;       /* Set your desired width */
-  height: 3.7vw;      /* Set your desired height */
-  overflow: hidden;   /* Ensures the image doesn't overflow the container */
+  width: 3.7vw; /* Set your desired width */
+  height: 3.7vw; /* Set your desired height */
+  overflow: hidden; /* Ensures the image doesn't overflow the container */
 }
 
 .TD {

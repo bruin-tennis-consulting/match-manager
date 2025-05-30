@@ -6,6 +6,7 @@ import Fuse from 'fuse.js'
 import { useAuth } from '@/app/AuthWrapper.js'
 import { useData } from '@/app/DataProvider'
 import '../styles/MatchList.css'
+import TeamManagement from '@/app/components/TeamManagement'
 import {
   aggregatePlayerStats,
   exportStatsToCSV
@@ -30,13 +31,14 @@ export default function MatchList() {
   const [matchStatsProgress, setMatchStatsProgress] = useState(0)
   const [collectionProgress, setCollectionProgress] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
+  const [activeTab, setActiveTab] = useState('matches') // 'matches' or 'teams'
 
   const formattedMatches = formatMatches(matches)
 
   // Generate match names for search
   const matchesWithNames = useMemo(() => {
     return formattedMatches.map((match) => {
-      const matchName = `${match.players.client.firstName} ${match.players.client.lastName} ${match.teams.clientTeam} vs. ${match.players.opponent.firstName} ${match.players.opponent.lastName} ${match.teams.opponentTeam}`
+      const matchName = `${match.players.client.firstName} ${match.players.client.lastName} [${match.teams.clientTeam} vs. ${match.players.opponent.firstName} ${match.players.opponent.lastName}] ${match.teams.opponentTeam}`
       return { ...match, matchName }
     })
   }, [formattedMatches])
@@ -159,118 +161,147 @@ export default function MatchList() {
     <div className="match-list-container">
       <div className="list-header">
         <h1 className="list-title">Match List</h1>
-        <div className="search-container">
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Search matches..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-          />
-        </div>
-      </div>
-
-      {filteredMatches.length > 0 ? (
-        <div className="match-list">
-          {filteredMatches.map((match) => (
-            <div key={match.id} className="match-item">
-              <div className="match-header">
-                <div className="match-name">{match.matchName}</div>
-                <div className="match-id">[{match.id}]</div>
-              </div>
-
-              <div className="match-actions">
-                <div className="action-group">
-                  <Link href={`/tag-match/${match.id}`}>
-                    <button className="action-btn primary">
-                      Tag Match - Full
-                    </button>
-                  </Link>
-                  <Link href={`/timestamp-tagger?videoId=${match.videoId}`}>
-                    <button className="action-btn primary">
-                      Tag Match - Timestamp
-                    </button>
-                  </Link>
-                  <Link
-                    href={`/simple-tagger?videoId=${match.videoId}&matchId=${match.id}`}
-                  >
-                    <button className="action-btn primary">
-                      Tag Match - Simple
-                    </button>
-                  </Link>
-                </div>
-
-                <div className="action-group">
-                  <button
-                    className="action-btn secondary"
-                    onClick={() => handleDownload(match.pointsJson, match.id)}
-                  >
-                    Download JSON
-                  </button>
-                  <button
-                    className="action-btn danger"
-                    onClick={() => handleDelete(match.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="loading-message">
-          {matches.length === 0 ? (
-            <p>Loading matches...</p>
-          ) : (
-            <p>No matches found. Try a different search term.</p>
-          )}
-        </div>
-      )}
-
-      <div className="stats-actions">
-        <div className="stats-download-container">
-          <button className="download-btn" onClick={handleDownloadPlayerStats}>
-            Download Player Stats
-          </button>
-          {playerStatsProgress > 0 && (
-            <progress
-              value={playerStatsProgress}
-              max="100"
-              className="download-progress"
-            />
-          )}
-        </div>
-
-        <div className="stats-download-container">
-          <button className="download-btn" onClick={handleDownloadMatchStats}>
-            Download Match Stats
-          </button>
-          {matchStatsProgress > 0 && (
-            <progress
-              value={matchStatsProgress}
-              max="100"
-              className="download-progress"
-            />
-          )}
-        </div>
-
-        <div className="stats-download-container">
+        <div className="tabs">
           <button
-            className="download-btn"
-            onClick={handleDownloadCollectionAsZip}
+            className={`tab ${activeTab === 'matches' ? 'active' : ''}`}
+            onClick={() => setActiveTab('matches')}
           >
-            Download Collection As Zip
+            Matches
           </button>
-          {collectionProgress > 0 && (
-            <progress
-              value={collectionProgress}
-              max="100"
-              className="download-progress"
-            />
-          )}
+          <button
+            className={`tab ${activeTab === 'teams' ? 'active' : ''}`}
+            onClick={() => setActiveTab('teams')}
+          >
+            Teams
+          </button>
         </div>
       </div>
+
+      {activeTab === 'matches' ? (
+        <>
+          <div className="search-container">
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Search matches..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
+          </div>
+
+          {filteredMatches.length > 0 ? (
+            <div className="match-list">
+              {filteredMatches.map((match) => (
+                <div key={match.id} className="match-item">
+                  <div className="match-header">
+                    <div className="match-name">{match.matchName}</div>
+                    <div className="match-id">[{match.id}]</div>
+                  </div>
+
+                  <div className="match-actions">
+                    <div className="action-group">
+                      <Link href={`/tag-match/${match.id}`}>
+                        <button className="action-btn primary">
+                          Tag Match - Full
+                        </button>
+                      </Link>
+                      <Link href={`/timestamp-tagger?videoId=${match.videoId}`}>
+                        <button className="action-btn primary">
+                          Tag Match - Timestamp
+                        </button>
+                      </Link>
+                      <Link
+                        href={`/simple-tagger?videoId=${match.videoId}&matchId=${match.id}`}
+                      >
+                        <button className="action-btn primary">
+                          Tag Match - Simple
+                        </button>
+                      </Link>
+                    </div>
+
+                    <div className="action-group">
+                      <button
+                        className="action-btn secondary"
+                        onClick={() =>
+                          handleDownload(match.pointsJson, match.id)
+                        }
+                      >
+                        Download JSON
+                      </button>
+                      <button
+                        className="action-btn danger"
+                        onClick={() => handleDelete(match.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="loading-message">
+              {matches.length === 0 ? (
+                <p>Loading matches...</p>
+              ) : (
+                <p>No matches found. Try a different search term.</p>
+              )}
+            </div>
+          )}
+
+          <div className="stats-actions">
+            <div className="stats-download-container">
+              <button
+                className="download-btn"
+                onClick={handleDownloadPlayerStats}
+              >
+                Download Player Stats
+              </button>
+              {playerStatsProgress > 0 && (
+                <progress
+                  value={playerStatsProgress}
+                  max="100"
+                  className="download-progress"
+                />
+              )}
+            </div>
+
+            <div className="stats-download-container">
+              <button
+                className="download-btn"
+                onClick={handleDownloadMatchStats}
+              >
+                Download Match Stats
+              </button>
+              {matchStatsProgress > 0 && (
+                <progress
+                  value={matchStatsProgress}
+                  max="100"
+                  className="download-progress"
+                />
+              )}
+            </div>
+
+            <div className="stats-download-container">
+              <button
+                className="download-btn"
+                onClick={handleDownloadCollectionAsZip}
+              >
+                Download Collection As Zip
+              </button>
+              {collectionProgress > 0 && (
+                <progress
+                  value={collectionProgress}
+                  max="100"
+                  className="download-progress"
+                />
+              )}
+            </div>
+          </div>
+        </>
+      ) : (
+        <TeamManagement />
+      )}
     </div>
   )
 }

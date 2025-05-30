@@ -26,7 +26,7 @@ export default function RootLayout({ children }) {
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body>
-        <div className={dmSans.className} style={{ width: '100%' }}>
+        <div className={`${dmSans.className} root`}>
           <AuthProvider>
             <ConditionalNavbar />
             <DataProvider>{children}</DataProvider>

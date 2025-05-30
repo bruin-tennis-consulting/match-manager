@@ -17,7 +17,7 @@ import { searchableProperties } from '@/app/services/searchableProperties.js'
 import SearchIcon from '@/public/search'
 
 const cleanTeamName = (teamName) => {
-  return teamName.replace(/\s*\([MmWw]\)\s*$/, '').trim()
+  return teamName ? teamName.replace(/\s*\([MmWw]\)\s*$/, '').trim() : teamName
 }
 
 const getUniqueMatches = (matches, cleanTeamName) => {
@@ -55,7 +55,7 @@ const CarouselItem = React.memo(({ match, isSelected, onClick, logo }) => {
       onClick={() => onClick(matchKey)}
     >
       <Image
-        src={imageSrc}
+        src={imageSrc || '/images/default-logo.svg'}
         loading="lazy"
         alt="Team Logo"
         width={50}
@@ -64,6 +64,13 @@ const CarouselItem = React.memo(({ match, isSelected, onClick, logo }) => {
         // Add blur placeholder for faster perceived loading
         placeholder="blur"
         blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+        onError={(e) => {
+          if (e.target.src !== '/images/default-logo.svg') {
+            e.target.src = '/images/default-logo.svg'
+          } else {
+            e.target.style.display = 'none'
+          }
+        }}
       />
       <span className={styles.matchDate}>{match.matchDate}</span>
     </div>
@@ -401,7 +408,9 @@ const Dashboard = () => {
 
               const matchName = matchKey.split('#')[1]
               const displayName =
-                matchName === '_' ? matchName : cleanTeamName(matchName)
+                matchName === '_'
+                  ? matchName
+                  : matchName.replace(/\s+\([MW]\)$/, '')
 
               const parseLocalDate = (dateString) => {
                 const [year, month, day] = dateString.split('-').map(Number)
