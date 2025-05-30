@@ -16,14 +16,14 @@ import Loading from './Loading'
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 import SearchIcon from '@/public/search'
 
-const cleanTeamName = (teamName) => {
-  return teamName.replace(/\s*\([MmWw]\)\s*$/, '').trim()
-}
-
 const formatMatches = (matches) => {
   return matches
     .filter((match) => match.version === 'v1')
     .sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate))
+}
+
+const cleanTeamName = (teamName) => {
+  return teamName ? teamName.replace(/\s+\([MW]\)$/, '') : teamName
 }
 
 // Memoized CarouselItem with fixed dimensions but original logo container
@@ -42,7 +42,7 @@ const CarouselItem = React.memo(({ match, isSelected, onClick, logo }) => {
       onClick={() => onClick(matchKey)}
     >
       <Image
-        src={imageSrc}
+        src={imageSrc || '/images/default-logo.svg'}
         loading="lazy"
         alt="Team Logo"
         width={50}
@@ -51,6 +51,13 @@ const CarouselItem = React.memo(({ match, isSelected, onClick, logo }) => {
         // Add blur placeholder for faster perceived loading
         placeholder="blur"
         blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+        onError={(e) => {
+          if (e.target.src !== '/images/default-logo.svg') {
+            e.target.src = '/images/default-logo.svg'
+          } else {
+            e.target.style.display = 'none'
+          }
+        }}
       />
       <span className={styles.matchDate}>{match.matchDate}</span>
     </div>
@@ -288,6 +295,20 @@ const Dashboard = () => {
     ]
   }, [searchTerm, filteredMatchSets, selectedMatchSets, formattedMatches])
 
+  // Get unique matches for carousel (avoiding duplicates)
+  const uniqueCarouselMatches = useMemo(() => {
+    const uniqueKeys = new Set()
+    return formattedMatches.filter((match) => {
+      const matchKey = match.matchDetails.duel
+        ? `${match.matchDate}#${match.teams.opponentTeam}`
+        : `_#${match.matchDetails.event}`
+
+      if (uniqueKeys.has(matchKey)) return false
+      uniqueKeys.add(matchKey)
+      return true
+    })
+  }, [formattedMatches])
+
   const handleTileClick = useCallback(
     (videoId) => {
       router.push(`/matches/${videoId}`)
@@ -333,20 +354,22 @@ const Dashboard = () => {
                   className={`${styles.card} ${styles.placeholderCard}`}
                 />
               ))
-          : // Map over formattedMatches to render each CarouselItem
-            formattedMatches.map((match, index) => (
-              <CarouselItem
-                key={index}
-                match={match}
-                logo={logos[match.teams.opponentTeam]}
-                isSelected={selectedMatchSets.includes(
-                  match.matchDetails.duel
-                    ? `${match.matchDate}#${match.teams.opponentTeam}`
-                    : `_#${match.matchDetails.event}`
-                )}
-                onClick={handleCarouselClick}
-              />
-            ))}
+          : // Map over unique carousel matches to render each CarouselItem
+            uniqueCarouselMatches.map((match, index) => {
+              const matchKey = match.matchDetails.duel
+                ? `${match.matchDate}#${match.teams.opponentTeam}`
+                : `_#${match.matchDetails.event}`
+
+              return (
+                <CarouselItem
+                  key={index}
+                  match={match}
+                  logo={logos[match.teams.opponentTeam]}
+                  isSelected={selectedMatchSets.includes(matchKey)}
+                  onClick={handleCarouselClick}
+                />
+              )
+            })}
       </div>
 
       <div className={styles.mainContent}>
@@ -383,7 +406,9 @@ const Dashboard = () => {
 
               const matchName = matchKey.split('#')[1]
               const displayName =
-                matchName === '_' ? matchName : cleanTeamName(matchName)
+                matchName === '_'
+                  ? matchName
+                  : matchName.replace(/\s+\([MW]\)$/, '')
 
               const parseLocalDate = (dateString) => {
                 const [year, month, day] = dateString.split('-').map(Number)

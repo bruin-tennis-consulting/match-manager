@@ -17,10 +17,16 @@ const RosterList = () => {
         const mensTeam = teamsData.find(
           (team) => team.name === 'University of California, Los Angeles (M)'
         )
+        if (!mensTeam || !mensTeam.players) {
+          console.log('Mens team or players not found')
+          setMensRoster([])
+          return
+        }
         const playersArray = mensTeam.players.map((player) => ({
-          firstName: player.firstName,
-          lastName: player.lastName,
-          photoUrl: player.photo
+          firstName: player.firstName || '',
+          lastName: player.lastName || '',
+          photo: player.photo || null,
+          largePlayerPhoto: player.largePlayerPhoto || null
         }))
         setMensRoster(playersArray)
       } catch (error) {
@@ -53,7 +59,8 @@ const RosterList = () => {
                 key={index}
                 firstName={player.firstName}
                 lastName={player.lastName}
-                playerPhoto={player.photoUrl}
+                photo={player.photo}
+                largePlayerPhoto={player.largePlayerPhoto}
               />
             ))}
       </div>

@@ -1,0 +1,394 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.title {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #333;
+  text-align: center;
+}
+
+.message {
+  padding: 0.75rem;
+  margin: 1rem 0;
+  border-radius: 4px;
+  background-color: #e7f3ff;
+  text-align: center;
+}
+
+.error {
+  color: #e53e3e;
+  font-weight: bold;
+}
+
+.createButton {
+  display: block;
+  margin: 0 auto 2rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.createButton:hover {
+  background-color: #3182ce;
+}
+
+.mainContent {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 2rem;
+}
+
+.teamsPanel,
+.playersPanel,
+.assignPanel {
+  background-color: #f7fafc;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.teamSelect,
+.searchInput {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.playersList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.playerCard {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 4px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.playerCard:hover {
+  background-color: #edf2f7;
+}
+
+.playerCard.selected {
+  background-color: #e6fffa;
+  border: 1px solid #4fd1c5;
+}
+
+.playerImage {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+}
+
+.noImage {
+  font-size: 0.8rem;
+  color: #718096;
+  text-align: center;
+}
+
+.playerInfo {
+  flex: 1;
+}
+
+.playerInfo h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+}
+
+.playerInfo p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #4a5568;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.assignPanel {
+  display: flex;
+  flex-direction: column;
+}
+
+.selectedPlayerCard {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.selectedPlayerCard h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.selectedPlayerCard img {
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.selectedPlayerCard p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.targetTeamSelect {
+  margin-top: auto;
+}
+
+.targetTeamSelect select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.assignButton {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #48bb78;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.assignButton:hover {
+  background-color: #38a169;
+}
+
+.assignButton:disabled {
+  background-color: #a0aec0;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1024px) {
+  .mainContent {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* Modal styles */
+.modal {
+  position: fixed;
+  z-index: 1000; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalContent {
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 500px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+  position: relative;
+}
+
+.closeButton {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  position: absolute;
+  top: 10px;
+  right: 20px;
+}
+
+.closeButton:hover,
+.closeButton:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.modalInput,
+.modalTextarea {
+  width: calc(100% - 20px);
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.modalTextarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.modalButton {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.modalButton:hover {
+  background-color: #0056b3;
+}
+
+.actionButton {
+  background-color: #28a745; /* Green for create/add actions */
+  color: white;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px; /* Space from the select dropdown or list */
+  transition: background-color 0.3s ease;
+}
+
+.actionButton:hover {
+  background-color: #218838;
+}
+
+.actionButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Input error style for modals */
+.inputError {
+  color: #e53e3e; /* Red color for errors */
+  font-size: 0.875rem; /* Smaller font size */
+  margin-top: -10px; /* Adjust to position it nicely below the input */
+  margin-bottom: 10px;
+  text-align: left; /* Align to the left under the input */
+}
+
+.fileInputLabel {
+  display: block; /* Make it a block to take full width if needed */
+  margin-top: 10px; /* Space above the label */
+  margin-bottom: 5px; /* Space between label and input */
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #333;
+  text-align: left;
+}
+
+.fileNameDisplay {
+  font-size: 0.8rem;
+  color: #555;
+  margin-top: -5px; /* Adjust to be closer to the file input */
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+/* Styles for grouped inputs and specific input sizes in modals */
+.inputGroup {
+  display: flex;
+  align-items: center; /* Vertically align items in the group */
+  justify-content: space-between; /* Distribute space for items like Age/Class */
+  margin-bottom: 15px;
+  gap: 10px; /* Add some space between elements in a group */
+}
+
+.inputGroup .inputLabel {
+  margin-bottom: 0; /* Remove bottom margin if label is part of a group */
+  flex-basis: auto; /* Allow label to take its content size */
+}
+
+.inputGroup > label { /* For direct label children of inputGroup like Age/Class labels */
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.inputLabel { /* General label style if not already covered */
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #333;
+  text-align: left;
+}
+
+.radioGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Space between radio buttons */
+}
+
+.radioGroup label {
+  font-weight: normal;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.modalInputSmall {
+  width: 80px; /* Smaller width for inputs like height feet/inches */
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.editButton {
+  background-color: #4a90e2; /* Blue color for edit action */
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 15px;
+  transition: background-color 0.3s ease;
+}
+
+.editButton:hover {
+  background-color: #357abd;
+}
+
+.editButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
