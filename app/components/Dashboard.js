@@ -16,14 +16,27 @@ import Loading from './Loading'
 import { searchableProperties } from '@/app/services/searchableProperties.js'
 import SearchIcon from '@/public/search'
 
+const cleanTeamName = (teamName) => {
+  return teamName ? teamName.replace(/\s*\([MmWw]\)\s*$/, '').trim() : teamName
+}
+
+const getUniqueMatches = (matches, cleanTeamName) => {
+  const uniqueKeys = new Set()
+  return matches.filter((match) => {
+    const cleanedOpponentTeam = cleanTeamName(match.teams.opponentTeam)
+    let matchKey = `${match.matchDate}#${cleanedOpponentTeam}`
+    if (!match.matchDetails.duel) matchKey = `_#${match.matchDetails.event}`
+
+    if (uniqueKeys.has(matchKey)) return false
+    uniqueKeys.add(matchKey)
+    return true
+  })
+}
+
 const formatMatches = (matches) => {
   return matches
     .filter((match) => match.version === 'v1')
     .sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate))
-}
-
-const cleanTeamName = (teamName) => {
-  return teamName ? teamName.replace(/\s+\([MW]\)$/, '') : teamName
 }
 
 // Memoized CarouselItem with fixed dimensions but original logo container
@@ -230,6 +243,11 @@ const Dashboard = () => {
     return formatted
   }, [matches, isLoaded])
 
+  const uniqueMatches = useMemo(
+    () => getUniqueMatches(formattedMatches, cleanTeamName),
+    [formattedMatches]
+  )
+
   // Mobile detection useEffect
   useEffect(() => {
     const checkIfMobile = () => setIsMobile(window.innerWidth < 400)
@@ -295,20 +313,6 @@ const Dashboard = () => {
     ]
   }, [searchTerm, filteredMatchSets, selectedMatchSets, formattedMatches])
 
-  // Get unique matches for carousel (avoiding duplicates)
-  const uniqueCarouselMatches = useMemo(() => {
-    const uniqueKeys = new Set()
-    return formattedMatches.filter((match) => {
-      const matchKey = match.matchDetails.duel
-        ? `${match.matchDate}#${match.teams.opponentTeam}`
-        : `_#${match.matchDetails.event}`
-
-      if (uniqueKeys.has(matchKey)) return false
-      uniqueKeys.add(matchKey)
-      return true
-    })
-  }, [formattedMatches])
-
   const handleTileClick = useCallback(
     (videoId) => {
       router.push(`/matches/${videoId}`)
@@ -345,8 +349,7 @@ const Dashboard = () => {
 
       <div className={styles.carousel}>
         {!formattedMatches.length
-          ? // Placeholder skeletons for carousel items
-            Array(10)
+          ? Array(10)
               .fill(0)
               .map((_, i) => (
                 <div
@@ -354,15 +357,14 @@ const Dashboard = () => {
                   className={`${styles.card} ${styles.placeholderCard}`}
                 />
               ))
-          : // Map over unique carousel matches to render each CarouselItem
-            uniqueCarouselMatches.map((match, index) => {
+          : uniqueMatches.map((match) => {
               const matchKey = match.matchDetails.duel
                 ? `${match.matchDate}#${match.teams.opponentTeam}`
                 : `_#${match.matchDetails.event}`
 
               return (
                 <CarouselItem
-                  key={index}
+                  key={matchKey}
                   match={match}
                   logo={logos[match.teams.opponentTeam]}
                   isSelected={selectedMatchSets.includes(matchKey)}
