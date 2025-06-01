@@ -1,4 +1,5 @@
-@import url('https://api.fontshare.com/css?f[]=clash-display@100,300,400,500&display=swap');
+/* Moved font import to layout.js to add in <document> <head> */
+/* @import url('https://api.fontshare.com/css?f[]=clash-display@100,300,400,500&display=swap'); */
 
 html {
   overflow-y: scroll;
@@ -146,6 +147,13 @@ h5,
 h6 {
   font-family: 'Clash Display', sans-serif;
 }
+
+/* less bold  */
+/* h4,
+h5,
+h6 {
+  font-weight: 500;
+} */
 
 p,
 button {

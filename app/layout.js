@@ -24,6 +24,10 @@ export default function RootLayout({ children }) {
       <head>
         <title>Match Viewer</title>
         <link rel="icon" href="/favicon.ico" />
+        <link
+          href="https://api.fontshare.com/css?f[]=clash-display@100,300,400,500&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body>
         <div className={`${dmSans.className} root`}>
