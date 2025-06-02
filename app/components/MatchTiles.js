@@ -124,8 +124,8 @@ const MatchTiles = ({
             <Image
               src={opponentLogo || '/images/default-logo.svg'}
               alt={`${opponentTeam} logo`}
-              width={50}
-              height={50}
+              layout="fill"
+              objectFit="contain"
               onError={(e) => {
                 if (e.target.src !== '/images/default-logo.svg') {
                   e.target.src = '/images/default-logo.svg'
