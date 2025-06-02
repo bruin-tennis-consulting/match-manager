@@ -1,0 +1,260 @@
+.playerProfileContainer {
+    max-width: 90%;
+    margin: 0 auto;
+    padding: 2vw;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+  }
+  
+  .playerHeader {
+    text-align: right;
+    margin-bottom: 3vh;
+    font-size: 1.4vw;
+    color: #666;
+    font-weight: 500;
+  }
+  
+  .profileSection {
+    display: grid;
+    grid-template-columns: 20vw 1fr 1fr;
+    gap: 3vw;
+    margin-bottom: 4vh;
+    align-items: start;
+  }
+  
+  .playerImage {
+    position: relative;
+  }
+  
+  .playerImage img {
+    width: 20vw;
+    height: 20vw;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 0.4vw solid #fff;
+    box-shadow: 0 0.4vw 1.2vw rgba(0, 0, 0, 0.1);
+  }
+  
+  .playerInfo h2 {
+    font-size: 2.4vw;
+    font-weight: 300;
+    margin: 0;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 0.1vw;
+  }
+  
+  .playerInfo h1 {
+    font-size: 4.8vw;
+    font-weight: 900;
+    margin: -0.5vw 0 1.5vw 0;
+    color: #000;
+    text-transform: uppercase;
+    letter-spacing: 0.2vw;
+  }
+  
+  .meta {
+    font-size: 1.2vw;
+    color: #999;
+    font-weight: 500;
+    letter-spacing: 0.1vw;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  
+  .playerStats {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5vw;
+  }
+  
+  .statRow {
+    display: flex;
+    align-items: center;
+    gap: 1.5vw;
+  }
+  
+  .label {
+    font-size: 1.2vw;
+    color: #999;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1vw;
+    min-width: 8vw;
+  }
+  
+  .value {
+    font-size: 2.4vw;
+    font-weight: 700;
+    color: #000;
+  }
+  
+  .charLimit {
+    font-size: 1vw;
+    color: #ccc;
+    margin-top: 0.5vh;
+  }
+  
+  .bio {
+    font-size: 1.4vw;
+    line-height: 1.6;
+    color: #666;
+    margin-top: 1vh;
+    max-width: 100%;
+  }
+  
+  .recentMatches {
+    margin-top: 5vh;
+  }
+  
+  .recentMatches h2 {
+    font-size: 3.2vw;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 3vh;
+  }
+  
+  .matchCard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3vw;
+    background: #fff;
+    border-radius: 1.2vw;
+    padding: 2.5vw;
+    margin-bottom: 2vh;
+  }
+  
+  .matchMeta {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2vw;
+  }
+  
+  .matchInfo {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .matchInfo .value {
+    font-size: 1.8vw;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 0.2vh;
+  }
+  
+  .matchInfo .label {
+    font-size: 1.1vw;
+    color: #999;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1vw;
+  }
+  
+  .statItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .statItem .value {
+    font-size: 3.2vw;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 0.5vh;
+  }
+  
+  .statItem .label {
+    font-size: 1.1vw;
+    color: #999;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1vw;
+    line-height: 1.2;
+  }
+  
+  .scoreSection {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5vw;
+  }
+  
+  .scoreHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.2vw;
+    color: #999;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1vw;
+  }
+  
+  .scoreRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8vh 0;
+  }
+  
+  .playerName {
+    font-size: 1.4vw;
+    font-weight: 600;
+    color: #000;
+  }
+  
+  .playerName.highlighted {
+    font-weight: 700;
+  }
+  
+  .playerName.dimmed {
+    color: #999;
+    font-weight: 400;
+  }
+  
+  .score {
+    font-size: 1.4vw;
+    font-weight: 600;
+    color: #000;
+    letter-spacing: 0.1vw;
+  }
+  
+  .videoButton {
+    background: #6B9EFF;
+    color: white;
+    border: none;
+    border-radius: 0.8vw;
+    padding: 1.2vh 2.4vw;
+    font-size: 1.4vw;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    transition: background-color 0.2s ease;
+    margin-top: 1vh;
+  }
+  
+  .videoButton:hover {
+    background: #5A8BFF;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .profileSection {
+      grid-template-columns: 1fr;
+      gap: 2vw;
+      text-align: center;
+    }
+    
+    .playerImage {
+      justify-self: center;
+    }
+    
+    .matchCard {
+      grid-template-columns: 1fr;
+      gap: 2vw;
+    }
+    
+    .matchMeta {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
