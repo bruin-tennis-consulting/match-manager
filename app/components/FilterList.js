@@ -11,6 +11,11 @@ const FilterList = ({
 }) => {
   const [openSections, setOpenSections] = useState({})
   const [pendingList, setPendingList] = useState(filterList)
+
+  // Sync pendingList when filterList changes (ex. when a filter is removed via X)
+  useEffect(() => {
+    setPendingList(filterList)
+  }, [filterList])
   // Calculate available filters from the actual data
   const availableFilters = useMemo(() => {
     const filters = {}

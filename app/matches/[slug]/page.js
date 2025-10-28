@@ -352,16 +352,26 @@ const MatchPage = ({ params }) => {
         </div>
         <div className={styles.sidebar}>
           <div className={filterListStyles.activeFilterListContainer}>
-            Active Filters:
+            <div style={{ width: '100%', marginBottom: '0.5vw' }}>
+              Active Filters:
+            </div>
             <ul className={filterListStyles.activeFilterList}>
               {sortedFilterList.map(([key, value]) => (
                 <li
                   className={filterListStyles.activeFilterItem}
                   key={`${key}-${value}`}
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => removeFilter(key, value)}
                 >
-                  {findDisplayName(key)}: {value}
+                  <span>{findDisplayName(key)}: {value}</span>
+                  <button
+                    className={filterListStyles.closeButton}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeFilter(key, value)
+                    }}
+                    aria-label="Remove filter"
+                  >
+                    ×
+                  </button>
                 </li>
               ))}
             </ul>
