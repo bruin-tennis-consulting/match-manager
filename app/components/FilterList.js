@@ -7,7 +7,9 @@ const FilterList = ({
   setFilterList,
   showPercent,
   showCount,
-  onSubmitRef
+  onSubmitRef,
+  player1Name = 'Player 1',
+  player2Name = 'Player 2'
 }) => {
   const [openSections, setOpenSections] = useState({})
   const [pendingList, setPendingList] = useState(filterList)
@@ -247,6 +249,11 @@ const FilterList = ({
 
     if (!hasPlayerFilters) return null
 
+    // Determine which player name to use based on the path
+    const displayName = path.includes('player1') ? player1Name : 
+                       path.includes('player2') ? player2Name : 
+                       playerData.title
+
     return (
       <div style={{ marginLeft: '2.3vw' }}>
         <div
@@ -262,7 +269,7 @@ const FilterList = ({
           <span style={{ marginRight: '0.8vw', width: '1.5vw' }}>
             {isOpen(path) ? '⌄' : '›'}
           </span>
-          {playerData.title}
+          {displayName}
         </div>
         {isOpen(path) &&
           Object.entries(playerData.categories).map(([categoryKey, category]) =>

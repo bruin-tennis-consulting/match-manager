@@ -361,7 +361,9 @@ const MatchPage = ({ params }) => {
                   className={filterListStyles.activeFilterItem}
                   key={`${key}-${value}`}
                 >
-                  <span>{findDisplayName(key)}: {value}</span>
+                  <span>
+                    {findDisplayName(key)}: {value}
+                  </span>
                   <button
                     className={filterListStyles.closeButton}
                     onClick={(e) => {
@@ -475,6 +477,8 @@ const MatchPage = ({ params }) => {
                       showPercent={showPercent}
                       showCount={showCount}
                       onSubmitRef={filterSubmitRef}
+                      player1Name={`${matchData.players.client.firstName} ${matchData.players.client.lastName}`}
+                      player2Name={`${matchData.players.opponent.firstName} ${matchData.players.opponent.lastName}`}
                     />
                   </div>
                 </div>
