@@ -33,3 +33,5 @@ yarn-error.log*
 .firebase/
 
 .vscode/launch.json
+
+match-viewing-dashboard-firebase-adminsdk-aq6ab-baa0bd2aa1.json
