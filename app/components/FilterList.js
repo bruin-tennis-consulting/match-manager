@@ -253,8 +253,8 @@ const FilterList = ({
     const displayName = path.includes('player1')
       ? player1Name
       : path.includes('player2')
-      ? player2Name
-      : playerData.title
+        ? player2Name
+        : playerData.title
 
     return (
       <div style={{ marginLeft: '2.3vw' }}>
