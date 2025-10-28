@@ -53,6 +53,7 @@ const MatchPage = ({ params }) => {
   const [autoplayEnabled, setAutoplayEnabled] = useState(true)
   const tableRef = useRef(null)
   const iframeRef = useRef(null)
+  const filterSubmitRef = useRef(null)
 
   const pathname = usePathname() // usePathname now imported from next/navigation
   const docId = pathname.substring(pathname.lastIndexOf('/') + 1)
@@ -407,55 +408,92 @@ const MatchPage = ({ params }) => {
           </button>
 
           {tab === 0 && (
-            <div className={styles.sidebox}>
-              <div className={styles.sidecontent}>
-                <div className={filterListStyles.optionsList}>
-                  <div>
-                    <input
-                      type="radio"
-                      id="defaultRadio"
-                      checked={!showCount && !showPercent}
-                      onChange={() => {
-                        setShowPercent(false)
-                        setShowCount(false)
-                      }}
-                    />
-                    <label htmlFor="defaultRadio">Default</label>
+            <>
+              <div className={styles.sidebox}>
+                <div className={styles.sidecontent}>
+                  <div className={filterListStyles.optionsList}>
+                    <div>
+                      <input
+                        type="radio"
+                        id="defaultRadio"
+                        checked={!showCount && !showPercent}
+                        onChange={() => {
+                          setShowPercent(false)
+                          setShowCount(false)
+                        }}
+                      />
+                      <label htmlFor="defaultRadio">Default</label>
+                    </div>
+                    <div>
+                      <input
+                        type="radio"
+                        id="percentRadio"
+                        checked={showPercent}
+                        onChange={() => {
+                          setShowPercent(true)
+                          setShowCount(false)
+                        }}
+                      />
+                      <label htmlFor="percentRadio">Show Percent</label>
+                    </div>
+                    <div>
+                      <input
+                        type="radio"
+                        id="countRadio"
+                        checked={showCount}
+                        onChange={() => {
+                          setShowPercent(false)
+                          setShowCount(true)
+                        }}
+                      />
+                      <label htmlFor="countRadio">Show Count</label>
+                    </div>
                   </div>
-                  <div>
-                    <input
-                      type="radio"
-                      id="percentRadio"
-                      checked={showPercent}
-                      onChange={() => {
-                        setShowPercent(true)
-                        setShowCount(false)
-                      }}
+                  <div
+                    style={{
+                      border: '0.1vh solid #ccd0d4',
+                      background: '#fff',
+                      borderRadius: '0.7vw',
+                      padding: '2.7vh 1.5vw',
+                      fontSize: '1.7vw'
+                    }}
+                  >
+                    <FilterList
+                      pointsData={matchData.pointsJson}
+                      filterList={filterList}
+                      setFilterList={setFilterList}
+                      showPercent={showPercent}
+                      showCount={showCount}
+                      onSubmitRef={filterSubmitRef}
                     />
-                    <label htmlFor="percentRadio">Show Percent</label>
-                  </div>
-                  <div>
-                    <input
-                      type="radio"
-                      id="countRadio"
-                      checked={showCount}
-                      onChange={() => {
-                        setShowPercent(false)
-                        setShowCount(true)
-                      }}
-                    />
-                    <label htmlFor="countRadio">Show Count</label>
                   </div>
                 </div>
-                <FilterList
-                  pointsData={matchData.pointsJson}
-                  filterList={filterList}
-                  setFilterList={setFilterList}
-                  showPercent={showPercent}
-                  showCount={showCount}
-                />
               </div>
-            </div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  padding: '1vh 0',
+                  backgroundColor: '#fff',
+                  marginBottom: '1vh'
+                }}
+              >
+                <button
+                  onClick={() => filterSubmitRef.current?.()}
+                  style={{
+                    padding: '1vh 2vw',
+                    fontSize: '1.4vw',
+                    backgroundColor: '#2c61ab',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.4vw',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </>
           )}
           {tab === 1 && (
             <div className={styles.sidebox}>

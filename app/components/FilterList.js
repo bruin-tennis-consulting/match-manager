@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { filterGroups } from '../services/filterGroups'
 
 const FilterList = ({
@@ -6,7 +6,8 @@ const FilterList = ({
   filterList,
   setFilterList,
   showPercent,
-  showCount
+  showCount,
+  onSubmitRef
 }) => {
   const [openSections, setOpenSections] = useState({})
   const [pendingList, setPendingList] = useState(filterList)
@@ -59,6 +60,12 @@ const FilterList = ({
   const handleSubmit = () => {
     setFilterList(pendingList)
   }
+
+  useEffect(() => {
+    if (onSubmitRef) {
+      onSubmitRef.current = handleSubmit
+    }
+  }, [onSubmitRef, pendingList, setFilterList])
 
   const toggleSection = (path) => {
     setOpenSections((prev) => ({
@@ -263,10 +270,6 @@ const FilterList = ({
   return (
     <div
       style={{
-        border: '0.1vh solid #ccd0d4',
-        background: '#fff',
-        borderRadius: '0.7vw',
-        padding: '2.7vh 1.5vw',
         fontSize: '1.7vw'
       }}
     >
@@ -306,28 +309,6 @@ const FilterList = ({
           </div>
         )
       })}
-      <div
-        style={{
-          marginTop: '2vh',
-          display: 'flex',
-          justifyContent: 'center'
-        }}
-      >
-        <button
-          onClick={handleSubmit}
-          style={{
-            padding: '1vh 2vw',
-            fontSize: '1.4vw',
-            backgroundColor: '#2c61ab',
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.4vw',
-            cursor: 'pointer'
-          }}
-        >
-          Apply Filters
-        </button>
-      </div>
     </div>
   )
 }
