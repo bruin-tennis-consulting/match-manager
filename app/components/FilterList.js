@@ -72,7 +72,7 @@ const FilterList = ({
     if (onSubmitRef) {
       onSubmitRef.current = handleSubmit
     }
-  }, [onSubmitRef, pendingList, setFilterList])
+  }, [onSubmitRef, handleSubmit])
 
   const toggleSection = (path) => {
     setOpenSections((prev) => ({
@@ -250,9 +250,11 @@ const FilterList = ({
     if (!hasPlayerFilters) return null
 
     // Determine which player name to use based on the path
-    const displayName = path.includes('player1') ? player1Name : 
-                       path.includes('player2') ? player2Name : 
-                       playerData.title
+    const displayName = path.includes('player1')
+      ? player1Name
+      : path.includes('player2')
+      ? player2Name
+      : playerData.title
 
     return (
       <div style={{ marginLeft: '2.3vw' }}>
