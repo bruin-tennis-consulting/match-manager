@@ -291,14 +291,13 @@ const FilterList = ({
         if (!hasSectionFilters(group)) return null
 
         return (
-          <div key={key} style={{ marginBottom: '2.7vh' }}>
+          <div key={key} style={{ marginBottom: '.7vh' }}>
             <div
               onClick={() => toggleSection(key)}
               style={{
                 cursor: 'pointer',
                 display: 'flex',
-                alignItems: 'center',
-                padding: '0.62vw 0'
+                alignItems: 'center'
               }}
             >
               <span style={{ marginRight: '0.8vw', width: '1.5vw' }}>
