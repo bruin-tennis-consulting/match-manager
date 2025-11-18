@@ -47,6 +47,7 @@ const MatchPage = ({ params }) => {
   const [showCount, setShowCount] = useState(false)
   const [playingPoint, setPlayingPoint] = useState(null)
   const [showPDF, setShowPDF] = useState(true)
+  const [showHTML, setShowHTML] = useState(false)
   const [tab, setTab] = useState(1)
   const [bookmarks, setBookmarks] = useState([])
   const [triggerScroll, setTriggerScroll] = useState(false)
@@ -112,6 +113,20 @@ const MatchPage = ({ params }) => {
       loadMatchData()
     }
   }, [matches, params.slug, fetchMatchDetails])
+
+  // Set showHTML based on whether HTML file exists
+  useEffect(() => {
+    if (matchData?.htmlFile != null) {
+      setShowHTML(true)
+      setShowPDF(false) // Prioritize HTML over PDF
+    } else {
+      setShowHTML(true) // modify after testing
+      // Only set showPDF to true if HTML doesn't exist
+      // if (matchData?.pdfFile != null) {
+      //   setShowPDF(true)
+      // }
+    }
+  }, [matchData])
 
   const handleJumpToTime = (time) => {
     if (videoObject && videoObject.seekTo) {
@@ -239,6 +254,7 @@ const MatchPage = ({ params }) => {
 
   const scrollToDetailedList = () => {
     setShowPDF(false)
+    setShowHTML(false)
     setTriggerScroll(true)
   }
 
@@ -595,9 +611,19 @@ const MatchPage = ({ params }) => {
       </div>
       <div className={styles.toggle}>
         <button
-          onClick={() => setShowPDF(true)}
+          onClick={() => {
+            // if (matchData?.htmlFile != null) {
+            //   setShowHTML(true)
+            //   setShowPDF(false)
+            // } else if (matchData?.pdfFile != null) {
+            //   setShowPDF(true)
+            //   setShowHTML(false)
+            // }
+            setShowHTML(true)
+            setShowPDF(true)
+          }}
           className={
-            showPDF
+            showHTML || showPDF
               ? styles.toggle_buttonb_inactive
               : styles.toggle_buttonb_active
           }
@@ -605,16 +631,26 @@ const MatchPage = ({ params }) => {
           Key Stats & Visuals
         </button>
         <button
-          onClick={() => setShowPDF(false)}
+          onClick={() => {
+            setShowPDF(false)
+            setShowHTML(false)
+          }}
           className={
-            showPDF
+            !showPDF && !showHTML
               ? styles.toggle_buttona_active
               : styles.toggle_buttona_inactive
           }
         >
           Detailed Point List
         </button>
-        {showPDF ? (
+        {showHTML ? (
+          <iframe
+            className={styles.pdfView}
+            src={'/match_report.html'} // TODO: Change to matchData.htmlFile
+            width="90%"
+            height="1550"
+          />
+        ) : showPDF ? (
           <iframe
             className={styles.pdfView}
             src={matchData.pdfFile}
