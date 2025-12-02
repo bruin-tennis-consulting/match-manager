@@ -37,6 +37,7 @@ const findDisplayName = (key) => {
 }
 
 const MatchPage = ({ params }) => {
+  const { slug } = React.use(params)
   const { matches, fetchMatchDetails } = useData()
   const [matchData, setMatchData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -64,6 +65,7 @@ const MatchPage = ({ params }) => {
   // Read filter parameters from URL on initial load
   useEffect(() => {
     const params = new URLSearchParams(searchParams)
+
     const initialFilters = []
     for (const [key, value] of params.entries()) {
       initialFilters.push([key, value])
@@ -87,7 +89,7 @@ const MatchPage = ({ params }) => {
     const loadMatchData = async () => {
       try {
         setLoading(true)
-        const match = matches.find((m) => m.id === params.slug)
+        const match = matches.find((m) => m.id === slug)
         if (!match) {
           setError('Match not found')
           return
@@ -111,7 +113,7 @@ const MatchPage = ({ params }) => {
     if (matches.length > 0) {
       loadMatchData()
     }
-  }, [matches, params.slug, fetchMatchDetails])
+  }, [matches, slug, fetchMatchDetails])
 
   const handleJumpToTime = (time) => {
     if (videoObject && videoObject.seekTo) {
