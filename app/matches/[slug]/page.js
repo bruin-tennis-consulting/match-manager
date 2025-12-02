@@ -325,11 +325,11 @@ const MatchPage = ({ params }) => {
         player2FinalScores={matchData.sets.map((set) => ({
           score: set.opponentGames
         }))}
-        player1TieScores={matchData.pointsJson.map(
-          (point) => point.player1TiebreakScore
+        player1TieScores={matchData.sets.map((set) =>
+          set ? set.clientTiebreak : null
         )}
-        player2TieScores={matchData.pointsJson.map(
-          (point) => point.player2TiebreakScore
+        player2TieScores={matchData.sets.map((set) =>
+          set ? set.opponentTiebreak : null
         )}
         isUnfinished={matchData.matchDetails.unfinished}
         displaySections={{ score: true, info: true, matchup: true }}
