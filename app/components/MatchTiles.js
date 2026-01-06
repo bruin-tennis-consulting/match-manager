@@ -46,13 +46,19 @@ const MatchTiles = ({
 
   // Render function for scores
   const renderScore = (score, index, isPlayer1, tieScores) => {
-    const opacity = isPlayer1
-      ? player1Opacity[index]
-        ? '100%'
-        : '40%'
-      : !player1Opacity[index]
-        ? '100%'
-        : '40%'
+    const lastSetIndex =
+      player1FinalScores[2].score == null ? 1 : player1FinalScores.length - 1
+    const isLastSet = index === lastSetIndex
+    const opacity =
+      isUnfinished && isLastSet
+        ? '40%' // Grey out last set if unfinished
+        : isPlayer1
+          ? player1Opacity[index]
+            ? '100%'
+            : '40%'
+          : !player1Opacity[index]
+            ? '100%'
+            : '40%'
 
     return (
       !isNaN(score.score) && (
