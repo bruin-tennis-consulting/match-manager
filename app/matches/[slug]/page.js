@@ -46,7 +46,8 @@ const MatchPage = ({ params }) => {
   const [showPercent, setShowPercent] = useState(false)
   const [showCount, setShowCount] = useState(false)
   const [playingPoint, setPlayingPoint] = useState(null)
-  const [showPDF, setShowPDF] = useState(true)
+  const [showHTML, setShowHTML] = useState(false)
+  const [showPDF, setShowPDF] = useState(false)
   const [tab, setTab] = useState(1)
   const [bookmarks, setBookmarks] = useState([])
   const [triggerScroll, setTriggerScroll] = useState(false)
@@ -112,6 +113,20 @@ const MatchPage = ({ params }) => {
       loadMatchData()
     }
   }, [matches, params.slug, fetchMatchDetails])
+
+  // Set showHTML/showPDF based on available files (prioritize HTML, fallback to PDF)
+  useEffect(() => {
+    if (matchData?.htmlFile != null) {
+      setShowHTML(true)
+      setShowPDF(false)
+    } else if (matchData?.pdfFile != null) {
+      setShowHTML(false)
+      setShowPDF(true)
+    } else {
+      setShowHTML(false)
+      setShowPDF(false)
+    }
+  }, [matchData])
 
   const handleJumpToTime = (time) => {
     if (videoObject && videoObject.seekTo) {
@@ -221,13 +236,13 @@ const MatchPage = ({ params }) => {
   }, [videoObject, matchData, returnFilteredPoints])
 
   useEffect(() => {
-    if (triggerScroll && !showPDF) {
+    if (triggerScroll && !showHTML && !showPDF) {
       if (tableRef.current) {
         tableRef.current.scrollIntoView({ behavior: 'smooth' })
       }
       setTriggerScroll(false)
     }
-  }, [triggerScroll, showPDF])
+  }, [triggerScroll, showHTML, showPDF])
 
   const removeFilter = (key, value) => {
     const updatedFilterList = filterList.filter(
@@ -238,6 +253,7 @@ const MatchPage = ({ params }) => {
   }
 
   const scrollToDetailedList = () => {
+    setShowHTML(false)
     setShowPDF(false)
     setTriggerScroll(true)
   }
@@ -595,9 +611,17 @@ const MatchPage = ({ params }) => {
       </div>
       <div className={styles.toggle}>
         <button
-          onClick={() => setShowPDF(true)}
+          onClick={() => {
+            if (matchData?.htmlFile != null) {
+              setShowHTML(true)
+              setShowPDF(false)
+            } else if (matchData?.pdfFile != null) {
+              setShowPDF(true)
+              setShowHTML(false)
+            }
+          }}
           className={
-            showPDF
+            showHTML || showPDF
               ? styles.toggle_buttonb_inactive
               : styles.toggle_buttonb_active
           }
@@ -605,19 +629,29 @@ const MatchPage = ({ params }) => {
           Key Stats & Visuals
         </button>
         <button
-          onClick={() => setShowPDF(false)}
+          onClick={() => {
+            setShowHTML(false)
+            setShowPDF(false)
+          }}
           className={
-            showPDF
+            !showHTML && !showPDF
               ? styles.toggle_buttona_active
               : styles.toggle_buttona_inactive
           }
         >
           Detailed Point List
         </button>
-        {showPDF ? (
+        {showHTML ? (
           <iframe
-            className={styles.pdfView}
-            src={matchData.pdfFile}
+            className={styles.VisualsView}
+            src={matchData?.htmlFile}
+            width="90%"
+            height="1550"
+          />
+        ) : showPDF ? (
+          <iframe
+            className={styles.VisualsView}
+            src={matchData?.pdfFile}
             width="90%"
             height="1550"
           />

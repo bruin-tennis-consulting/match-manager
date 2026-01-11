@@ -189,7 +189,7 @@ export default function UploadMatchForm() {
 
       // Validate the File types
       validateFileType(formData.jsonFile, 'application/json', 'JSON file')
-      validateFileType(formData.pdfFile, 'application/pdf', 'PDF file')
+      validateFileType(formData.htmlFile, 'text/html', 'HTML file')
 
       const pointsJson = formData.jsonFile
         ? JSON.parse(atob(formData.jsonFile.split(',')[1]))
@@ -261,7 +261,7 @@ export default function UploadMatchForm() {
         sets,
         videoId: formData.videoID,
         pointsJson,
-        pdfFile: formData.pdfFile ? dataURItoBlob(formData.pdfFile) : null,
+        htmlFile: formData.htmlFile ? dataURItoBlob(formData.htmlFile) : null,
         teams: teamsData,
         players,
         matchDate: formData.date,

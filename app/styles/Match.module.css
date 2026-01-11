@@ -106,7 +106,7 @@
   margin: 0 auto; /* This may help maintain the centering if other elements are taking up space */
 }
 
-.pdfView {
+.VisualsView {
   width: 100%;
   border: 1px solid #eaeaea;
   border-radius: 10px;

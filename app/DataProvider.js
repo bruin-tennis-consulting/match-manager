@@ -121,22 +121,25 @@ export const DataProvider = ({ children }) => {
   const createMatch = useCallback(
     async (collectionName, newMatchData) => {
       try {
-        let pdfUrl = null
-        if (newMatchData.pdfFile) {
-          const pdfRef = ref(storage, `match-pdfs/${newMatchData.pdfFile.name}`)
+        let htmlUrl = null
+        if (newMatchData.htmlFile) {
+          const htmlRef = ref(
+            storage,
+            `match-html/${newMatchData.htmlFile.name}`
+          )
           const metadata = {
-            contentType: 'application/pdf'
+            contentType: 'text/html'
           }
 
           const snapshot = await uploadBytes(
-            pdfRef,
-            newMatchData.pdfFile.blob,
+            htmlRef,
+            newMatchData.htmlFile.blob,
             metadata
           )
-          pdfUrl = await getDownloadURL(snapshot.ref)
+          htmlUrl = await getDownloadURL(snapshot.ref)
         }
-        console.log(pdfUrl)
-        newMatchData.pdfFile = pdfUrl
+        console.log(htmlUrl)
+        newMatchData.htmlFile = htmlUrl
         newMatchData._deleted = false
 
         const newMatch = {
