@@ -351,7 +351,18 @@ const MatchPage = ({ params }) => {
         </div>
         <div className={styles.sidebar}>
           <div className={filterListStyles.activeFilterListContainer}>
-            Active Filters:
+            <div className={filterListStyles.activeFilterHeader}>
+              <span>Active Filters:</span>
+              {sortedFilterList.length > 0 && (
+                <button
+                  className={filterListStyles.clearAllButton}
+                  onClick={() => setFilterList([])}
+                  title="Clear all filters"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
             <ul className={filterListStyles.activeFilterList}>
               {sortedFilterList.map(([key, value]) => (
                 <li
