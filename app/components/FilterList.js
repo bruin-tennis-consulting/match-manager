@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { filterGroups } from '../services/filterGroups'
 
 const FilterList = ({
@@ -6,10 +6,18 @@ const FilterList = ({
   filterList,
   setFilterList,
   showPercent,
-  showCount
+  showCount,
+  onSubmitRef,
+  player1Name = 'Player 1',
+  player2Name = 'Player 2'
 }) => {
   const [openSections, setOpenSections] = useState({})
   const [pendingList, setPendingList] = useState(filterList)
+
+  // Sync pendingList when filterList changes (ex. when a filter is removed via X)
+  useEffect(() => {
+    setPendingList(filterList)
+  }, [filterList])
   // Calculate available filters from the actual data
   const availableFilters = useMemo(() => {
     const filters = {}
@@ -59,6 +67,12 @@ const FilterList = ({
   const handleSubmit = () => {
     setFilterList(pendingList)
   }
+
+  useEffect(() => {
+    if (onSubmitRef) {
+      onSubmitRef.current = handleSubmit
+    }
+  }, [onSubmitRef, handleSubmit])
 
   const toggleSection = (path) => {
     setOpenSections((prev) => ({
@@ -235,6 +249,13 @@ const FilterList = ({
 
     if (!hasPlayerFilters) return null
 
+    // Determine which player name to use based on the path
+    const displayName = path.includes('player1')
+      ? player1Name
+      : path.includes('player2')
+        ? player2Name
+        : playerData.title
+
     return (
       <div style={{ marginLeft: '2.3vw' }}>
         <div
@@ -250,7 +271,7 @@ const FilterList = ({
           <span style={{ marginRight: '0.8vw', width: '1.5vw' }}>
             {isOpen(path) ? '⌄' : '›'}
           </span>
-          {playerData.title}
+          {displayName}
         </div>
         {isOpen(path) &&
           Object.entries(playerData.categories).map(([categoryKey, category]) =>
@@ -263,10 +284,6 @@ const FilterList = ({
   return (
     <div
       style={{
-        border: '0.1vh solid #ccd0d4',
-        background: '#fff',
-        borderRadius: '0.7vw',
-        padding: '2.7vh 1.5vw',
         fontSize: '1.7vw'
       }}
     >
@@ -274,14 +291,13 @@ const FilterList = ({
         if (!hasSectionFilters(group)) return null
 
         return (
-          <div key={key} style={{ marginBottom: '2.7vh' }}>
+          <div key={key} style={{ marginBottom: '.7vh' }}>
             <div
               onClick={() => toggleSection(key)}
               style={{
                 cursor: 'pointer',
                 display: 'flex',
-                alignItems: 'center',
-                padding: '0.62vw 0'
+                alignItems: 'center'
               }}
             >
               <span style={{ marginRight: '0.8vw', width: '1.5vw' }}>
@@ -306,28 +322,6 @@ const FilterList = ({
           </div>
         )
       })}
-      <div
-        style={{
-          marginTop: '2vh',
-          display: 'flex',
-          justifyContent: 'center'
-        }}
-      >
-        <button
-          onClick={handleSubmit}
-          style={{
-            padding: '1vh 2vw',
-            fontSize: '1.4vw',
-            backgroundColor: '#2c61ab',
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.4vw',
-            cursor: 'pointer'
-          }}
-        >
-          Apply Filters
-        </button>
-      </div>
     </div>
   )
 }

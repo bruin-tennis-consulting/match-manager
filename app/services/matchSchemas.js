@@ -161,9 +161,14 @@ const initialSchema = {
       title: 'JSON File',
       format: 'data-url'
     },
-    pdfFile: {
+    // pdfFile: {
+    //   type: 'string',
+    //   title: 'PDF File'
+    // },
+    htmlFile: {
       type: 'string',
-      title: 'PDF File'
+      title: 'HTML File',
+      format: 'data-url'
     }
   },
   required: [
@@ -182,7 +187,10 @@ const uiSchema = {
   jsonFile: {
     'ui:widget': 'file'
   },
-  pdfFile: {
+  // pdfFile: {
+  //   'ui:widget': 'file'
+  // },
+  htmlFile: {
     'ui:widget': 'file'
   },
   event: {

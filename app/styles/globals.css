@@ -1,6 +1,8 @@
 /* Moved font import to layout.js to add in <document> <head> */
 /* @import url('https://api.fontshare.com/css?f[]=clash-display@100,300,400,500&display=swap'); */
 
+@import url('https://api.fontshare.com/css?f[]=clash-display@100,300,400,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 html {
   overflow-y: scroll;
   scrollbar-gutter: stable;
@@ -113,9 +115,6 @@ a {
     color-scheme: dark;
   }
 } */
-
-@import url('https://api.fontshare.com/css?f[]=clash-display@100,300,400,500&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
 html,
 body {

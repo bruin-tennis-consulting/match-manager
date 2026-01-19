@@ -49,13 +49,15 @@ const MatchPage = ({ params }) => {
   const [showPercent, setShowPercent] = useState(false)
   const [showCount, setShowCount] = useState(false)
   const [playingPoint, setPlayingPoint] = useState(null)
-  const [showPDF, setShowPDF] = useState(true)
+  const [showHTML, setShowHTML] = useState(false)
+  const [showPDF, setShowPDF] = useState(false)
   const [tab, setTab] = useState(1)
   const [bookmarks, setBookmarks] = useState([])
   const [triggerScroll, setTriggerScroll] = useState(false)
   const [autoplayEnabled, setAutoplayEnabled] = useState(true)
   const tableRef = useRef(null)
   const iframeRef = useRef(null)
+  const filterSubmitRef = useRef(null)
 
   const pathname = usePathname() // usePathname now imported from next/navigation
   const docId = pathname.substring(pathname.lastIndexOf('/') + 1)
@@ -114,6 +116,20 @@ const MatchPage = ({ params }) => {
       loadMatchData()
     }
   }, [matches, params.slug, fetchMatchDetails])
+
+  // Set showHTML/showPDF based on available files (prioritize HTML, fallback to PDF)
+  useEffect(() => {
+    if (matchData?.htmlFile != null) {
+      setShowHTML(true)
+      setShowPDF(false)
+    } else if (matchData?.pdfFile != null) {
+      setShowHTML(false)
+      setShowPDF(true)
+    } else {
+      setShowHTML(false)
+      setShowPDF(false)
+    }
+  }, [matchData])
 
   const handleJumpToTime = (time) => {
     if (videoObject && videoObject.seekTo) {
@@ -223,13 +239,13 @@ const MatchPage = ({ params }) => {
   }, [videoObject, matchData, returnFilteredPoints])
 
   useEffect(() => {
-    if (triggerScroll && !showPDF) {
+    if (triggerScroll && !showHTML && !showPDF) {
       if (tableRef.current) {
         tableRef.current.scrollIntoView({ behavior: 'smooth' })
       }
       setTriggerScroll(false)
     }
-  }, [triggerScroll, showPDF])
+  }, [triggerScroll, showHTML, showPDF])
 
   const removeFilter = (key, value) => {
     const updatedFilterList = filterList.filter(
@@ -240,6 +256,7 @@ const MatchPage = ({ params }) => {
   }
 
   const scrollToDetailedList = () => {
+    setShowHTML(false)
     setShowPDF(false)
     setTriggerScroll(true)
   }
@@ -327,11 +344,11 @@ const MatchPage = ({ params }) => {
         player2FinalScores={matchData.sets.map((set) => ({
           score: set.opponentGames
         }))}
-        player1TieScores={matchData.pointsJson.map(
-          (point) => point.player1TiebreakScore
+        player1TieScores={matchData.sets.map((set) =>
+          set ? set.clientTiebreak : null
         )}
-        player2TieScores={matchData.pointsJson.map(
-          (point) => point.player2TiebreakScore
+        player2TieScores={matchData.sets.map((set) =>
+          set ? set.opponentTiebreak : null
         )}
         isUnfinished={matchData.matchDetails.unfinished}
         displaySections={{ score: true, info: true, matchup: true }}
@@ -380,16 +397,28 @@ const MatchPage = ({ params }) => {
         </div>
         <div className={styles.sidebar}>
           <div className={filterListStyles.activeFilterListContainer}>
-            Active Filters:
+            <div style={{ width: '100%', marginBottom: '0.5vw' }}>
+              Active Filters:
+            </div>
             <ul className={filterListStyles.activeFilterList}>
               {sortedFilterList.map(([key, value]) => (
                 <li
                   className={filterListStyles.activeFilterItem}
                   key={`${key}-${value}`}
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => removeFilter(key, value)}
                 >
-                  {findDisplayName(key)}: {value}
+                  <span>
+                    {findDisplayName(key)}: {value}
+                  </span>
+                  <button
+                    className={filterListStyles.closeButton}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeFilter(key, value)
+                    }}
+                    aria-label="Remove filter"
+                  >
+                    ×
+                  </button>
                 </li>
               ))}
             </ul>
@@ -436,55 +465,94 @@ const MatchPage = ({ params }) => {
           </button>
 
           {tab === 0 && (
-            <div className={styles.sidebox}>
-              <div className={styles.sidecontent}>
-                <div className={filterListStyles.optionsList}>
-                  <div>
-                    <input
-                      type="radio"
-                      id="defaultRadio"
-                      checked={!showCount && !showPercent}
-                      onChange={() => {
-                        setShowPercent(false)
-                        setShowCount(false)
-                      }}
-                    />
-                    <label htmlFor="defaultRadio">Default</label>
+            <>
+              <div className={styles.sidebox}>
+                <div className={styles.sidecontent}>
+                  <div className={filterListStyles.optionsList}>
+                    <div>
+                      <input
+                        type="radio"
+                        id="defaultRadio"
+                        checked={!showCount && !showPercent}
+                        onChange={() => {
+                          setShowPercent(false)
+                          setShowCount(false)
+                        }}
+                      />
+                      <label htmlFor="defaultRadio">Default</label>
+                    </div>
+                    <div>
+                      <input
+                        type="radio"
+                        id="percentRadio"
+                        checked={showPercent}
+                        onChange={() => {
+                          setShowPercent(true)
+                          setShowCount(false)
+                        }}
+                      />
+                      <label htmlFor="percentRadio">Show Percent</label>
+                    </div>
+                    <div>
+                      <input
+                        type="radio"
+                        id="countRadio"
+                        checked={showCount}
+                        onChange={() => {
+                          setShowPercent(false)
+                          setShowCount(true)
+                        }}
+                      />
+                      <label htmlFor="countRadio">Show Count</label>
+                    </div>
                   </div>
-                  <div>
-                    <input
-                      type="radio"
-                      id="percentRadio"
-                      checked={showPercent}
-                      onChange={() => {
-                        setShowPercent(true)
-                        setShowCount(false)
-                      }}
+                  <div
+                    style={{
+                      border: '0.1vh solid #ccd0d4',
+                      background: '#fff',
+                      borderRadius: '0.7vw',
+                      padding: '2.7vh 1.5vw',
+                      fontSize: '1.7vw'
+                    }}
+                  >
+                    <FilterList
+                      pointsData={matchData.pointsJson}
+                      filterList={filterList}
+                      setFilterList={setFilterList}
+                      showPercent={showPercent}
+                      showCount={showCount}
+                      onSubmitRef={filterSubmitRef}
+                      player1Name={`${matchData.players.client.firstName} ${matchData.players.client.lastName}`}
+                      player2Name={`${matchData.players.opponent.firstName} ${matchData.players.opponent.lastName}`}
                     />
-                    <label htmlFor="percentRadio">Show Percent</label>
-                  </div>
-                  <div>
-                    <input
-                      type="radio"
-                      id="countRadio"
-                      checked={showCount}
-                      onChange={() => {
-                        setShowPercent(false)
-                        setShowCount(true)
-                      }}
-                    />
-                    <label htmlFor="countRadio">Show Count</label>
                   </div>
                 </div>
-                <FilterList
-                  pointsData={matchData.pointsJson}
-                  filterList={filterList}
-                  setFilterList={setFilterList}
-                  showPercent={showPercent}
-                  showCount={showCount}
-                />
               </div>
-            </div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  padding: '1vh 0',
+                  backgroundColor: '#fff',
+                  marginBottom: '1vh'
+                }}
+              >
+                <button
+                  onClick={() => filterSubmitRef.current?.()}
+                  style={{
+                    padding: '1vh 2vw',
+                    fontSize: '1.4vw',
+                    backgroundColor: '#2c61ab',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.4vw',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </>
           )}
           {tab === 1 && (
             <div className={styles.sidebox}>
@@ -572,9 +640,17 @@ const MatchPage = ({ params }) => {
       </div>
       <div className={styles.toggle}>
         <button
-          onClick={() => setShowPDF(true)}
+          onClick={() => {
+            if (matchData?.htmlFile != null) {
+              setShowHTML(true)
+              setShowPDF(false)
+            } else if (matchData?.pdfFile != null) {
+              setShowPDF(true)
+              setShowHTML(false)
+            }
+          }}
           className={
-            showPDF
+            showHTML || showPDF
               ? styles.toggle_buttonb_inactive
               : styles.toggle_buttonb_active
           }
@@ -582,19 +658,29 @@ const MatchPage = ({ params }) => {
           Key Stats & Visuals
         </button>
         <button
-          onClick={() => setShowPDF(false)}
+          onClick={() => {
+            setShowHTML(false)
+            setShowPDF(false)
+          }}
           className={
-            showPDF
+            !showHTML && !showPDF
               ? styles.toggle_buttona_active
               : styles.toggle_buttona_inactive
           }
         >
           Detailed Point List
         </button>
-        {showPDF ? (
+        {showHTML ? (
           <iframe
-            className={styles.pdfView}
-            src={matchData.pdfFile}
+            className={styles.VisualsView}
+            src={matchData?.htmlFile}
+            width="90%"
+            height="1550"
+          />
+        ) : showPDF ? (
+          <iframe
+            className={styles.VisualsView}
+            src={matchData?.pdfFile}
             width="90%"
             height="1550"
           />
