@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation' // Updated import for usePathname
 
 import { useData } from '@/app/DataProvider'
+import { useAuth } from '@/app/AuthWrapper'
 import { filterGroups } from '@/app/services/filterGroups'
 import filterListStyles from '@/app/styles/FilterList.module.css'
 import styles from '@/app/styles/Match.module.css'
@@ -14,6 +15,7 @@ import PointsList from '@/app/components/PointsList'
 import ScoreBoard from '@/app/components/ScoreBoard'
 import MatchTiles from '@/app/components/MatchTiles'
 import ExtendedList from '@/app/components/ExtendedList'
+import Notes from '@/app/components/Notes'
 
 const findDisplayName = (key) => {
   // Search through all sections of filterGroups
@@ -37,7 +39,8 @@ const findDisplayName = (key) => {
 }
 
 const MatchPage = ({ params }) => {
-  const { matches, fetchMatchDetails } = useData()
+  const { matches, fetchMatchDetails, updateMatch } = useData()
+  const { authUser } = useAuth()
   const [matchData, setMatchData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -348,6 +351,32 @@ const MatchPage = ({ params }) => {
               onReady={addBorderRadius}
             />
           </div>
+          <Notes
+            videoId={matchData.videoId}
+            videoObject={videoObject}
+            pointsJson={matchData.pointsJson}
+            authUser={authUser}
+            matchData={matchData}
+            updateMatch={updateMatch}
+            matchId={params.slug}
+            matchCollection={
+              matches.find((m) => m.id === params.slug)?.collection
+            }
+            onNoteSaved={(updatedData) => {
+              console.log('onNoteSaved called in parent, updating matchData...')
+              console.log(
+                'Updated pointsJson length:',
+                updatedData.pointsJson?.length
+              )
+              console.log(
+                'Points with notes:',
+                updatedData.pointsJson?.filter(
+                  (p) => p.notes && p.notes.length > 0
+                ).length
+              )
+              setMatchData(updatedData)
+            }}
+          />
         </div>
         <div className={styles.sidebar}>
           <div className={filterListStyles.activeFilterListContainer}>
