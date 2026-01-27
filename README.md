@@ -20,7 +20,7 @@ Before uploading a CSV, it must be converted to JSON. Use csvjson.com.
 ## Deployment
 
 1. Run `npm run build` to generate production files
-2. Run `firebase deploy` to depoly to firebase
+2. Run `firebase deploy` to deploy to firebase
 
 ## Uploading a Match
 
