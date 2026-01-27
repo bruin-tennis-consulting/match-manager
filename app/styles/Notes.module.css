@@ -1,0 +1,297 @@
+.notesContainer {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.getVideoIdButton {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background-color: #2c61ab;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.getVideoIdButton:hover:not(:disabled) {
+  background-color: #1e4a7a;
+}
+
+.getVideoIdButton:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+}
+
+.noteInputContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border: 1px solid #eaeaea;
+  border-radius: 0.5rem;
+}
+
+.noteInputHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.timestampDisplay {
+  font-weight: 600;
+  color: #2c61ab;
+}
+
+.pointInfo {
+  color: #333;
+}
+
+.noteTextarea {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-family: inherit;
+  border: 1px solid #ddd;
+  border-radius: 0.375rem;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.noteTextarea:focus {
+  outline: none;
+  border-color: #2c61ab;
+  box-shadow: 0 0 0 3px rgba(44, 97, 171, 0.1);
+}
+
+.noteButtons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.saveNoteButton {
+  padding: 0.5rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: #2c61ab;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.saveNoteButton:hover:not(:disabled) {
+  background-color: #1e4a7a;
+}
+
+.saveNoteButton:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+}
+
+.cancelNoteButton {
+  padding: 0.5rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: #ffffff;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cancelNoteButton:hover:not(:disabled) {
+  background-color: #f5f5f5;
+}
+
+.cancelNoteButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.notesButtonsRow {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.viewNotesButton {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background-color: #28a745;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.viewNotesButton:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.viewNotesButton:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+}
+
+.notesListContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border: 1px solid #eaeaea;
+  border-radius: 0.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notesListHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.notesListHeader h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  color: #333;
+}
+
+.closeButton {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: #6c757d;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.closeButton:hover {
+  background-color: #5a6268;
+}
+
+.notesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.noteItem {
+  padding: 0.75rem;
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 0.375rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.noteItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.noteActionButtons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.noteHeaderInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.noteTimestamp {
+  font-weight: 600;
+  color: #2c61ab;
+  font-size: 0.875rem;
+}
+
+.notePointName {
+  font-size: 0.75rem;
+  color: #666;
+  font-style: italic;
+}
+
+.jumpToButton {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #2c61ab;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.jumpToButton:hover:not(:disabled) {
+  background-color: #1e4a7a;
+}
+
+.jumpToButton:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+}
+
+.deleteNoteButton {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #dc3545;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.deleteNoteButton:hover {
+  background-color: #c82333;
+}
+
+.noteText {
+  margin: 0;
+  color: #333;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.noteDate {
+  font-size: 0.75rem;
+  color: #666;
+  font-style: italic;
+}
+
+.noNotes {
+  text-align: center;
+  color: #666;
+  padding: 2rem;
+  font-style: italic;
+}
