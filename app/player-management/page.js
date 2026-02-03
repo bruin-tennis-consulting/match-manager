@@ -763,10 +763,10 @@ export default function PlayerManagement() {
                         name="playerActive"
                         value="true"
                         checked={newPlayer.active === true}
-                        onChange={(e) =>
+                        onChange={() =>
                           setNewPlayer({
                             ...newPlayer,
-                            active: e.target.value === 'true'
+                            active: true
                           })
                         }
                       />{' '}
@@ -778,10 +778,10 @@ export default function PlayerManagement() {
                         name="playerActive"
                         value="false"
                         checked={newPlayer.active === false}
-                        onChange={(e) =>
+                        onChange={() =>
                           setNewPlayer({
                             ...newPlayer,
-                            active: e.target.value === 'true'
+                            active: false
                           })
                         }
                       />{' '}
