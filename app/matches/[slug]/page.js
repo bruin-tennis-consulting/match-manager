@@ -82,7 +82,7 @@ const MatchPage = ({ params }) => {
       filterList.forEach(([key, value]) => {
         params.append(key, value)
       })
-      router.replace(`?${params.toString()}`)
+      router.replace(`?${params.toString()}`, { scroll: false })
     }
   }, [filterList, router])
 
