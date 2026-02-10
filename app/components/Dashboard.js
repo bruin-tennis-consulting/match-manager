@@ -39,6 +39,53 @@ const formatMatches = (matches) => {
     .sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate))
 }
 
+// Helper function to determine which season a match belongs to
+const getMatchSeason = (matchDate) => {
+  const date = new Date(matchDate)
+  const month = date.getMonth() + 1 // 1-12
+  const year = date.getFullYear()
+
+  // College tennis seasons:
+  // Fall (Aug-Nov): part of next year's season (e.g., Aug 2024 = 2024-2025)
+  // Spring (Jan-May): part of current year's season (e.g., Jan 2025 = 2024-2025)
+
+  if (month >= 8) {
+    // Aug-Dec: part of current-next season
+    return `${year}-${year + 1}`
+  } else if (month <= 5) {
+    // Jan-May: part of previous-current season
+    return `${year - 1}-${year}`
+  }
+  // June-July: off-season, still count as previous-current season
+  return `${year - 1}-${year}`
+}
+
+// Get current season based on today's date
+const getCurrentSeason = () => {
+  return getMatchSeason(new Date().toISOString().split('T')[0])
+}
+
+// Get all unique seasons from matches
+const getAvailableSeasons = (matches) => {
+  const seasons = new Set()
+  const currentYear = new Date().getFullYear()
+
+  matches.forEach((match) => {
+    const season = getMatchSeason(match.matchDate)
+
+    // Only include seasons from the last 10 years
+    const seasonStartYear = parseInt(season.split('-')[0])
+    if (
+      seasonStartYear >= currentYear - 30 &&
+      seasonStartYear <= currentYear + 1
+    ) {
+      seasons.add(season)
+    }
+  })
+
+  return Array.from(seasons).sort().reverse() // Most recent first
+}
+
 // Memoized CarouselItem with fixed dimensions but original logo container
 const CarouselItem = React.memo(({ match, isSelected, onClick, logo }) => {
   const matchKey = match.matchDetails.duel
@@ -116,10 +163,39 @@ const SearchBox = React.memo(({ searchTerm, onSearch, onClear }) => {
 
 SearchBox.displayName = 'SearchBox'
 
+// Season Filter Component
+const SeasonFilter = React.memo(
+  ({ availableSeasons, selectedSeason, onSeasonChange }) => {
+    return (
+      <div className={styles.seasonFilterContainer}>
+        <div className={styles.seasonButtons}>
+          {availableSeasons.map((season) => (
+            <button
+              key={season}
+              className={`${styles.seasonButton} ${selectedSeason === season ? styles.activeSeason : ''}`}
+              onClick={() => onSeasonChange(season)}
+            >
+              {season}
+            </button>
+          ))}
+          <button
+            className={`${styles.seasonButton} ${selectedSeason === 'all' ? styles.activeSeason : ''}`}
+            onClick={() => onSeasonChange('all')}
+          >
+            All Seasons
+          </button>
+        </div>
+      </div>
+    )
+  }
+)
+
+SeasonFilter.displayName = 'SeasonFilter'
+
 // MatchSection with placeholder heights
 const MatchSection = React.memo(
-  ({ matchKey, formattedMatches, onTileClick }) => {
-    const singlesMatches = formattedMatches.filter(
+  ({ matchKey, seasonFilteredMatches, onTileClick }) => {
+    const singlesMatches = seasonFilteredMatches.filter(
       (match) =>
         match.singles &&
         ((match.matchDetails.duel &&
@@ -129,7 +205,7 @@ const MatchSection = React.memo(
             matchKey === `_#${match.matchDetails.event}`))
     )
 
-    const doublesMatches = formattedMatches.filter(
+    const doublesMatches = seasonFilteredMatches.filter(
       (match) =>
         !match.singles &&
         ((match.matchDetails.duel &&
@@ -142,7 +218,7 @@ const MatchSection = React.memo(
     const [matchName] = matchKey.split('#')
     const displayName =
       matchName === '_'
-        ? formattedMatches.find(
+        ? seasonFilteredMatches.find(
             (match) =>
               !match.matchDetails.duel && match.matchDetails.event === matchName
           )?.matchDetails.event || matchName
@@ -231,6 +307,7 @@ const Dashboard = () => {
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
   const [isMobile, setIsMobile] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [selectedSeason, setSelectedSeason] = useState(getCurrentSeason())
 
   const [searchIndex, setSearchIndex] = useState(null)
   // Calculate formatted matches once
@@ -243,10 +320,32 @@ const Dashboard = () => {
     return formatted
   }, [matches, isLoaded])
 
-  const uniqueMatches = useMemo(
-    () => getUniqueMatches(formattedMatches, cleanTeamName),
-    [formattedMatches]
+  // Filter matches by selected season
+  const seasonFilteredMatches = useMemo(() => {
+    if (selectedSeason === 'all') {
+      return formattedMatches
+    }
+    return formattedMatches.filter(
+      (match) => getMatchSeason(match.matchDate) === selectedSeason
+    )
+  }, [formattedMatches, selectedSeason])
+
+  const handleSeasonChange = useCallback(
+    (season) => {
+      setSelectedSeason(season)
+      setSelectedMatchSets([]) // Clear carousel selections when season changes
+    },
+    [setSelectedSeason, setSelectedMatchSets]
   )
+
+  // Get available seasons from all matches
+  const availableSeasons = useMemo(() => {
+    return getAvailableSeasons(formattedMatches)
+  }, [formattedMatches])
+
+  const uniqueMatches = useMemo(() => {
+    return getUniqueMatches(seasonFilteredMatches, cleanTeamName)
+  }, [])
 
   // Mobile detection useEffect
   useEffect(() => {
@@ -259,11 +358,11 @@ const Dashboard = () => {
     return () => resizeObserver.disconnect()
   }, [])
 
-  // Create search index after component mounts and formattedMatches is available
+  // Create search index after component mounts and seasonFilteredMatches is available
   useEffect(() => {
-    if (formattedMatches.length && !searchIndex) {
+    if (seasonFilteredMatches.length && !searchIndex) {
       const timer = setTimeout(() => {
-        const fuse = new Fuse(formattedMatches, {
+        const fuse = new Fuse(seasonFilteredMatches, {
           keys: searchableProperties,
           threshold: 0.4
         })
@@ -272,7 +371,17 @@ const Dashboard = () => {
 
       return () => clearTimeout(timer)
     }
-  }, [formattedMatches, searchIndex]) // Now formattedMatches is defined before this useEffect
+  }, [seasonFilteredMatches, searchIndex, searchableProperties])
+
+  useEffect(() => {
+    if (seasonFilteredMatches.length) {
+      const fuse = new Fuse(seasonFilteredMatches, {
+        keys: searchableProperties,
+        threshold: 0.4
+      })
+      setSearchIndex(fuse)
+    }
+  }, [selectedSeason, searchableProperties])
 
   // Filtered match sets calculation using the searchIndex from state
   const filteredMatchSets = useMemo(() => {
@@ -304,14 +413,14 @@ const Dashboard = () => {
     if (selectedMatchSets.length > 0) return selectedMatchSets
     return [
       ...new Set(
-        formattedMatches.map((match) => {
+        seasonFilteredMatches.map((match) => {
           return match.matchDetails.duel
             ? `${match.matchDate}#${match.teams.opponentTeam}`
             : `_#${match.matchDetails.event}`
         })
       )
     ]
-  }, [searchTerm, filteredMatchSets, selectedMatchSets, formattedMatches])
+  }, [searchTerm, filteredMatchSets, selectedMatchSets])
 
   const handleTileClick = useCallback(
     (videoId) => {
@@ -339,16 +448,23 @@ const Dashboard = () => {
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <h2>Dashboard</h2>
-          <SearchBox
-            searchTerm={searchTerm}
-            onSearch={handleSearch}
-            onClear={handleClearSearch}
-          />
+          <div className={styles.headerControls}>
+            <SearchBox
+              searchTerm={searchTerm}
+              onSearch={handleSearch}
+              onClear={handleClearSearch}
+            />
+            <SeasonFilter
+              availableSeasons={availableSeasons}
+              selectedSeason={selectedSeason}
+              onSeasonChange={handleSeasonChange}
+            />
+          </div>
         </div>
       </header>
 
       <div className={styles.carousel}>
-        {!formattedMatches.length
+        {!seasonFilteredMatches.length
           ? Array(10)
               .fill(0)
               .map((_, i) => (
@@ -386,7 +502,7 @@ const Dashboard = () => {
             <div className={styles.noMatches}>No matches found</div>
           ) : (
             displayMatchSets.map((matchKey, index) => {
-              const singlesMatches = formattedMatches.filter(
+              const singlesMatches = seasonFilteredMatches.filter(
                 (match) =>
                   match.singles &&
                   ((match.matchDetails.duel &&
@@ -396,7 +512,7 @@ const Dashboard = () => {
                       matchKey === `_#${match.matchDetails.event}`))
               )
 
-              const doublesMatches = formattedMatches.filter(
+              const doublesMatches = seasonFilteredMatches.filter(
                 (match) =>
                   !match.singles &&
                   ((match.matchDetails.duel &&
