@@ -661,7 +661,7 @@ export default function PlayerManagement() {
                 />
                 <input
                   type="text"
-                  placeholder="Last Name"
+                  placeholder="Last Name (If middle name or multi-word last name, include here)"
                   value={newPlayer.lastName}
                   onChange={(e) =>
                     setNewPlayer({ ...newPlayer, lastName: e.target.value })
