@@ -16,6 +16,7 @@ import ScoreBoard from '@/app/components/ScoreBoard'
 import MatchTiles from '@/app/components/MatchTiles'
 import ExtendedList from '@/app/components/ExtendedList'
 import Notes from '@/app/components/Notes'
+import HtmlCarousel from '@/app/components/HtmlCarousel'
 
 const findDisplayName = (key) => {
   // Search through all sections of filterGroups
@@ -680,12 +681,7 @@ const MatchPage = ({ params }) => {
           Detailed Point List
         </button>
         {showHTML ? (
-          <iframe
-            className={styles.VisualsView}
-            src={matchData?.htmlFile}
-            width="90%"
-            height="1550"
-          />
+          <HtmlCarousel htmlUrl={matchData?.htmlFile} />
         ) : showPDF ? (
           <iframe
             className={styles.VisualsView}
