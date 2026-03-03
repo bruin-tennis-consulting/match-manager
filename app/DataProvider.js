@@ -124,8 +124,12 @@ export const DataProvider = ({ children }) => {
         let pdfUrl = null
         if (newMatchData.pdfFile) {
           const pdfRef = ref(storage, `match-pdfs/${newMatchData.pdfFile.name}`)
+          
+          // Determine content type based on file extension
+          const fileName = newMatchData.pdfFile.name || ''
+          const isHtml = fileName.toLowerCase().endsWith('.html')
           const metadata = {
-            contentType: 'application/pdf'
+            contentType: isHtml ? 'text/html' : 'application/pdf'
           }
 
           const snapshot = await uploadBytes(

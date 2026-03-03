@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visuals Compilation</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+    <nav id="toc">
+        <ul>
+            <li><a href="#sum-stats">Summary Stats</a></li>
+            <li><a href="#winner-placement">Winner Placement</a></li>
+            <li><a href="#serve-place">Serve Placement</a></li>
+            <li><a href="#serve-error">Serve Error</a></li>
+            <li><a href="#serve-dist-map">Serve Distribution</a></li>
+            <li><a href="#net-errors">Net Errors</a></li>
+            <li><a href="#ret-cont">Return Contact</a></li>
+            <li><a href="#return-place-ad-forehand">Return Placement</a></li>
+            <li><a href="#slice-place-forehand">Slice Placement</a></li>
+        </ul>
+    </nav>
+
+    <section id="header">
+        <div class="match-header">
+            <div class="players">
+            <span id="player1" class="player"></span>
+            <span class="vs">vs</span>
+            <span id="player2" class="player"></span>
+            </div>
+
+            <div class="set-scores" id="setScores"></div>
+
+            <div class="event-info">
+            <span id="eventName"></span> • <span id="eventDate"></span>
+            </div>
+        </div>
+    </section>
+
+
+    <section id="sum-stats">
+        <svg width="1000" height="1000"></svg>
+    </section>
+
+    <section id="winner-placement">
+        <svg width="1000" height="800"></svg>
+    </section>
+
+    <section id="serve-place">
+        <svg width="1000" height="800"></svg>
+    </section>
+
+    <section id="serve-error">
+        <svg width="1000" height="800"></svg>
+    </section>
+
+    <section id="serve-dist-map">
+        <svg width="1000" height="800"></svg>
+    </section>
+
+    <section id="net-errors">
+        <svg width="1000" height="800"></svg>
+    </section>
+
+    <section id="ret-cont">
+        <svg width="1000" height="800"></svg>
+    </section>
+
+    <section id="return-place-ad-forehand">
+        <svg width="1000" height="800"></svg>
+    </section>
+
+    <section id="return-place-ad-backhand">
+        <svg width="1000" height="800"></svg>
+    </section>
+
+    <section id="return-place-deuce-backhand">
+        <svg width="1000" height="800"></svg>
+    </section>
+
+    <section id="return-place-deuce-forehand">
+        <svg width="1000" height="800"></svg>
+    </section>
+
+    <section id="slice-place-forehand">
+        <svg width="1000" height="800"></svg>
+    </section>
+
+    <section id="slice-place-backhand">
+        <svg width="1000" height="800"></svg>
+    </section>
+
+
+    <button id="save-all-sections">Export as PDF</button> 
+    <button id="export-report">Download Match Report</button>
+
+
+    <script src="sum-stats.js"></script>
+    <script src="winners.js"></script>
+    <script src="serve-place.js"></script>
+    <script src="serve-error.js"></script>
+    <script src="serve-dist-map.js"></script>
+    <script src="net-errors.js"></script>
+    <script src="return-place.js"></script>
+    <script>
+        const ad_forehand = "../../../../data/json/return_place_ad_forehand.json"; 
+        const ad_forehand_dist = "../../../../data/json/return_place_ad_forehand_dist.json"
+        drawReturnPlace(ad_forehand, ad_forehand_dist, "#return-place-ad-forehand svg"); 
+
+        const ad_backhand = "../../../../data/json/return_place_ad_backhand.json"; 
+        const ad_backhand_dist = "../../../../data/json/return_place_ad_backhand_dist.json"
+        drawReturnPlace(ad_backhand, ad_backhand_dist, "#return-place-ad-backhand svg"); 
+
+        const deuce_backhand = "../../../../data/json/return_place_deuce_backhand.json"; 
+        const deuce_backhand_dist = "../../../../data/json/return_place_deuce_backhand_dist.json"
+        drawReturnPlace(deuce_backhand, deuce_backhand_dist, "#return-place-deuce-backhand svg"); 
+
+        const deuce_forehand = "../../../../data/json/return_place_deuce_forehand.json"; 
+        const deuce_forehand_dist = "../../../../data/json/return_place_deuce_forehand_dist.json"
+        drawReturnPlace(deuce_forehand, deuce_forehand_dist, "#return-place-deuce-forehand svg"); 
+    </script>
+    
+    <script src="ret-cont.js"></script>
+
+    <script src="slice-place.js"></script>
+    <script>
+        const forehand_slice = "../../../../data/json/slice_place_forehand.json"; 
+        drawSlicePlace(forehand_slice, "#slice-place-forehand svg"); 
+
+        const backhand_slice = "../../../../data/json/slice_place_backhand.json"; 
+        drawSlicePlace(backhand_slice, "#slice-place-backhand svg"); 
+    </script>
+
+    <script src="header.js"></script>
+
+    <script src="export_report.js"></script>
+
+
+    <!-- Libraries for PDF saving -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="pdf.js"></script>
+
+
+</body>
+</html>

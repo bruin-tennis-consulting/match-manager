@@ -163,7 +163,13 @@ const initialSchema = {
     },
     pdfFile: {
       type: 'string',
-      title: 'PDF File'
+      title: 'PDF/HTML File (optional if CSV is provided)'
+    },
+    csvFile: {
+      type: 'string',
+      title: 'CSV File (for automatic HTML generation)',
+      format: 'data-url',
+      description: 'Upload CSV file to automatically generate HTML court visuals. Player names will be extracted from CSV or use the player names above.'
     }
   },
   required: [
@@ -183,6 +189,9 @@ const uiSchema = {
     'ui:widget': 'file'
   },
   pdfFile: {
+    'ui:widget': 'file'
+  },
+  csvFile: {
     'ui:widget': 'file'
   },
   event: {

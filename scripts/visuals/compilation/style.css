@@ -1,0 +1,254 @@
+/*Header Styling*/
+.match-header {
+    text-align: center;
+    margin-bottom: 1rem;
+    margin-top: 1rem;
+}
+
+.match-header .players {
+    font-size: calc(1.5vw + 1.5vh);
+}
+.match-header .player {
+    color: black;
+}
+.match-header .player.winner {
+    font-weight: 700; /* bold for winner */
+}
+
+.match-header .player:not(.winner) {
+    font-weight: 400; /* normal for loser */
+}
+
+.match-header .vs {
+    font-weight: 400
+}
+
+
+.match-header .team-name {
+    font-size: calc(0.9vw + 0.5vh);
+    font-weight: 400;
+    margin-left: 0.2vw;
+}
+.match-header .set-scores {
+    margin: 0 0.1vw;
+    word-spacing: 10px; 
+    font-size: calc(1vw + 0.8vh);
+    font-weight: 600;
+}
+.match-header .event-info {
+    margin-top: 0.8vh;
+    font-size: calc(0.8vw + 0.6vh);
+    font-weight: 400;
+}
+
+/*Overall Section Styling*/
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'DM Sans', sans-serif;
+    background-color: white;
+}
+#sum-stats, #header {
+    background-color: white;
+}
+/*Ensures court visuals have green background*/
+#net-errors, #ret-cont, #return-place, #serve-place, #serve-dist-map, #serve-error, #winner-placement,
+#slice-place-forehand, #slice-place-backhand, #return-place-deuce-forehand, #return-place-ad-forehand,
+#return-place-deuce-backhand, #return-place-ad-backhand {
+    background-color: #86ac91;
+}
+section {  
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 5px;
+    margin: 15px;
+    width: 98%;
+    background-clip: padding-box; 
+}
+section:last-child {
+    border-bottom: none;
+}
+
+
+.svg-container {
+    width: 90%;
+    max-width: 800px;
+    height: auto;
+    aspect-ratio: 4 / 3;
+}
+svg {
+    width: 60%;
+    height: 90%;
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* Individual CSS Styling */
+.title {
+    font-size: 24px;
+    font-weight: bold;
+    fill: white;
+    text-anchor: middle;
+}
+.tooltip {
+    position: absolute;
+    text-align: center;
+    width: auto;
+    padding: 10px;
+    font-size: 12px;
+    background: white;
+    border: 1px solid black;
+    border-radius: 10px;
+    pointer-events: none;
+}
+.barUCLA {
+    fill: #2596be;
+    rx: 9;
+    ry: 9;
+}
+.barOpp {
+    fill: #fcd404;
+    rx: 9;
+    ry: 9;
+}
+.highlight-rect-UCLA {
+    fill: none;
+    stroke: #2974af;
+    rx: 10;
+    ry: 10;
+    stroke-width: 2;
+}
+.highlight-rect-Opp {
+    fill: none;
+    stroke: #fcd404;
+    rx: 10;
+    ry: 10;
+    stroke-width: 2;
+}
+.stat-label {
+    font-size: 16px;
+    fill: #555;
+}
+.percentage-label {
+    font-size: 16px;
+    fill: #333;
+}
+.attempts-label {
+    font-size: 11px;
+    fill: #777;
+}
+.percent-text {
+    font-size: 25px;
+    text-anchor: middle;
+    font-weight: bold;
+}
+.label-text {
+    font-weight: bold;
+    text-anchor: middle;
+}
+.zone-label {
+    font-size: 18px;
+    fill: white;
+    text-anchor: middle;
+    font-weight: bold;
+}
+.count-text {
+    font-size: 18px;
+    font-weight: bold;
+    fill: white;
+    text-anchor: middle;
+}
+.contour {
+    fill-opacity: 0.8;
+}
+.central-text {
+    font-size: 14px;
+    font-weight: bold;
+    fill: white;
+    text-anchor: middle;
+}
+.player-label {
+    font-size: 20px;
+    font-weight: bold;
+}
+.bar-background-UCLA {
+    fill: #d4e5f3;
+    rx: 9;
+    ry: 9;
+}
+.bar-background-Opp {
+    fill: #fef7cd;
+    rx: 9;
+    ry: 9;
+}
+.dashed-line {
+    stroke: white;
+    stroke-width: 2;
+    stroke-dasharray: 5,5;
+}
+
+/*Table of Contents*/
+#toc {
+    position: fixed;       /* stays visible while scrolling */
+    top: 10px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.9); /* semi-transparent box */
+    padding: 10px 15px;
+    border: 1px solid black;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    z-index: 1000;
+    font-size: calc(5px + 0.6vw + 0.4vh);
+}
+#toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+#toc li {
+    margin-bottom: 8px;
+}
+#toc a {
+    font-size: inherit;
+    text-decoration: none;
+    color: black;
+    font-weight: 500;
+}
+#toc a:hover {
+    text-decoration: underline;
+}
+html {
+    scroll-behavior: smooth;
+}
+button{
+    position: fixed;
+    bottom: 3vh;
+    right: 2vw;
+    font-family: 'DM Sans', sans-serif;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid black;
+    border-radius: 8px;
+    font-size: calc(5px + 0.6vw + 0.4vh);
+    text-align: left;
+    padding: 10px 15px;
+    cursor: pointer;
+    
+}
+
+#save-all-sections {
+    position: fixed;
+    bottom: 3vh;
+    right: 2vw;
+    z-index: 2000;
+}
+
+#export-report {
+    position: fixed;
+    bottom: 10vh;   /* stacks above the PDF button */
+    right: 2vw;
+    z-index: 2000;
+}

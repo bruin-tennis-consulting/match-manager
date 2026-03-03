@@ -188,8 +188,112 @@ export default function UploadMatchForm() {
       }
 
       // Validate the File types
-      validateFileType(formData.jsonFile, 'application/json', 'JSON file')
-      validateFileType(formData.pdfFile, 'application/pdf', 'PDF file')
+      if (formData.jsonFile) {
+        validateFileType(formData.jsonFile, 'application/json', 'JSON file')
+      }
+      
+      // PDF/HTML file is optional if CSV is provided
+      if (formData.pdfFile && !formData.csvFile) {
+        // Only validate if no CSV is provided (CSV will generate HTML)
+        const pdfMimeType = formData.pdfFile.split(';')[0].split(':')[1]
+        if (pdfMimeType !== 'application/pdf' && pdfMimeType !== 'text/html') {
+          throw new Error('PDF/HTML file must be a PDF or HTML file.')
+        }
+      }
+      
+      // Process CSV file if provided
+      let generatedHtmlFile = formData.pdfFile
+      if (formData.csvFile) {
+        setUploadProgress(20) // Update progress
+        
+        try {
+          // Extract CSV file from data URL
+          const csvDataUrl = formData.csvFile
+          let csvBlob = dataURItoBlob(csvDataUrl)
+          
+          // Ensure we have a valid Blob
+          if (!(csvBlob instanceof Blob)) {
+            // Fallback: manually convert data URL to Blob
+            const response = await fetch(csvDataUrl)
+            csvBlob = await response.blob()
+          }
+          
+          // Create a File object from the Blob (required for FormData.append with filename)
+          const csvFile = csvBlob instanceof File 
+            ? csvBlob 
+            : new File([csvBlob], 'match-data.csv', { type: 'text/csv' })
+          
+          // Create FormData to send to API
+          const apiFormData = new FormData()
+          apiFormData.append('csvFile', csvFile)
+          
+          // Add player names if available (they'll be extracted from CSV if not provided)
+          if (formData.clientPlayer && formData.opponentPlayer) {
+            apiFormData.append('player1Name', formData.clientPlayer)
+            apiFormData.append('player2Name', formData.opponentPlayer)
+          }
+          
+          // Call API to process CSV and generate HTML
+          const response = await fetch('/api/process-csv', {
+            method: 'POST',
+            body: apiFormData
+          })
+          
+          if (!response.ok) {
+            const errorData = await response.json()
+            // Include detailed error information in the error message
+            let errorMessage = errorData.error || 'Failed to process CSV file'
+            
+            // Add all available error details
+            if (errorData.details) {
+              errorMessage += `\n\nDetails:\n${errorData.details}`
+            }
+            if (errorData.pythonCommand) {
+              errorMessage += `\n\nPython Command: ${errorData.pythonCommand}`
+            }
+            if (errorData.pythonScriptPath) {
+              errorMessage += `\nPython Script: ${errorData.pythonScriptPath}`
+            }
+            if (errorData.stderr) {
+              const stderrPreview = errorData.stderr.length > 500 
+                ? errorData.stderr.substring(0, 500) + '...' 
+                : errorData.stderr
+              errorMessage += `\n\nPython Error Output:\n${stderrPreview}`
+            }
+            if (errorData.stdout) {
+              const stdoutPreview = errorData.stdout.length > 500 
+                ? errorData.stdout.substring(0, 500) + '...' 
+                : errorData.stdout
+              errorMessage += `\n\nPython Output:\n${stdoutPreview}`
+            }
+            if (errorData.suggestion) {
+              errorMessage += `\n\nSuggestion: ${errorData.suggestion}`
+            }
+            
+            console.error('CSV Processing Error Details:', errorData)
+            throw new Error(errorMessage)
+          }
+          
+          const result = await response.json()
+          
+          if (!result.success || !result.html) {
+            throw new Error('Failed to generate HTML from CSV')
+          }
+          
+          // Log success
+          console.log('✓ CSV processed successfully!')
+          console.log(`✓ HTML generated (${result.html.length} characters)`)
+          console.log(`✓ Players: ${result.player1} vs ${result.player2}`)
+          
+          // Store HTML string directly - we'll create blob when uploading
+          generatedHtmlFile = result.html
+          
+          setUploadProgress(50) // Update progress
+        } catch (error) {
+          console.error('Error processing CSV:', error)
+          throw new Error(`CSV processing failed: ${error.message}`)
+        }
+      }
 
       const pointsJson = formData.jsonFile
         ? JSON.parse(atob(formData.jsonFile.split(',')[1]))
@@ -257,11 +361,53 @@ export default function UploadMatchForm() {
         formData.matchScore.set3 || {}
       ]
 
+      // Log what's being uploaded
+      let pdfFileToUpload = null
+      if (generatedHtmlFile) {
+        console.log('✓ Uploading match with generated HTML file')
+        
+        // Check if generatedHtmlFile is a string (from CSV) or data URL (from manual upload)
+        let htmlBlob
+        if (typeof generatedHtmlFile === 'string' && generatedHtmlFile.startsWith('data:')) {
+          // It's a data URL (from manual upload)
+          htmlBlob = dataURItoBlob(generatedHtmlFile)
+        } else if (typeof generatedHtmlFile === 'string') {
+          // It's an HTML string (from CSV processing)
+          htmlBlob = new Blob([generatedHtmlFile], { type: 'text/html' })
+        } else {
+          throw new Error('Unexpected HTML file format')
+        }
+        
+        console.log(`✓ HTML file size: ${(htmlBlob.size / 1024).toFixed(2)} KB`)
+        console.log(`✓ HTML blob type: ${htmlBlob.type}`)
+        
+        // Create file object with name for Firebase Storage
+        const player1Name = formData.clientPlayer?.replace(/\s+/g, '_') || 'Player1'
+        const player2Name = formData.opponentPlayer?.replace(/\s+/g, '_') || 'Player2'
+        const fileName = `${player1Name}_vs_${player2Name}_visualizations.html`
+        pdfFileToUpload = {
+          blob: htmlBlob,
+          name: fileName
+        }
+      } else if (formData.pdfFile) {
+        // Use provided PDF/HTML file
+        // Extract filename from data URL or use default
+        const player1Name = formData.clientPlayer?.replace(/\s+/g, '_') || 'Player1'
+        const player2Name = formData.opponentPlayer?.replace(/\s+/g, '_') || 'Player2'
+        const defaultFileName = `${player1Name}_vs_${player2Name}_visualization.html`
+        pdfFileToUpload = {
+          blob: dataURItoBlob(formData.pdfFile),
+          name: defaultFileName
+        }
+      } else {
+        console.log('ℹ No HTML/PDF file to upload')
+      }
+
       await createMatch(formData.collection, {
         sets,
         videoId: formData.videoID,
         pointsJson,
-        pdfFile: formData.pdfFile ? dataURItoBlob(formData.pdfFile) : null,
+        pdfFile: pdfFileToUpload,
         teams: teamsData,
         players,
         matchDate: formData.date,
@@ -271,6 +417,8 @@ export default function UploadMatchForm() {
         version: 'v1',
         published
       })
+      
+      console.log('✓ Match uploaded successfully to database')
 
       // Complete progress and show success message
       setUploadProgress(100)
