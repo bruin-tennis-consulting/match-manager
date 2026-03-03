@@ -21,11 +21,47 @@
 .form {
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem 1.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  max-width: 720px;
 }
 
-.form label select,
-.form label input {
-  margin-left: 0.5rem; /* Adjust the margin-left as needed */
+/* Shared control styling: all text-like inputs match react-select (RJSF: label and input are siblings, not nested) */
+.form input:not([type='checkbox']):not([type='radio']) {
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  margin-left: 0.5rem;
+  box-sizing: border-box;
+}
+
+.form input:not([type='checkbox']):not([type='radio']):focus {
+  outline: none;
+  border-color: #2684ff;
+  box-shadow: 0 0 0 1px #2684ff;
+}
+
+.form select {
+  margin-left: 0.5rem;
+}
+
+/* react-select: match text inputs and integrate with form layout */
+.form :global(.rjsf-select__control) {
+  min-height: 32px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.form :global(.rjsf-select__control--is-focused) {
+  border-color: #2684ff;
+  box-shadow: 0 0 0 1px #2684ff;
 }
 
 .errorContainer {

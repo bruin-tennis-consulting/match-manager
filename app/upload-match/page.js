@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import Form from '@rjsf/core'
 import validator from '@rjsf/validator-ajv8'
 import { dataURItoBlob } from '@rjsf/utils'
+import ReactSelect from 'react-select'
 
 import getTeams from '@/app/services/getTeams.js'
 import { searchableProperties } from '@/app/services/searchableProperties.js'
@@ -18,6 +19,55 @@ import {
   uiSchema as baseUiSchema
 } from '@/app/services/matchSchemas.js'
 
+/** SelectWidget wrapping react-select for enum fields. Replaces native <select>. */
+function ReactSelectWidget({
+  id,
+  value,
+  options = {},
+  required,
+  disabled,
+  readonly,
+  multiple = false,
+  onChange,
+  placeholder = 'Select...'
+}) {
+  const { enumOptions = [] } = options
+  const opts = Array.isArray(enumOptions) ? enumOptions : []
+
+  const getSelectValue = () => {
+    if (multiple) {
+      const arr = Array.isArray(value) ? value : value != null ? [value] : []
+      return arr.map((v) => opts.find((o) => o.value === v)).filter(Boolean)
+    }
+    if (value == null || value === '') return null
+    return opts.find((o) => o.value === value) ?? null
+  }
+
+  const handleChange = (selected) => {
+    if (multiple) {
+      const arr = Array.isArray(selected) ? selected : []
+      onChange(arr.map((o) => o.value))
+    } else {
+      onChange(selected ? selected.value : undefined)
+    }
+  }
+
+  return (
+    <ReactSelect
+      inputId={id}
+      value={getSelectValue()}
+      options={opts}
+      onChange={handleChange}
+      isMulti={multiple}
+      isDisabled={disabled || readonly}
+      isClearable={!required}
+      placeholder={placeholder}
+      classNamePrefix="rjsf-select"
+      menuPosition="fixed"
+    />
+  )
+}
+
 export default function UploadMatchForm() {
   const setCollections = useState([])[1]
 
@@ -30,15 +80,29 @@ export default function UploadMatchForm() {
   const [localUiSchema, setLocalUiSchema] = useState(baseUiSchema)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   const { userProfile } = useAuth()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const fetchCollectionsAndTeams = async () => {
       try {
         const allTeams = await getTeams()
+
+        const uclaTeams = allTeams.filter(
+          // Dropdown for only UCLA teams (filter)
+          (team) =>
+            team.name.includes('University of California, Los Angeles') &&
+            (team.name.endsWith('(M)') || team.name.endsWith('(W)'))
+        )
+
         setTeams(allTeams)
         const teamNames = allTeams.map((team) => team.name)
+        const uclaNames = uclaTeams.map((team) => team.name)
 
         // Assuming userProfile.collections contains the collection names
         const userCollections = userProfile?.collections || []
@@ -51,7 +115,7 @@ export default function UploadMatchForm() {
             ...prevSchema.properties,
             clientTeam: {
               ...prevSchema.properties.clientTeam,
-              enum: teamNames
+              enum: uclaNames
             },
             opponentTeam: {
               ...prevSchema.properties.opponentTeam,
@@ -293,6 +357,20 @@ export default function UploadMatchForm() {
     }
   }
 
+  if (!mounted) {
+    return (
+      <div className={styles.container}>
+        <div>
+          <h1 className={styles.title}>Upload Match</h1>
+          <h3>
+            Make sure you add the player in &apos;Upload Team&apos; before this!
+          </h3>
+          <p style={{ marginTop: '1rem', color: '#666' }}>Loading form...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={styles.container}>
       <div>
@@ -302,6 +380,7 @@ export default function UploadMatchForm() {
         </h3>
 
         <Form
+          className={styles.form}
           schema={schema}
           uiSchema={localUiSchema}
           formData={formData}
@@ -309,6 +388,7 @@ export default function UploadMatchForm() {
           onSubmit={handleSubmit}
           validator={validator}
           disabled={isUploading}
+          widgets={{ SelectWidget: ReactSelectWidget }}
         />
 
         {isUploading && (
