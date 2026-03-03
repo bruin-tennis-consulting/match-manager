@@ -391,19 +391,22 @@
   }
 }
 
-/* Header Controls - wraps search and season filter */
+/* Header Controls - wraps search and season filter 
 .headerControls {
   display: flex;
   gap: 20px;
   align-items: center;
   flex-wrap: wrap;
-}
+}*/
 
 /* Season Filter Container */
 .seasonFilterContainer {
   display: flex;
   align-items: center;
   gap: 12px;
+  padding: 10px 0;
+  margin-bottom: 10px;
+  margin-left: 0;
 }
 
 .seasonButtons {

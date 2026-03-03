@@ -169,21 +169,24 @@ const SeasonFilter = React.memo(
     return (
       <div className={styles.seasonFilterContainer}>
         <div className={styles.seasonButtons}>
-          {availableSeasons.map((season) => (
-            <button
-              key={season}
-              className={`${styles.seasonButton} ${selectedSeason === season ? styles.activeSeason : ''}`}
-              onClick={() => onSeasonChange(season)}
-            >
-              {season}
-            </button>
-          ))}
           <button
             className={`${styles.seasonButton} ${selectedSeason === 'all' ? styles.activeSeason : ''}`}
             onClick={() => onSeasonChange('all')}
           >
             All Seasons
           </button>
+          {availableSeasons
+            .slice()
+            .reverse()
+            .map((season) => (
+              <button
+                key={season}
+                className={`${styles.seasonButton} ${selectedSeason === season ? styles.activeSeason : ''}`}
+                onClick={() => onSeasonChange(season)}
+              >
+                {season}
+              </button>
+            ))}
         </div>
       </div>
     )
@@ -345,7 +348,7 @@ const Dashboard = () => {
 
   const uniqueMatches = useMemo(() => {
     return getUniqueMatches(seasonFilteredMatches, cleanTeamName)
-  }, [])
+  }, [seasonFilteredMatches])
 
   // Mobile detection useEffect
   useEffect(() => {
@@ -448,20 +451,19 @@ const Dashboard = () => {
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <h2>Dashboard</h2>
-          <div className={styles.headerControls}>
-            <SearchBox
-              searchTerm={searchTerm}
-              onSearch={handleSearch}
-              onClear={handleClearSearch}
-            />
-            <SeasonFilter
-              availableSeasons={availableSeasons}
-              selectedSeason={selectedSeason}
-              onSeasonChange={handleSeasonChange}
-            />
-          </div>
+          <SearchBox
+            searchTerm={searchTerm}
+            onSearch={handleSearch}
+            onClear={handleClearSearch}
+          />
         </div>
       </header>
+
+      <SeasonFilter
+        availableSeasons={availableSeasons}
+        selectedSeason={selectedSeason}
+        onSeasonChange={handleSeasonChange}
+      />
 
       <div className={styles.carousel}>
         {!seasonFilteredMatches.length
