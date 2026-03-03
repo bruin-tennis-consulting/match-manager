@@ -16,6 +16,7 @@ import ScoreBoard from '@/app/components/ScoreBoard'
 import MatchTiles from '@/app/components/MatchTiles'
 import ExtendedList from '@/app/components/ExtendedList'
 import Notes from '@/app/components/Notes'
+import HtmlCarousel from '@/app/components/HtmlCarousel'
 
 const findDisplayName = (key) => {
   // Search through all sections of filterGroups
@@ -82,7 +83,7 @@ const MatchPage = ({ params }) => {
       filterList.forEach(([key, value]) => {
         params.append(key, value)
       })
-      router.replace(`?${params.toString()}`)
+      router.replace(`?${params.toString()}`, { scroll: false })
     }
   }, [filterList, router])
 
@@ -397,8 +398,17 @@ const MatchPage = ({ params }) => {
         </div>
         <div className={styles.sidebar}>
           <div className={filterListStyles.activeFilterListContainer}>
-            <div style={{ width: '100%', marginBottom: '0.5vw' }}>
-              Active Filters:
+            <div className={filterListStyles.activeFilterHeader}>
+              <span>Active Filters:</span>
+              {sortedFilterList.length > 0 && (
+                <button
+                  className={filterListStyles.clearAllButton}
+                  onClick={() => setFilterList([])}
+                  title="Clear all filters"
+                >
+                  Clear All
+                </button>
+              )}
             </div>
             <ul className={filterListStyles.activeFilterList}>
               {sortedFilterList.map(([key, value]) => (
@@ -671,12 +681,7 @@ const MatchPage = ({ params }) => {
           Detailed Point List
         </button>
         {showHTML ? (
-          <iframe
-            className={styles.VisualsView}
-            src={matchData?.htmlFile}
-            width="90%"
-            height="1550"
-          />
+          <HtmlCarousel htmlUrl={matchData?.htmlFile} />
         ) : showPDF ? (
           <iframe
             className={styles.VisualsView}
