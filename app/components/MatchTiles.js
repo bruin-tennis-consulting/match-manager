@@ -77,7 +77,7 @@ const MatchTiles = ({
                 fontSize: '0.6em',
                 top: '-0.3em',
                 left: '0.9em',
-                letterSpacing: '1vw'
+                letterSpacing: 'normal'
               }}
             >
               {tieScores[index]}
