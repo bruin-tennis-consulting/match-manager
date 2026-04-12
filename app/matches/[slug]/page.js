@@ -12,7 +12,6 @@ import styles from '@/app/styles/Match.module.css'
 import VideoPlayer from '@/app/components/VideoPlayer'
 import FilterList from '@/app/components/FilterList'
 import PointsList from '@/app/components/PointsList'
-import ScoreBoard from '@/app/components/ScoreBoard'
 import MatchTiles from '@/app/components/MatchTiles'
 import ExtendedList from '@/app/components/ExtendedList'
 import Notes from '@/app/components/Notes'
@@ -52,7 +51,8 @@ const MatchPage = ({ params }) => {
   const [playingPoint, setPlayingPoint] = useState(null)
   const [showHTML, setShowHTML] = useState(false)
   const [showPDF, setShowPDF] = useState(false)
-  const [tab, setTab] = useState(1)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [sidebarTab, setSidebarTab] = useState('points') // 'points' | 'saved'
   const [bookmarks, setBookmarks] = useState([])
   const [triggerScroll, setTriggerScroll] = useState(false)
   const [autoplayEnabled, setAutoplayEnabled] = useState(true)
@@ -184,9 +184,6 @@ const MatchPage = ({ params }) => {
             (point) => currentTime < point.Position
           )
           if (nextPoint) {
-            if (iframeRef.current) {
-              iframeRef.current.scrollIntoView({ behavior: 'smooth' })
-            }
             videoObject.seekTo(nextPoint.Position / 1000, true)
           }
         }
@@ -205,7 +202,9 @@ const MatchPage = ({ params }) => {
     })
 
     setMatchData((prev) => ({ ...prev, pointsJson: updatedPoints }))
-    setBookmarks(updatedPoints.filter((p) => p.bookmarked))
+    const newBookmarks = updatedPoints.filter((p) => p.bookmarked)
+    setBookmarks(newBookmarks)
+    if (newBookmarks.length === 0) setSidebarTab('points')
 
     try {
       await fetchMatchDetails(docId, updatedPoints)
@@ -248,6 +247,28 @@ const MatchPage = ({ params }) => {
     }
   }, [triggerScroll, showHTML, showPDF])
 
+  const handlePrevPoint = useCallback(() => {
+    if (!videoObject) return
+    const currentTime = videoObject.getCurrentTime() * 1000
+    const points = returnFilteredPoints().sort(
+      (a, b) => a.Position - b.Position
+    )
+    const prevPoint = [...points]
+      .reverse()
+      .find((p) => p.Position < currentTime - 1000)
+    if (prevPoint) handleJumpToTime(prevPoint.Position)
+  }, [videoObject, returnFilteredPoints])
+
+  const handleNextPoint = useCallback(() => {
+    if (!videoObject) return
+    const currentTime = videoObject.getCurrentTime() * 1000
+    const points = returnFilteredPoints().sort(
+      (a, b) => a.Position - b.Position
+    )
+    const nextPoint = points.find((p) => p.Position > currentTime + 500)
+    if (nextPoint) handleJumpToTime(nextPoint.Position)
+  }, [videoObject, returnFilteredPoints])
+
   const removeFilter = (key, value) => {
     const updatedFilterList = filterList.filter(
       ([filterKey, filterValue]) =>
@@ -265,58 +286,28 @@ const MatchPage = ({ params }) => {
   const sortedFilterList = filterList.sort((a, b) => a[0].localeCompare(b[0]))
 
   function addBorderRadius() {
-    console.log('adding border radius')
     const anyIframe = document.getElementById('player')
     if (anyIframe) {
-      console.log('found iframe:', anyIframe)
       anyIframe.style.borderRadius = '10px'
     }
-  }
-
-  const getMatchScores = (pointsJson) => {
-    if (!pointsJson || !pointsJson.length) return []
-
-    // Group points by set and get the last point of each set
-    return (
-      Object.values(
-        pointsJson.reduce((acc, point) => {
-          if (
-            !acc[point.setNum] ||
-            point.Position > acc[point.setNum].Position
-          ) {
-            acc[point.setNum] = point
-          }
-          return acc
-        }, {})
-      )
-        // Sort by set number
-        .sort((a, b) => a.setNum - b.setNum)
-        // Map to score arrays, filtering out 0-0 scores
-        .map((point) => {
-          if (!point.gameScore || point.gameScore === '0-0') return null
-          return point.gameScore.split('-').map(Number)
-        })
-        .filter(Boolean)
-    )
-  }
-
-  // Usage in your component:
-  console.log(matchData)
-  const matchScores = matchData ? getMatchScores(matchData.pointsJson) : []
-  if (matchData) {
-    console.log('b')
-    console.log(matchData.matchDetails.event ?? matchData.matchDetails.venue)
-    console.log(matchData.matchDetails)
   }
 
   if (loading) return <div>Loading match data...</div>
   if (error) return <div>Error: {error}</div>
   if (!matchData) return <div>No match data available</div>
 
+  const player1Name =
+    matchData.players.client.firstName + ' ' + matchData.players.client.lastName
+  const player2Name =
+    matchData.players.opponent.firstName +
+    ' ' +
+    matchData.players.opponent.lastName
+
   return (
     <div className={styles.container}>
+      {/* Compact single-row header */}
       <MatchTiles
-        matchName={matchData.matchDetails.event}
+        compact
         clientTeam={matchData.teams.clientTeam}
         opponentTeam={matchData.teams.opponentTeam}
         matchDetails={
@@ -329,16 +320,8 @@ const MatchPage = ({ params }) => {
         })}
         player1UTR={matchData.players.client.UTR}
         player2UTR={matchData.players.opponent.UTR}
-        player1Name={
-          matchData.players.client.firstName +
-          ' ' +
-          matchData.players.client.lastName
-        }
-        player2Name={
-          matchData.players.opponent.firstName +
-          ' ' +
-          matchData.players.opponent.lastName
-        }
+        player1Name={player1Name}
+        player2Name={player2Name}
         player1FinalScores={matchData.sets.map((set) => ({
           score: set.clientGames
         }))}
@@ -352,23 +335,63 @@ const MatchPage = ({ params }) => {
           set ? set.opponentTiebreak : null
         )}
         isUnfinished={matchData.matchDetails.unfinished}
-        displaySections={{ score: true, info: true, matchup: true }}
       />
-      <div className={styles.headerRow}>
-        <div className={styles.titleContainer}>
-          <h2>{matchData.name}</h2>
-        </div>
-      </div>
+
       <div className={styles.mainContent}>
+        {/* Video column */}
         <div className={styles.videoPlayer}>
-          <div ref={iframeRef}>
+          <div className={styles.videoWrapper} ref={iframeRef}>
             <VideoPlayer
               id="player"
               videoId={matchData.videoId}
               setVideoObject={setVideoObject}
               onReady={addBorderRadius}
             />
+            <div className={styles.prevNextOverlay}>
+              <button className={styles.navBtn} onClick={handlePrevPoint}>
+                ◀ Prev
+              </button>
+              <button className={styles.navBtn} onClick={handleNextPoint}>
+                Next ▶
+              </button>
+            </div>
           </div>
+
+          {/* Thin live score bar replacing the full ScoreBoard */}
+          {playingPoint && (
+            <div className={styles.liveScoreBar}>
+              <span className={styles.liveLabel}>LIVE</span>
+              <span className={styles.livePlayerName}>
+                {player1Name}
+                {playingPoint.serverName === player1Name && (
+                  <span className={styles.servingDot}> ●</span>
+                )}
+              </span>
+              <span className={styles.liveScore}>
+                {playingPoint.pointScore
+                  ? playingPoint.player1PointScore
+                  : playingPoint.player1TiebreakScore}
+              </span>
+              <span className={styles.liveScoreDivider}> – </span>
+              <span className={styles.liveScore}>
+                {playingPoint.pointScore
+                  ? playingPoint.player2PointScore
+                  : playingPoint.player2TiebreakScore}
+              </span>
+              <span className={styles.livePlayerName}>
+                {player2Name}
+                {playingPoint.serverName === player2Name && (
+                  <span className={styles.servingDot}> ●</span>
+                )}
+              </span>
+              {playingPoint.gameScore && (
+                <span className={styles.liveGameScore}>
+                  Game {playingPoint.gameScore}
+                </span>
+              )}
+            </div>
+          )}
+
           <Notes
             videoId={matchData.videoId}
             videoObject={videoObject}
@@ -380,27 +403,69 @@ const MatchPage = ({ params }) => {
             matchCollection={
               matches.find((m) => m.id === params.slug)?.collection
             }
-            onNoteSaved={(updatedData) => {
-              console.log('onNoteSaved called in parent, updating matchData...')
-              console.log(
-                'Updated pointsJson length:',
-                updatedData.pointsJson?.length
-              )
-              console.log(
-                'Points with notes:',
-                updatedData.pointsJson?.filter(
-                  (p) => p.notes && p.notes.length > 0
-                ).length
-              )
-              setMatchData(updatedData)
-            }}
+            onNoteSaved={(updatedData) => setMatchData(updatedData)}
           />
         </div>
+
+        {/* Sidebar */}
         <div className={styles.sidebar}>
-          <div className={filterListStyles.activeFilterListContainer}>
-            <div className={filterListStyles.activeFilterHeader}>
-              <span>Active Filters:</span>
-              {sortedFilterList.length > 0 && (
+          {/* Top controls: Filters toggle + Autoplay */}
+          <div className={styles.sidebarControls}>
+            <button
+              onClick={() => setFiltersOpen((prev) => !prev)}
+              className={
+                filtersOpen
+                  ? styles.toggle_button_neutral_active
+                  : styles.toggle_button_neutral_inactive
+              }
+              style={{ minWidth: '7vw' }}
+            >
+              {filtersOpen ? '▲' : '▼'} Filters
+              {sortedFilterList.length > 0 && ` (${sortedFilterList.length})`}
+            </button>
+            <button
+              onClick={() => setAutoplayEnabled((prev) => !prev)}
+              className={
+                autoplayEnabled
+                  ? styles.toggle_button_autoplay_active
+                  : styles.toggle_button_neutral_inactive
+              }
+            >
+              Autoplay
+            </button>
+          </div>
+
+          {/* Points / Saved tabs */}
+          <div className={styles.sidebarTabs}>
+            <button
+              onClick={() => setSidebarTab('points')}
+              className={
+                sidebarTab === 'points'
+                  ? styles.toggle_button_neutral_active_wide
+                  : styles.toggle_button_neutral_inactive_wide
+              }
+            >
+              Points
+            </button>
+            {bookmarks.length > 0 && (
+              <button
+                onClick={() => setSidebarTab('saved')}
+                className={
+                  sidebarTab === 'saved'
+                    ? styles.toggle_button_neutral_active_wide
+                    : styles.toggle_button_neutral_inactive_wide
+                }
+              >
+                Saved ({bookmarks.length})
+              </button>
+            )}
+          </div>
+
+          {/* Active filters — only rendered when filters are set */}
+          {sortedFilterList.length > 0 && (
+            <div className={filterListStyles.activeFilterListContainer}>
+              <div className={filterListStyles.activeFilterHeader}>
+                <span>Active Filters:</span>
                 <button
                   className={filterListStyles.clearAllButton}
                   onClick={() => setFilterList([])}
@@ -408,73 +473,34 @@ const MatchPage = ({ params }) => {
                 >
                   Clear All
                 </button>
-              )}
-            </div>
-            <ul className={filterListStyles.activeFilterList}>
-              {sortedFilterList.map(([key, value]) => (
-                <li
-                  className={filterListStyles.activeFilterItem}
-                  key={`${key}-${value}`}
-                >
-                  <span>
-                    {findDisplayName(key)}: {value}
-                  </span>
-                  <button
-                    className={filterListStyles.closeButton}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      removeFilter(key, value)
-                    }}
-                    aria-label="Remove filter"
+              </div>
+              <ul className={filterListStyles.activeFilterList}>
+                {sortedFilterList.map(([key, value]) => (
+                  <li
+                    className={filterListStyles.activeFilterItem}
+                    key={`${key}-${value}`}
                   >
-                    ×
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <button
-            onClick={() => setTab(0)}
-            className={
-              tab === 0
-                ? styles.toggle_button_neutral_active
-                : styles.toggle_button_neutral_inactive
-            }
-          >
-            Filters
-          </button>
-          <button
-            onClick={() => setTab(1)}
-            className={
-              tab === 1
-                ? styles.toggle_button_neutral_active
-                : styles.toggle_button_neutral_inactive
-            }
-          >
-            Points
-          </button>
-          <button
-            onClick={() => setTab(2)}
-            className={
-              tab === 2
-                ? styles.toggle_button_neutral_active
-                : styles.toggle_button_neutral_inactive
-            }
-          >
-            Saved
-          </button>
-          <button
-            onClick={() => setAutoplayEnabled((prev) => !prev)}
-            className={
-              autoplayEnabled
-                ? styles.toggle_button_autoplay_active
-                : styles.toggle_button_neutral_inactive
-            }
-          >
-            Autoplay
-          </button>
+                    <span>
+                      {findDisplayName(key)}: {value}
+                    </span>
+                    <button
+                      className={filterListStyles.closeButton}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        removeFilter(key, value)
+                      }}
+                      aria-label="Remove filter"
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-          {tab === 0 && (
+          {/* Filters accordion */}
+          {filtersOpen && (
             <>
               <div className={styles.sidebox}>
                 <div className={styles.sidecontent}>
@@ -532,8 +558,8 @@ const MatchPage = ({ params }) => {
                       showPercent={showPercent}
                       showCount={showCount}
                       onSubmitRef={filterSubmitRef}
-                      player1Name={`${matchData.players.client.firstName} ${matchData.players.client.lastName}`}
-                      player2Name={`${matchData.players.opponent.firstName} ${matchData.players.opponent.lastName}`}
+                      player1Name={player1Name}
+                      player2Name={player2Name}
                     />
                   </div>
                 </div>
@@ -564,87 +590,28 @@ const MatchPage = ({ params }) => {
               </div>
             </>
           )}
-          {tab === 1 && (
-            <div className={styles.sidebox}>
-              <div className={styles.sidecontent}>
-                <PointsList
-                  pointsData={returnFilteredPoints()}
-                  onPointSelect={handleJumpToTime}
-                  onBookmark={handleBookmark}
-                  clientTeam={matchData.teams.clientTeam}
-                  opponentTeam={matchData.teams.opponentTeam}
-                />
-              </div>
-              <div
-                style={{
-                  padding: '0.5vw',
-                  textAlign: 'center'
-                }}
-              >
-                <button
-                  className={styles.viewDetailedListButton}
-                  onClick={scrollToDetailedList}
-                >
-                  View Detailed List
-                </button>
-              </div>
+
+          {/* Points list / Saved bookmarks */}
+          <div className={styles.sidebox}>
+            <div className={styles.sidecontent}>
+              <PointsList
+                pointsData={
+                  sidebarTab === 'saved' ? bookmarks : returnFilteredPoints()
+                }
+                onPointSelect={handleJumpToTime}
+                onBookmark={handleBookmark}
+                clientTeam={matchData.teams.clientTeam}
+                opponentTeam={matchData.teams.opponentTeam}
+              />
             </div>
-          )}
-          {tab === 2 && (
-            <div className={styles.sidebox}>
-              <div className={styles.sidecontent}>
-                <PointsList
-                  pointsData={bookmarks}
-                  onPointSelect={handleJumpToTime}
-                  onBookmark={handleBookmark}
-                  clientTeam={matchData.teams.clientTeam}
-                  opponentTeam={matchData.teams.opponentTeam}
-                />
-              </div>
-              <div
-                style={{
-                  padding: '0.5vw',
-                  textAlign: 'center'
-                }}
+            <div style={{ padding: '0.5vw', textAlign: 'center' }}>
+              <button
+                className={styles.viewDetailedListButton}
+                onClick={scrollToDetailedList}
               >
-                <button
-                  className={styles.viewDetailedListButton}
-                  onClick={scrollToDetailedList}
-                >
-                  View Detailed List
-                </button>
-              </div>
+                View Detailed List
+              </button>
             </div>
-          )}
-          <div className="scoreboard">
-            <ScoreBoard
-              names={matchData.name}
-              playData={playingPoint}
-              player1Name={
-                matchData.players.client.firstName +
-                ' ' +
-                matchData.players.client.lastName
-              }
-              player2Name={
-                matchData.players.opponent.firstName +
-                ' ' +
-                matchData.players.opponent.lastName
-              }
-              player1FinalScores={matchScores.map((scores) => ({
-                score: scores[0]
-              }))}
-              player2FinalScores={matchScores.map((scores) => ({
-                score: scores[1]
-              }))}
-              player1TieScores={matchData.pointsJson.map(
-                (point) => point.player1TiebreakScore
-              )}
-              player2TieScores={matchData.pointsJson.map(
-                (point) => point.player2TiebreakScore
-              )}
-              isUnfinished={matchData.matchDetails.unfinished}
-              displaySections={{ score: true, info: true, matchup: true }}
-            />
           </div>
         </div>
       </div>
