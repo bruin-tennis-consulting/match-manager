@@ -165,6 +165,7 @@
   color: #666;
   white-space: nowrap;
   flex-shrink: 0;
+  margin-left: 0.5vw;
   padding-left: 1vw;
   border-left: 1px solid #eaeaea;
 }

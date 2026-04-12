@@ -420,7 +420,7 @@ const MatchPage = ({ params }) => {
               }
               style={{ minWidth: '7vw' }}
             >
-              {filtersOpen ? '▲' : '▼'} Filters
+              {filtersOpen ? '▼' : '▶'} Filters
               {sortedFilterList.length > 0 && ` (${sortedFilterList.length})`}
             </button>
             <button

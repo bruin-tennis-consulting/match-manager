@@ -168,7 +168,8 @@
   left: 0;
   right: 0;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 3vw;
   padding: 0 1vw;
   pointer-events: none;
   z-index: 10;
