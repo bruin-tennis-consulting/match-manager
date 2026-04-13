@@ -65,6 +65,7 @@ export default function PlayerManagement() {
   const [editingReport, setEditingReport] = useState(null)
   const [showEditReportModal, setShowEditReportModal] = useState(false)
   const [editReportPdfFile, setEditReportPdfFile] = useState(null)
+  const [showPdfViewer, setShowPdfViewer] = useState(false)
   const [newReport, setNewReport] = useState({
     firstName: '',
     lastName: '',
@@ -1602,9 +1603,38 @@ export default function PlayerManagement() {
               </div>
             )}
 
-            <button className={styles.assignButton}>
+            <button
+              className={styles.assignButton}
+              onClick={() => setShowPdfViewer(true)}
+              disabled={!selectedReport.pdfUrl}
+            >
               View Scouting Report
             </button>
+          </div>
+        )}
+
+        {/* PDF Viewer Overlay */}
+        {showPdfViewer && selectedReport?.pdfUrl && (
+          <div className={styles.pdfOverlay}>
+            <div className={styles.pdfViewerContainer}>
+              <div className={styles.pdfViewerHeader}>
+                <span className={styles.pdfViewerTitle}>
+                  {selectedReport.firstName} {selectedReport.lastName} —{' '}
+                  {selectedReport.date}
+                </span>
+                <button
+                  className={styles.pdfViewerClose}
+                  onClick={() => setShowPdfViewer(false)}
+                >
+                  &times;
+                </button>
+              </div>
+              <iframe
+                src={selectedReport.pdfUrl}
+                className={styles.pdfViewerFrame}
+                title="Scouting Report PDF"
+              />
+            </div>
           </div>
         )}
       </div>
