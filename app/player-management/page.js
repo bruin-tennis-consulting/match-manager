@@ -57,6 +57,21 @@ export default function PlayerManagement() {
 
   const classOptions = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Graduate']
 
+  // state for scouting
+  const [isScoutingMode, setIsScoutingMode] = useState(false)
+  const [scoutingReports, setScoutingReports] = useState([])
+  const [showAddScoutingModal, setShowAddScoutingModal] = useState(false)
+  const [selectedReport, setSelectedReport] = useState(null)
+  const [editingReport, setEditingReport] = useState(null)
+  const [showEditReportModal, setShowEditReportModal] = useState(false)
+  const [editReportPdfFile, setEditReportPdfFile] = useState(null)
+  const [newReport, setNewReport] = useState({
+    firstName: '',
+    lastName: '',
+    date: '',
+    pdfFile: null
+  })
+
   const fetchPlayers = useCallback(async (teamId) => {
     if (!teamId) return // Don't fetch if no team is selected
 
@@ -602,198 +617,273 @@ export default function PlayerManagement() {
         )}
 
         <div className={styles.playersPanel}>
-          <h2>Players</h2>
-          <input
-            type="text"
-            placeholder="Search players..."
-            value={searchQuery}
-            onChange={handleSearch}
-            className={styles.searchInput}
-          />
-          <button
-            className={styles.actionButton}
-            onClick={() => setShowAddPlayerModal(true)}
-            disabled={!selectedTeam}
-          >
-            Add New Player
-          </button>
-
-          {/* Add Player Modal */}
-          {showAddPlayerModal && (
-            <div className={styles.modal}>
-              <div className={styles.modalContent}>
-                <span
-                  className={styles.closeButton}
-                  onClick={() => {
-                    setShowAddPlayerModal(false)
-                    // Reset player form states fully
-                    setNewPlayer({
-                      firstName: '',
-                      lastName: '',
-                      photo: '',
-                      bio: '',
-                      class: 'Freshman',
-                      height: '',
-                      age: '',
-                      hand: 'right',
-                      heightFeet: '',
-                      heightInches: '',
-                      active: true
-                    })
-                    setPlayerHeadPhotoFile(null)
-                    setPlayerLargePhotoFile(null)
-                  }}
+          {isScoutingMode ? (
+            <>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <h2>Scouting</h2>
+                <button
+                  className={styles.actionButton}
+                  onClick={() => setIsScoutingMode(false)}
                 >
-                  &times;
-                </span>
-                <h2>
-                  Add New Player to{' '}
-                  {teams.find((t) => t.id === selectedTeam)?.name}
-                </h2>
-                <input
-                  type="text"
-                  placeholder="First Name"
-                  value={newPlayer.firstName}
-                  onChange={(e) =>
-                    setNewPlayer({ ...newPlayer, firstName: e.target.value })
-                  }
-                  className={styles.modalInput}
-                />
-                <input
-                  type="text"
-                  placeholder="Last Name (If middle name or multi-word last name, include here)"
-                  value={newPlayer.lastName}
-                  onChange={(e) =>
-                    setNewPlayer({ ...newPlayer, lastName: e.target.value })
-                  }
-                  className={styles.modalInput}
-                />
-                <input
-                  type="text"
-                  placeholder="Photo URL"
-                  value={newPlayer.photo}
-                  onChange={(e) =>
-                    setNewPlayer({ ...newPlayer, photo: e.target.value })
-                  }
-                  className={styles.modalInput}
-                />
-                <textarea
-                  placeholder="Bio"
-                  value={newPlayer.bio}
-                  onChange={(e) =>
-                    setNewPlayer({ ...newPlayer, bio: e.target.value })
-                  }
-                  className={styles.modalTextarea}
-                />
-                <input
-                  type="text"
-                  placeholder="Class (e.g., Freshman, Sophomore)"
-                  value={newPlayer.class}
-                  onChange={(e) =>
-                    setNewPlayer({ ...newPlayer, class: e.target.value })
-                  }
-                  className={styles.modalInput}
-                />
-                <input
-                  type="text"
-                  placeholder="Height (e.g., 6'1&quot;)"
-                  value={newPlayer.height}
-                  onChange={(e) =>
-                    setNewPlayer({ ...newPlayer, height: e.target.value })
-                  }
-                  className={styles.modalInput}
-                />
-                <input
-                  type="number"
-                  placeholder="Age"
-                  value={newPlayer.age}
-                  onChange={(e) =>
-                    setNewPlayer({ ...newPlayer, age: e.target.value })
-                  }
-                  className={styles.modalInput}
-                />
-                {/* Hand Radio Buttons */}
-                <div className={styles.inputGroup}>
-                  <label className={styles.inputLabel}>Hand:</label>
-                  <div className={styles.radioGroup}>
-                    <label>
-                      <input
-                        type="radio"
-                        name="playerHand"
-                        value="right"
-                        checked={newPlayer.hand === 'right'}
-                        onChange={(e) =>
-                          setNewPlayer({ ...newPlayer, hand: e.target.value })
-                        }
-                      />{' '}
-                      Right
+                  Players
+                </button>
+              </div>
+
+              <button
+                className={styles.actionButton}
+                onClick={() => setShowAddScoutingModal(true)}
+                disabled={!selectedTeam}
+              >
+                Add Scouting Report
+              </button>
+
+              {/* Add Scouting Report Modal */}
+              {showAddScoutingModal && (
+                <div className={styles.modal}>
+                  <div className={styles.modalContent}>
+                    <span
+                      className={styles.closeButton}
+                      onClick={() => {
+                        setShowAddScoutingModal(false)
+                        setNewReport({
+                          firstName: '',
+                          lastName: '',
+                          date: '',
+                          pdfFile: null
+                        })
+                      }}
+                    >
+                      &times;
+                    </span>
+                    <h2>Add Scouting Report</h2>
+                    <input
+                      type="text"
+                      placeholder="First Name"
+                      value={newReport.firstName}
+                      onChange={(e) =>
+                        setNewReport({
+                          ...newReport,
+                          firstName: e.target.value
+                        })
+                      }
+                      className={styles.modalInput}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Last Name"
+                      value={newReport.lastName}
+                      onChange={(e) =>
+                        setNewReport({ ...newReport, lastName: e.target.value })
+                      }
+                      s
+                      className={styles.modalInput}
+                    />
+                    <input
+                      type="date"
+                      value={newReport.date}
+                      onChange={(e) =>
+                        setNewReport({ ...newReport, date: e.target.value })
+                      }
+                      className={styles.modalInput}
+                    />
+                    <label
+                      htmlFor="scoutingPdfUpload"
+                      className={styles.fileInputLabel}
+                    >
+                      Scouting Report PDF:
                     </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="playerHand"
-                        value="left"
-                        checked={newPlayer.hand === 'left'}
-                        onChange={(e) =>
-                          setNewPlayer({ ...newPlayer, hand: e.target.value })
-                        }
-                      />{' '}
-                      Left
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="playerHand"
-                        value="ambidextrous"
-                        checked={newPlayer.hand === 'ambidextrous'}
-                        onChange={(e) =>
-                          setNewPlayer({ ...newPlayer, hand: e.target.value })
-                        }
-                      />{' '}
-                      Ambidextrous
-                    </label>
+                    <input
+                      id="scoutingPdfUpload"
+                      type="file"
+                      accept="application/pdf"
+                      onChange={(e) =>
+                        setNewReport({
+                          ...newReport,
+                          pdfFile: e.target.files[0]
+                        })
+                      }
+                      className={styles.modalInput}
+                    />
+                    {newReport.pdfFile && (
+                      <p className={styles.fileNameDisplay}>
+                        Selected: {newReport.pdfFile.name}
+                      </p>
+                    )}
+                    <button
+                      className={styles.modalButton}
+                      disabled={
+                        !newReport.firstName.trim() ||
+                        !newReport.lastName.trim() ||
+                        !newReport.date ||
+                        !newReport.pdfFile
+                      }
+                      onClick={() => {
+                        setScoutingReports([
+                          ...scoutingReports,
+                          { ...newReport }
+                        ])
+                        setShowAddScoutingModal(false)
+                        setNewReport({
+                          firstName: '',
+                          lastName: '',
+                          date: '',
+                          pdfFile: null
+                        })
+                      }}
+                    >
+                      Add Report
+                    </button>
                   </div>
                 </div>
-                <div className={styles.inputGroup}>
-                  <label className={styles.inputLabel}>Active:</label>
-                  <div className={styles.radioGroup}>
-                    <label>
-                      <input
-                        type="radio"
-                        name="playerActive"
-                        value="true"
-                        checked={newPlayer.active === true}
-                        onChange={() =>
-                          setNewPlayer({
-                            ...newPlayer,
-                            active: true
-                          })
-                        }
-                      />{' '}
-                      Active
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="playerActive"
-                        value="false"
-                        checked={newPlayer.active === false}
-                        onChange={() =>
-                          setNewPlayer({
-                            ...newPlayer,
-                            active: false
-                          })
-                        }
-                      />{' '}
-                      Inactive
-                    </label>
-                  </div>
+              )}
+              {/* Scouting Reports List */}
+              {scoutingReports.length === 0 ? (
+                <p>No scouting reports for this team.</p>
+              ) : (
+                <div className={styles.playersList}>
+                  {scoutingReports.map((report, index) => (
+                    <div
+                      key={index}
+                      className={`${styles.playerCard} ${selectedReport === report ? styles.selected : ''}`}
+                      onClick={() => setSelectedReport(report)}
+                    >
+                      <div className={styles.playerInfo}>
+                        <h3>
+                          {report.firstName} {report.lastName}
+                        </h3>
+                        <p>{report.date}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className={styles.inputGroup}>
-                  {' '}
-                  {/* For Age and Class side-by-side */}
-                  <label className={styles.inputLabel}>
-                    Age:
+              )}
+            </>
+          ) : (
+            <>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <h2>Players</h2>
+                <button
+                  className={styles.actionButton}
+                  onClick={() => setIsScoutingMode(true)}
+                >
+                  Scouting
+                </button>
+              </div>
+              <input
+                type="text"
+                placeholder="Search players..."
+                value={searchQuery}
+                onChange={handleSearch}
+                className={styles.searchInput}
+              />
+              <button
+                className={styles.actionButton}
+                onClick={() => setShowAddPlayerModal(true)}
+                disabled={!selectedTeam}
+              >
+                Add New Player
+              </button>
+
+              {/* Add Player Modal */}
+              {showAddPlayerModal && (
+                <div className={styles.modal}>
+                  <div className={styles.modalContent}>
+                    <span
+                      className={styles.closeButton}
+                      onClick={() => {
+                        setShowAddPlayerModal(false)
+                        // Reset player form states fully
+                        setNewPlayer({
+                          firstName: '',
+                          lastName: '',
+                          photo: '',
+                          bio: '',
+                          class: 'Freshman',
+                          height: '',
+                          age: '',
+                          hand: 'right',
+                          heightFeet: '',
+                          heightInches: '',
+                          active: true
+                        })
+                        setPlayerHeadPhotoFile(null)
+                        setPlayerLargePhotoFile(null)
+                      }}
+                    >
+                      &times;
+                    </span>
+                    <h2>
+                      Add New Player to{' '}
+                      {teams.find((t) => t.id === selectedTeam)?.name}
+                    </h2>
+                    <input
+                      type="text"
+                      placeholder="First Name"
+                      value={newPlayer.firstName}
+                      onChange={(e) =>
+                        setNewPlayer({
+                          ...newPlayer,
+                          firstName: e.target.value
+                        })
+                      }
+                      className={styles.modalInput}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Last Name (If middle name or multi-word last name, include here)"
+                      value={newPlayer.lastName}
+                      onChange={(e) =>
+                        setNewPlayer({ ...newPlayer, lastName: e.target.value })
+                      }
+                      className={styles.modalInput}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Photo URL"
+                      value={newPlayer.photo}
+                      onChange={(e) =>
+                        setNewPlayer({ ...newPlayer, photo: e.target.value })
+                      }
+                      className={styles.modalInput}
+                    />
+                    <textarea
+                      placeholder="Bio"
+                      value={newPlayer.bio}
+                      onChange={(e) =>
+                        setNewPlayer({ ...newPlayer, bio: e.target.value })
+                      }
+                      className={styles.modalTextarea}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Class (e.g., Freshman, Sophomore)"
+                      value={newPlayer.class}
+                      onChange={(e) =>
+                        setNewPlayer({ ...newPlayer, class: e.target.value })
+                      }
+                      className={styles.modalInput}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Height (e.g., 6'1&quot;)"
+                      value={newPlayer.height}
+                      onChange={(e) =>
+                        setNewPlayer({ ...newPlayer, height: e.target.value })
+                      }
+                      className={styles.modalInput}
+                    />
                     <input
                       type="number"
                       placeholder="Age"
@@ -803,147 +893,259 @@ export default function PlayerManagement() {
                       }
                       className={styles.modalInput}
                     />
-                  </label>
-                  <label className={styles.inputLabel}>
-                    Class:
-                    <select
-                      value={newPlayer.class}
-                      onChange={(e) =>
-                        setNewPlayer({ ...newPlayer, class: e.target.value })
-                      }
-                      className={
-                        styles.modalInput
-                      } /* Or a specific select style */
-                    >
-                      {classOptions.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
+                    {/* Hand Radio Buttons */}
+                    <div className={styles.inputGroup}>
+                      <label className={styles.inputLabel}>Hand:</label>
+                      <div className={styles.radioGroup}>
+                        <label>
+                          <input
+                            type="radio"
+                            name="playerHand"
+                            value="right"
+                            checked={newPlayer.hand === 'right'}
+                            onChange={(e) =>
+                              setNewPlayer({
+                                ...newPlayer,
+                                hand: e.target.value
+                              })
+                            }
+                          />{' '}
+                          Right
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            name="playerHand"
+                            value="left"
+                            checked={newPlayer.hand === 'left'}
+                            onChange={(e) =>
+                              setNewPlayer({
+                                ...newPlayer,
+                                hand: e.target.value
+                              })
+                            }
+                          />{' '}
+                          Left
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            name="playerHand"
+                            value="ambidextrous"
+                            checked={newPlayer.hand === 'ambidextrous'}
+                            onChange={(e) =>
+                              setNewPlayer({
+                                ...newPlayer,
+                                hand: e.target.value
+                              })
+                            }
+                          />{' '}
+                          Ambidextrous
+                        </label>
+                      </div>
+                    </div>
+                    <div className={styles.inputGroup}>
+                      <label className={styles.inputLabel}>Active:</label>
+                      <div className={styles.radioGroup}>
+                        <label>
+                          <input
+                            type="radio"
+                            name="playerActive"
+                            value="true"
+                            checked={newPlayer.active === true}
+                            onChange={() =>
+                              setNewPlayer({
+                                ...newPlayer,
+                                active: true
+                              })
+                            }
+                          />{' '}
+                          Active
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            name="playerActive"
+                            value="false"
+                            checked={newPlayer.active === false}
+                            onChange={() =>
+                              setNewPlayer({
+                                ...newPlayer,
+                                active: false
+                              })
+                            }
+                          />{' '}
+                          Inactive
+                        </label>
+                      </div>
+                    </div>
+                    <div className={styles.inputGroup}>
+                      {' '}
+                      {/* For Age and Class side-by-side */}
+                      <label className={styles.inputLabel}>
+                        Age:
+                        <input
+                          type="number"
+                          placeholder="Age"
+                          value={newPlayer.age}
+                          onChange={(e) =>
+                            setNewPlayer({ ...newPlayer, age: e.target.value })
+                          }
+                          className={styles.modalInput}
+                        />
+                      </label>
+                      <label className={styles.inputLabel}>
+                        Class:
+                        <select
+                          value={newPlayer.class}
+                          onChange={(e) =>
+                            setNewPlayer({
+                              ...newPlayer,
+                              class: e.target.value
+                            })
+                          }
+                          className={
+                            styles.modalInput
+                          } /* Or a specific select style */
+                        >
+                          {classOptions.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
 
-                <div className={styles.inputGroup}>
-                  {' '}
-                  {/* For Height Feet and Inches */}
-                  <label className={styles.inputLabel}>Height:</label>
-                  <input
-                    type="number"
-                    placeholder="Feet"
-                    min="0"
-                    value={newPlayer.heightFeet}
-                    onChange={(e) =>
-                      setNewPlayer({ ...newPlayer, heightFeet: e.target.value })
-                    }
-                    className={styles.modalInputSmall}
-                  />
-                  <span>&apos;&nbsp;</span>
-                  <input
-                    type="number"
-                    placeholder="Inches"
-                    min="0"
-                    max="11"
-                    value={newPlayer.heightInches}
-                    onChange={(e) =>
-                      setNewPlayer({
-                        ...newPlayer,
-                        heightInches: e.target.value
-                      })
-                    }
-                    className={styles.modalInputSmall}
-                  />
-                </div>
-
-                <label
-                  htmlFor="playerHeadPhoto"
-                  className={styles.fileInputLabel}
-                >
-                  Player Head Photo (webp, svg, png, jpg):
-                </label>
-                <input
-                  id="playerHeadPhoto"
-                  type="file"
-                  accept="image/webp,image/svg+xml,image/png,image/jpeg"
-                  onChange={(e) => setPlayerHeadPhotoFile(e.target.files[0])}
-                  className={styles.modalInput}
-                />
-                {playerHeadPhotoFile && (
-                  <p className={styles.fileNameDisplay}>
-                    Selected: {playerHeadPhotoFile.name}
-                  </p>
-                )}
-
-                <label
-                  htmlFor="playerLargePhoto"
-                  className={styles.fileInputLabel}
-                >
-                  Large Player Photo (webp, svg, png, jpg):
-                </label>
-                <input
-                  id="playerLargePhoto"
-                  type="file"
-                  accept="image/webp,image/svg+xml,image/png,image/jpeg"
-                  onChange={(e) => setPlayerLargePhotoFile(e.target.files[0])}
-                  className={styles.modalInput}
-                />
-                {playerLargePhotoFile && (
-                  <p className={styles.fileNameDisplay}>
-                    Selected: {playerLargePhotoFile.name}
-                  </p>
-                )}
-
-                <button
-                  onClick={handleAddPlayer}
-                  className={styles.modalButton}
-                >
-                  Add Player
-                </button>
-              </div>
-            </div>
-          )}
-
-          {loading ? (
-            <p>Loading players...</p>
-          ) : error ? (
-            <p className={styles.error}>{error}</p>
-          ) : filteredPlayers.length === 0 ? (
-            <p>No players found</p>
-          ) : (
-            <div className={styles.playersList}>
-              {filteredPlayers.map((player, index) => (
-                <div
-                  key={index}
-                  className={`${styles.playerCard} ${selectedPlayer === player ? styles.selected : ''}`}
-                  onClick={() => handlePlayerSelect(player)}
-                >
-                  <div className={styles.playerImage}>
-                    {player.photo ? (
-                      <Image
-                        src={player.photo}
-                        alt={`${player.firstName} ${player.lastName}`}
-                        width={100}
-                        height={100}
-                        style={{ objectFit: 'cover' }}
-                        priority={index < 4} // Prioritize loading first 4 images
+                    <div className={styles.inputGroup}>
+                      {' '}
+                      {/* For Height Feet and Inches */}
+                      <label className={styles.inputLabel}>Height:</label>
+                      <input
+                        type="number"
+                        placeholder="Feet"
+                        min="0"
+                        value={newPlayer.heightFeet}
+                        onChange={(e) =>
+                          setNewPlayer({
+                            ...newPlayer,
+                            heightFeet: e.target.value
+                          })
+                        }
+                        className={styles.modalInputSmall}
                       />
-                    ) : (
-                      <div className={styles.noImage}>No Image</div>
+                      <span>&apos;&nbsp;</span>
+                      <input
+                        type="number"
+                        placeholder="Inches"
+                        min="0"
+                        max="11"
+                        value={newPlayer.heightInches}
+                        onChange={(e) =>
+                          setNewPlayer({
+                            ...newPlayer,
+                            heightInches: e.target.value
+                          })
+                        }
+                        className={styles.modalInputSmall}
+                      />
+                    </div>
+
+                    <label
+                      htmlFor="playerHeadPhoto"
+                      className={styles.fileInputLabel}
+                    >
+                      Player Head Photo (webp, svg, png, jpg):
+                    </label>
+                    <input
+                      id="playerHeadPhoto"
+                      type="file"
+                      accept="image/webp,image/svg+xml,image/png,image/jpeg"
+                      onChange={(e) =>
+                        setPlayerHeadPhotoFile(e.target.files[0])
+                      }
+                      className={styles.modalInput}
+                    />
+                    {playerHeadPhotoFile && (
+                      <p className={styles.fileNameDisplay}>
+                        Selected: {playerHeadPhotoFile.name}
+                      </p>
                     )}
-                  </div>
-                  <div className={styles.playerInfo}>
-                    <h3>
-                      {player.firstName} {player.lastName}
-                    </h3>
-                    <p>{player.bio}</p>
+
+                    <label
+                      htmlFor="playerLargePhoto"
+                      className={styles.fileInputLabel}
+                    >
+                      Large Player Photo (webp, svg, png, jpg):
+                    </label>
+                    <input
+                      id="playerLargePhoto"
+                      type="file"
+                      accept="image/webp,image/svg+xml,image/png,image/jpeg"
+                      onChange={(e) =>
+                        setPlayerLargePhotoFile(e.target.files[0])
+                      }
+                      className={styles.modalInput}
+                    />
+                    {playerLargePhotoFile && (
+                      <p className={styles.fileNameDisplay}>
+                        Selected: {playerLargePhotoFile.name}
+                      </p>
+                    )}
+
+                    <button
+                      onClick={handleAddPlayer}
+                      className={styles.modalButton}
+                    >
+                      Add Player
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
+              )}
+
+              {loading ? (
+                <p>Loading players...</p>
+              ) : error ? (
+                <p className={styles.error}>{error}</p>
+              ) : filteredPlayers.length === 0 ? (
+                <p>No players found</p>
+              ) : (
+                <div className={styles.playersList}>
+                  {filteredPlayers.map((player, index) => (
+                    <div
+                      key={index}
+                      className={`${styles.playerCard} ${selectedPlayer === player ? styles.selected : ''}`}
+                      onClick={() => handlePlayerSelect(player)}
+                    >
+                      <div className={styles.playerImage}>
+                        {player.photo ? (
+                          <Image
+                            src={player.photo}
+                            alt={`${player.firstName} ${player.lastName}`}
+                            width={100}
+                            height={100}
+                            style={{ objectFit: 'cover' }}
+                            priority={index < 4} // Prioritize loading first 4 images
+                          />
+                        ) : (
+                          <div className={styles.noImage}>No Image</div>
+                        )}
+                      </div>
+                      <div className={styles.playerInfo}>
+                        <h3>
+                          {player.firstName} {player.lastName}
+                        </h3>
+                        <p>{player.bio}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
 
-        {selectedPlayer && (
+        {!isScoutingMode && selectedPlayer && (
           <div className={styles.assignPanel}>
             <h2>Player Details</h2>
             <div className={styles.selectedPlayerCard}>
@@ -1240,6 +1442,107 @@ export default function PlayerManagement() {
                 Assign to Team
               </button>
             </div>
+          </div>
+        )}
+
+        {isScoutingMode && selectedReport && (
+          <div className={styles.assignPanel}>
+            <h2>Report Details</h2>
+            <div className={styles.selectedPlayerCard}>
+              <h3>
+                {selectedReport.firstName} {selectedReport.lastName}
+              </h3>
+              <p>
+                <strong>Date:</strong> {selectedReport.date}
+              </p>
+              <button
+                onClick={() => {
+                  setEditingReport({ ...selectedReport })
+                  setEditReportPdfFile(null)
+                  setShowEditReportModal(true)
+                }}
+                className={styles.editButton}
+              >
+                Edit Report
+              </button>
+            </div>
+
+            {/* Edit Scouting Report Modal */}
+            {showEditReportModal && editingReport && (
+              <div className={styles.modal}>
+                <div className={styles.modalContent}>
+                  <span
+                    className={styles.closeButton}
+                    onClick={() => {
+                      setShowEditReportModal(false)
+                      setEditingReport(null)
+                      setEditReportPdfFile(null)
+                    }}
+                  >
+                    &times;
+                  </span>
+                  <h2>Edit Scouting Report</h2>
+                  <input
+                    type="text"
+                    placeholder="First Name"
+                    value={editingReport.firstName}
+                    onChange={(e) =>
+                      setEditingReport({
+                        ...editingReport,
+                        firstName: e.target.value
+                      })
+                    }
+                    className={styles.modalInput}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Last Name"
+                    value={editingReport.lastName}
+                    onChange={(e) =>
+                      setEditingReport({
+                        ...editingReport,
+                        lastName: e.target.value
+                      })
+                    }
+                    className={styles.modalInput}
+                  />
+                  <input
+                    type="date"
+                    value={editingReport.date}
+                    onChange={(e) =>
+                      setEditingReport({
+                        ...editingReport,
+                        date: e.target.value
+                      })
+                    }
+                    className={styles.modalInput}
+                  />
+                  <label
+                    htmlFor="editReportPdfUpload"
+                    className={styles.fileInputLabel}
+                  >
+                    Replace Scouting Report PDF:
+                  </label>
+                  <input
+                    id="editReportPdfUpload"
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) => setEditReportPdfFile(e.target.files[0])}
+                    className={styles.modalInput}
+                  />
+                  {editReportPdfFile && (
+                    <p className={styles.fileNameDisplay}>
+                      Selected: {editReportPdfFile.name}
+                    </p>
+                  )}
+                  <button className={styles.modalButton}>Update Report</button>
+                </div>
+              </div>
+            )}
+
+            <button className={styles.assignButton}>
+              View Scouting Report
+            </button>
           </div>
         )}
       </div>
