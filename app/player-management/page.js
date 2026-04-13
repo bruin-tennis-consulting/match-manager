@@ -84,8 +84,10 @@ export default function PlayerManagement() {
       if (!teamSnapshot.empty) {
         const teamData = teamSnapshot.docs[0].data()
         setPlayers(teamData.players || [])
+        setScoutingReports(teamData.scoutingReports || [])
       } else {
         setPlayers([])
+        setScoutingReports([])
       }
     } catch (err) {
       console.error('Error fetching players:', err)
@@ -292,6 +294,77 @@ export default function PlayerManagement() {
       setMessage('') // Or use: setMessage('Failed to create team. Please try again.')
     } finally {
       setIsCreatingTeam(false)
+    }
+  }
+
+  const handleScoutingReportSubmit = async () => {
+    if (!selectedTeam) {
+      setMessage('Please select a team first.')
+      return
+    }
+    if (
+      !newReport.firstName.trim() ||
+      !newReport.lastName.trim() ||
+      !newReport.date ||
+      !newReport.pdfFile
+    ) {
+      setMessage('All fields and a PDF file are required.')
+      return
+    }
+
+    try {
+      setLoading(true)
+      // Upload PDF to Firebase Storage to "scouting-pdfs/teamID/date_pdfileanme"
+      const pdfRef = ref(
+        storage,
+        `scouting-pdfs/${selectedTeam}/${Date.now()}_${newReport.pdfFile.name}`
+      )
+      await uploadBytes(pdfRef, newReport.pdfFile)
+      const pdfUrl = await getDownloadURL(pdfRef)
+
+      // Build the report object
+      const reportToAdd = {
+        firstName: newReport.firstName.trim(),
+        lastName: newReport.lastName.trim(),
+        date: newReport.date,
+        pdfUrl
+      }
+
+      // Update team document with new scouting report
+      const teamRef = doc(db, 'teams', selectedTeam)
+      const teamSnapshot = await getDocs(
+        query(collection(db, 'teams'), where('__name__', '==', selectedTeam))
+      )
+
+      if (teamSnapshot.empty) {
+        setMessage('Selected team not found.')
+        setLoading(false)
+        return
+      }
+
+      const teamData = teamSnapshot.docs[0].data()
+      const updatedReports = [...(teamData.scoutingReports || []), reportToAdd]
+
+      await updateDoc(teamRef, {
+        scoutingReports: updatedReports
+      })
+
+      setMessage(
+        `Scouting report for ${reportToAdd.firstName} ${reportToAdd.lastName} added successfully!`
+      )
+      setNewReport({
+        firstName: '',
+        lastName: '',
+        date: '',
+        pdfFile: null
+      })
+      setShowAddScoutingModal(false)
+      fetchPlayers(selectedTeam) // Refresh data
+    } catch (err) {
+      console.error('Error adding scouting report:', err)
+      setMessage('Failed to add scouting report. ' + err.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -721,23 +794,12 @@ export default function PlayerManagement() {
                         !newReport.firstName.trim() ||
                         !newReport.lastName.trim() ||
                         !newReport.date ||
-                        !newReport.pdfFile
+                        !newReport.pdfFile ||
+                        loading
                       }
-                      onClick={() => {
-                        setScoutingReports([
-                          ...scoutingReports,
-                          { ...newReport }
-                        ])
-                        setShowAddScoutingModal(false)
-                        setNewReport({
-                          firstName: '',
-                          lastName: '',
-                          date: '',
-                          pdfFile: null
-                        })
-                      }}
+                      onClick={handleScoutingReportSubmit}
                     >
-                      Add Report
+                      {loading ? 'Uploading...' : 'Add Report'}
                     </button>
                   </div>
                 </div>
