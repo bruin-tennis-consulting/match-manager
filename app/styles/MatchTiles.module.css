@@ -60,14 +60,14 @@
   font-weight: 600;
   overflow: hidden;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .playerInfoScore {
-  position: absolute;
   display: flex;
   font-size: 1.5vw;
   font-weight: 600;
-  padding-left: 22.6vw;
+  margin-left: auto;
   letter-spacing: 0.5vw;
 }
 
@@ -91,3 +91,95 @@
   align-items: center; /* Center the image horizontally */
   overflow: hidden; /* Ensure the image doesn't overflow the container */
 }
+
+/* Dashboard Overrides */
+.isDashboard {
+  width: 100% !important;
+  padding-top: 1vw !important;
+}
+
+.isDashboard .matchInfoContainer {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0.8vw !important;
+}
+
+.isDashboard .matchInfoContainer:hover {
+  cursor: pointer;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
+}
+
+.isDashboard .containerTitle {
+  font-size: 1vw !important;
+  padding-bottom: 0.4vw !important;
+}
+
+.isDashboard .containerTagged {
+  font-size: 0.7vw !important;
+  padding: 0.2vw 0.5vw !important;
+  border-radius: 0.6vw !important;
+}
+
+.isDashboard .playerInfo {
+  font-size: 1.3vw !important;
+  padding-bottom: 0.4vw !important;
+  align-items: center !important;
+}
+
+.isDashboard .playerInfoName {
+  font-size: 1.3vw !important;
+  padding-left: 0.8vw !important;
+}
+
+.isDashboard .playerInfoScore {
+  font-size: 1.3vw !important;
+  letter-spacing: 0.4vw !important;
+}
+
+.isDashboard .playerSchoolImgcontainerhome,
+.isDashboard .playerSchoolImgcontainer {
+  width: 40px !important;
+  height: 30px !important;
+  max-width: none !important;
+  max-height: none !important;
+  padding: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .isDashboard .matchInfoContainer {
+    border-radius: 10px !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    padding-left: 10px !important;
+  }
+  .isDashboard .containerTitle {
+    font-size: 3.5vw !important;
+    font-weight: 400 !important;
+  }
+  .isDashboard .containerTagged {
+    font-size: 8px !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+  }
+  .isDashboard .playerInfo {
+    font-size: 1vw !important;
+  }
+  .isDashboard .playerInfoName {
+    font-size: clamp(1.5rem, 2.5vw, 2rem) !important;
+    padding-left: 6px !important;
+  }
+  .isDashboard .playerInfoScore {
+    font-size: 4vw !important;
+    letter-spacing: 5px !important;
+  }
+  .isDashboard .playerSchoolImgcontainerhome,
+  .isDashboard .playerSchoolImgcontainer {
+    width: 20px !important;
+    height: 20px !important;
+  }
+}
+

@@ -1,5 +1,5 @@
 import React from 'react'
-import DashboardTile from '@/app/components/DashboardTile'
+import MatchTiles from '@/app/components/MatchTiles'
 import styles from '@/app/styles/Dashboard.module.css'
 
 const DashTileContainer = ({ matches, matchType, onTileClick, cols = 3 }) => {
@@ -20,7 +20,7 @@ const DashTileContainer = ({ matches, matchType, onTileClick, cols = 3 }) => {
                 className={styles.tileWrapper}
                 onClick={() => onTileClick(match.videoID || match.id)}
               >
-                <DashboardTile
+                <MatchTiles
                   matchName={`${match.opponent} ${match.date}`}
                   clientTeam={match.teams.clientTeam}
                   opponentTeam={match.teams.opponentTeam}
@@ -40,6 +40,8 @@ const DashTileContainer = ({ matches, matchType, onTileClick, cols = 3 }) => {
                   )}
                   isUnfinished={false}
                   isTagged={match.published}
+                  isDashboard={true}
+                  displaySections={{ score: true, info: false, matchup: false }}
                 />
               </div>
             ))}
