@@ -440,32 +440,6 @@ const MatchPage = ({ params }) => {
             </button>
           </div>
 
-          {/* Points / Saved tabs */}
-          <div className={styles.sidebarTabs}>
-            <button
-              onClick={() => setSidebarTab('points')}
-              className={
-                sidebarTab === 'points'
-                  ? styles.toggle_button_neutral_active_wide
-                  : styles.toggle_button_neutral_inactive_wide
-              }
-            >
-              Points
-            </button>
-            {bookmarks.length > 0 && (
-              <button
-                onClick={() => setSidebarTab('saved')}
-                className={
-                  sidebarTab === 'saved'
-                    ? styles.toggle_button_neutral_active_wide
-                    : styles.toggle_button_neutral_inactive_wide
-                }
-              >
-                Saved ({bookmarks.length})
-              </button>
-            )}
-          </div>
-
           {/* Active filters — only rendered when filters are set */}
           {sortedFilterList.length > 0 && (
             <div className={filterListStyles.activeFilterListContainer}>
@@ -579,7 +553,10 @@ const MatchPage = ({ params }) => {
                 }}
               >
                 <button
-                  onClick={() => filterSubmitRef.current?.()}
+                  onClick={() => {
+                    filterSubmitRef.current?.()
+                    setFiltersOpen(false)
+                  }}
                   style={{
                     padding: '1vh 2vw',
                     fontSize: '1.4vw',
@@ -595,6 +572,30 @@ const MatchPage = ({ params }) => {
               </div>
             </>
           )}
+
+          {/* Points / Saved tabs */}
+          <div className={styles.sidebarTabs}>
+            <button
+              onClick={() => setSidebarTab('points')}
+              className={
+                sidebarTab === 'points'
+                  ? styles.toggle_button_neutral_active_wide
+                  : styles.toggle_button_neutral_inactive_wide
+              }
+            >
+              Points
+            </button>
+            <button
+              onClick={() => setSidebarTab('saved')}
+              className={
+                sidebarTab === 'saved'
+                  ? styles.toggle_button_neutral_active_wide
+                  : styles.toggle_button_neutral_inactive_wide
+              }
+            >
+              Saved ({bookmarks.length})
+            </button>
+          </div>
 
           {/* Points list / Saved bookmarks */}
           <div className={styles.sidebox}>
