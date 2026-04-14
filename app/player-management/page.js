@@ -9,7 +9,12 @@ import {
   updateDoc,
   addDoc
 } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject
+} from 'firebase/storage'
 import { db, storage } from '@/app/services/initializeFirebase.js'
 import styles from '@/app/styles/PlayerManagement.module.css'
 import Image from 'next/image'
@@ -364,6 +369,53 @@ export default function PlayerManagement() {
     } catch (err) {
       console.error('Error adding scouting report:', err)
       setMessage('Failed to add scouting report. ' + err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteScoutingReport = async () => {
+    if (!selectedTeam || !selectedReport) return
+
+    try {
+      setLoading(true)
+
+      // Delete PDF from Firebase Storage
+      if (selectedReport.pdfUrl) {
+        const pdfRef = ref(storage, selectedReport.pdfUrl)
+        await deleteObject(pdfRef)
+      }
+
+      // Remove report from team's scoutingReports array, matching by pdfUrl to handle duplicate names
+      const teamRef = doc(db, 'teams', selectedTeam)
+      const teamSnapshot = await getDocs(
+        query(collection(db, 'teams'), where('__name__', '==', selectedTeam))
+      )
+
+      if (teamSnapshot.empty) {
+        setMessage('Selected team not found.')
+        setLoading(false)
+        return
+      }
+
+      const teamData = teamSnapshot.docs[0].data()
+      const updatedReports = (teamData.scoutingReports || []).filter(
+        (report) => report.pdfUrl !== selectedReport.pdfUrl
+      )
+
+      await updateDoc(teamRef, {
+        scoutingReports: updatedReports
+      })
+
+      setMessage(
+        `Scouting report for ${selectedReport.firstName} ${selectedReport.lastName} deleted successfully!`
+      )
+      setSelectedReport(null)
+      setShowPdfViewer(false)
+      fetchPlayers(selectedTeam)
+    } catch (err) {
+      console.error('Error deleting scouting report:', err)
+      setMessage('Failed to delete scouting report. ' + err.message)
     } finally {
       setLoading(false)
     }
@@ -1609,6 +1661,13 @@ export default function PlayerManagement() {
               disabled={!selectedReport.pdfUrl}
             >
               View Scouting Report
+            </button>
+            <button
+              className={styles.deleteButton}
+              onClick={handleDeleteScoutingReport}
+              disabled={loading}
+            >
+              {loading ? 'Deleting...' : 'Delete Report'}
             </button>
           </div>
         )}

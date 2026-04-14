@@ -397,6 +397,28 @@
   cursor: not-allowed;
 }
 
+.deleteButton {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  width: 100%;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.deleteButton:hover {
+  background-color: #c0392b;
+}
+
+.deleteButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
 /* PDF Viewer Overlay */
 .pdfOverlay {
   position: fixed;
