@@ -303,6 +303,9 @@ const MatchPage = ({ params }) => {
     ' ' +
     matchData.players.opponent.lastName
 
+  const currentMatch = matches.find((m) => m.id === params.slug)
+  const isTagged = currentMatch?.published || matchData?.published
+
   return (
     <div className={styles.container}>
       {/* Compact single-row header */}
@@ -347,14 +350,16 @@ const MatchPage = ({ params }) => {
               setVideoObject={setVideoObject}
               onReady={addBorderRadius}
             />
-            <div className={styles.prevNextOverlay}>
-              <button className={styles.navBtn} onClick={handlePrevPoint}>
-                ◀ Prev
-              </button>
-              <button className={styles.navBtn} onClick={handleNextPoint}>
-                Next ▶
-              </button>
-            </div>
+            {isTagged && (
+              <div className={styles.prevNextOverlay}>
+                <button className={styles.navBtn} onClick={handlePrevPoint}>
+                  ◀ Prev
+                </button>
+                <button className={styles.navBtn} onClick={handleNextPoint}>
+                  Next ▶
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Thin live score bar replacing the full ScoreBoard */}
