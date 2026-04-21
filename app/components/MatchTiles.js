@@ -30,8 +30,7 @@ const MatchTiles = ({
   player2UTR,
   isUnfinished,
   tagged = { status: false },
-  displaySections = { score: true, info: true, matchup: true }, // default all true
-  compact = false
+  displaySections = { score: true, info: true, matchup: true } // default all true
 }) => {
   const { clientLogo, opponentLogo, loading } = useTeamLogos(
     clientTeam,
@@ -92,119 +91,6 @@ const MatchTiles = ({
           )}
         </div>
       )
-    )
-  }
-
-  if (compact) {
-    return (
-      <div className={styles.compactContainer}>
-        {/* Player 1 */}
-        <div className={styles.compactPlayerSide}>
-          <div className={styles.compactLogo}>
-            <Image
-              src={clientLogo || '/images/default-logo.svg'}
-              alt={`${clientTeam} logo`}
-              width={35}
-              height={35}
-              style={{ objectFit: 'contain', width: '100%', height: '100%' }}
-              onError={(e) => {
-                if (e.target.src !== '/images/default-logo.svg')
-                  e.target.src = '/images/default-logo.svg'
-                else e.target.style.display = 'none'
-              }}
-            />
-          </div>
-          <div className={styles.compactPlayerName}>
-            {player1Name}
-            {isUnfinished && ' (UF)'}
-            {player1UTR && ` (${player1UTR})`}
-          </div>
-          <div className={styles.compactScores}>
-            {player1FinalScores.map((score, index) =>
-              !isNaN(score.score) ? (
-                <div
-                  key={index}
-                  className={styles.compactScoreVal}
-                  style={{ opacity: player1Opacity[index] ? 1 : 0.4 }}
-                >
-                  {score.score}
-                  {player1TieScores[index] && (
-                    <sup
-                      style={{
-                        position: 'absolute',
-                        fontSize: '0.6em',
-                        top: '-0.3em',
-                        left: '0.9em'
-                      }}
-                    >
-                      {player1TieScores[index]}
-                    </sup>
-                  )}
-                </div>
-              ) : null
-            )}
-          </div>
-        </div>
-
-        <div className={styles.compactVs}>vs</div>
-
-        {/* Player 2 */}
-        <div
-          className={`${styles.compactPlayerSide} ${styles.compactPlayerSideRight}`}
-        >
-          <div className={styles.compactScores}>
-            {player2FinalScores.map((score, index) =>
-              !isNaN(score.score) ? (
-                <div
-                  key={index}
-                  className={styles.compactScoreVal}
-                  style={{ opacity: !player1Opacity[index] ? 1 : 0.4 }}
-                >
-                  {score.score}
-                  {player2TieScores[index] && (
-                    <sup
-                      style={{
-                        position: 'absolute',
-                        fontSize: '0.6em',
-                        top: '-0.3em',
-                        left: '0.9em'
-                      }}
-                    >
-                      {player2TieScores[index]}
-                    </sup>
-                  )}
-                </div>
-              ) : null
-            )}
-          </div>
-          <div className={styles.compactPlayerName}>
-            {player2Name}
-            {player2UTR && ` (${player2UTR})`}
-          </div>
-          <div className={styles.compactLogo}>
-            <Image
-              src={opponentLogo || '/images/default-logo.svg'}
-              alt={`${opponentTeam} logo`}
-              width={35}
-              height={35}
-              style={{ objectFit: 'contain', width: '100%', height: '100%' }}
-              onError={(e) => {
-                if (e.target.src !== '/images/default-logo.svg')
-                  e.target.src = '/images/default-logo.svg'
-                else e.target.style.display = 'none'
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Meta */}
-        {(date || matchDetails) && (
-          <div className={styles.compactMeta}>
-            {date && <span>{date}</span>}
-            {matchDetails && <span>{matchDetails}</span>}
-          </div>
-        )}
-      </div>
     )
   }
 
