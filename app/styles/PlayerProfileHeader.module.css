@@ -1,59 +1,78 @@
 .profileHeader {
+  position: relative;
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
-  height: 100%;
+  justify-content: flex-start;
+  align-items: flex-start;
   width: 100%;
+  overflow: hidden;
+  /* Room so stat-box shadows aren’t clipped by overflow:hidden */
+  padding-bottom: 1.25rem;
+  padding-left: 1.25rem;
+  /* Height follows the text + stat column only; photo is absolutely positioned so tall images don’t push “Statistics” down. */
 }
 
 .playerName {
-  font-size: 3.5em;
+  font-size: 3.1em;
   font-weight: 800;
   margin: 0px;
-  letter-spacing: 7px;
-  line-height: normal;
+  letter-spacing: 5px;
+  line-height: 1.08;
   font-style: normal;
   font-family: 'Roboto';
 }
 
 .profileInfo {
-  padding-top: 70px;
+  padding-top: 48px;
   max-width: 55%;
-  flex-shrink: 1;
+  flex-shrink: 0;
 }
 
 .playerDetails {
-  margin-top: 10px;
-  font-size: 1.1em;
-  padding-left: 9px;
+  margin-top: 8px;
+  font-size: 1.07em;
+  padding-left: 6px;
   font-style: normal;
   font-weight: 600;
-  line-height: normal;
-  letter-spacing: 2px;
+  line-height: 1.4;
+  letter-spacing: 1.65px;
 }
 
 .profilePictureContainer {
-  flex-shrink: 1;
+  position: absolute;
+  top: calc(48px - 0.85rem);
+  right: 0;
+  bottom: 0;
   width: 44%;
-  height: auto;
   display: flex;
   justify-content: center;
+  align-items: flex-start;
 }
 
 .profilePicture {
-  height: 100%;
   width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .playerBio {
-  margin-top: 40px;
-  font-size: 1.16em;
+  margin-top: 22px;
+  font-size: 1.1em;
   text-align: left;
-  line-height: 1.65;
-  letter-spacing: 1.75px;
+  line-height: 1.62;
+  letter-spacing: 1.35px;
 }
+
+.playerBio p {
+  margin: 0;
+}
+
+.playerBio p + p {
+  margin-top: 0.75em;
+}
+
 .profileStats {
-  padding-right: 15px;
+  padding-right: 10px;
 }
 
 .filterContainer {
@@ -62,6 +81,7 @@
   flex-direction: row;
   align-items: center;
 }
+
 .filterText {
   color: #2774ae;
   font-size: 1.18em;
@@ -71,11 +91,15 @@
   letter-spacing: 2px;
   margin-right: 5px;
 }
+
 .statBoxes {
   display: flex;
   justify-content: space-between;
   gap: 20px;
+  padding-bottom: 0.35rem;
+  padding-left: 0.35rem;
 }
+
 .StatFilter {
   align-items: center;
   height: 1.8em;
@@ -88,37 +112,42 @@
   }
 
   .profileInfo {
-    padding-top: 20px;
+    padding-top: 16px;
     order: 2;
     max-width: 100%;
   }
 
   .profilePictureContainer {
+    position: static;
+    top: auto;
+    right: auto;
+    bottom: auto;
     width: 100%;
     order: 1;
-    margin-top: 20px;
+    margin-top: 8px;
   }
 
   .profilePicture {
+    width: auto;
     max-width: 50%;
     height: auto;
+    max-height: none;
   }
 
   .playerName {
-    font-size: 5em;
+    font-size: 4em;
     letter-spacing: 3px;
   }
 
   .playerDetails {
-    font-size: 2.5em;
+    font-size: 2.12em;
     padding-left: 0;
     margin: 5px 0px;
   }
+
   .playerBio {
-    font-size: 2.2em;
+    font-size: 1.95em;
     margin-top: 10px;
-  }
-  .profileStats {
-    font-size: 1.9em;
+    line-height: 1.62;
   }
 }
