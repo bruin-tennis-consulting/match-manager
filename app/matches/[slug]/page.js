@@ -56,6 +56,7 @@ const MatchPage = ({ params }) => {
   const [bookmarks, setBookmarks] = useState([])
   const [triggerScroll, setTriggerScroll] = useState(false)
   const [autoplayEnabled, setAutoplayEnabled] = useState(true)
+  const autoplaySuppressedRef = useRef(false)
   const tableRef = useRef(null)
   const iframeRef = useRef(null)
   const filterSubmitRef = useRef(null)
@@ -132,11 +133,14 @@ const MatchPage = ({ params }) => {
     }
   }, [matchData])
 
-  const handleJumpToTime = (time) => {
-    if (videoObject && videoObject.seekTo) {
-      videoObject.seekTo(time / 1000, true)
-    }
-  }
+  const handleJumpToTime = useCallback(
+    (time) => {
+      if (videoObject && videoObject.seekTo) {
+        videoObject.seekTo(time / 1000, true)
+      }
+    },
+    [videoObject]
+  )
 
   const returnFilteredPoints = useCallback(() => {
     let filteredPoints = matchData.pointsJson
@@ -165,6 +169,7 @@ const MatchPage = ({ params }) => {
   useEffect(() => {
     if (!videoObject || !autoplayEnabled) return
     const interval = setInterval(() => {
+      if (autoplaySuppressedRef.current) return
       if (videoObject && typeof videoObject.getCurrentTime === 'function') {
         const currentTime = videoObject.getCurrentTime() * 1000 // Convert to ms
         const filteredPoints = returnFilteredPoints().sort(
@@ -247,17 +252,40 @@ const MatchPage = ({ params }) => {
     }
   }, [triggerScroll, showHTML, showPDF])
 
+  const suppressAutoplay = useCallback(() => {
+    autoplaySuppressedRef.current = true
+    setTimeout(() => {
+      autoplaySuppressedRef.current = false
+    }, 3000)
+  }, [])
+
   const handlePrevPoint = useCallback(() => {
     if (!videoObject) return
     const currentTime = videoObject.getCurrentTime() * 1000
     const points = returnFilteredPoints().sort(
       (a, b) => a.Position - b.Position
     )
-    const prevPoint = [...points]
-      .reverse()
-      .find((p) => p.Position < currentTime - 1000)
-    if (prevPoint) handleJumpToTime(prevPoint.Position)
-  }, [videoObject, returnFilteredPoints])
+    // Find the index of the current/most-recent point
+    let currentIndex = -1
+    for (let i = points.length - 1; i >= 0; i--) {
+      if (points[i].Position <= currentTime + 500) {
+        currentIndex = i
+        break
+      }
+    }
+    // If we're very close to the start of the current point, go to the one before it
+    if (
+      currentIndex >= 0 &&
+      currentTime - points[currentIndex].Position < 2000 &&
+      currentIndex > 0
+    ) {
+      currentIndex -= 1
+    }
+    if (currentIndex >= 0) {
+      suppressAutoplay()
+      handleJumpToTime(points[currentIndex].Position)
+    }
+  }, [videoObject, returnFilteredPoints, suppressAutoplay, handleJumpToTime])
 
   const handleNextPoint = useCallback(() => {
     if (!videoObject) return
@@ -265,9 +293,20 @@ const MatchPage = ({ params }) => {
     const points = returnFilteredPoints().sort(
       (a, b) => a.Position - b.Position
     )
-    const nextPoint = points.find((p) => p.Position > currentTime + 500)
-    if (nextPoint) handleJumpToTime(nextPoint.Position)
-  }, [videoObject, returnFilteredPoints])
+    // Find the index of the current/most-recent point
+    let currentIndex = -1
+    for (let i = points.length - 1; i >= 0; i--) {
+      if (points[i].Position <= currentTime + 500) {
+        currentIndex = i
+        break
+      }
+    }
+    const nextIndex = currentIndex + 1
+    if (nextIndex < points.length) {
+      suppressAutoplay()
+      handleJumpToTime(points[nextIndex].Position)
+    }
+  }, [videoObject, returnFilteredPoints, suppressAutoplay, handleJumpToTime])
 
   const removeFilter = (key, value) => {
     const updatedFilterList = filterList.filter(
@@ -308,9 +347,7 @@ const MatchPage = ({ params }) => {
 
   return (
     <div className={styles.container}>
-      {/* Compact single-row header */}
       <MatchTiles
-        compact
         clientTeam={matchData.teams.clientTeam}
         opponentTeam={matchData.teams.opponentTeam}
         matchDetails={
