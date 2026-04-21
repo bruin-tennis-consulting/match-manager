@@ -465,31 +465,33 @@ const Dashboard = () => {
         onSeasonChange={handleSeasonChange}
       />
 
-      <div className={styles.carousel}>
-        {!seasonFilteredMatches.length
-          ? Array(10)
-              .fill(0)
-              .map((_, i) => (
-                <div
-                  key={i}
-                  className={`${styles.card} ${styles.placeholderCard}`}
-                />
-              ))
-          : uniqueMatches.map((match) => {
-              const matchKey = match.matchDetails.duel
-                ? `${match.matchDate}#${match.teams.opponentTeam}`
-                : `_#${match.matchDetails.event}`
+      <div className={styles.carouselStickyShell}>
+        <div className={styles.carousel}>
+          {!seasonFilteredMatches.length
+            ? Array(10)
+                .fill(0)
+                .map((_, i) => (
+                  <div
+                    key={i}
+                    className={`${styles.card} ${styles.placeholderCard}`}
+                  />
+                ))
+            : uniqueMatches.map((match) => {
+                const matchKey = match.matchDetails.duel
+                  ? `${match.matchDate}#${match.teams.opponentTeam}`
+                  : `_#${match.matchDetails.event}`
 
-              return (
-                <CarouselItem
-                  key={matchKey}
-                  match={match}
-                  logo={logos[match.teams.opponentTeam]}
-                  isSelected={selectedMatchSets.includes(matchKey)}
-                  onClick={handleCarouselClick}
-                />
-              )
-            })}
+                return (
+                  <CarouselItem
+                    key={matchKey}
+                    match={match}
+                    logo={logos[match.teams.opponentTeam]}
+                    isSelected={selectedMatchSets.includes(matchKey)}
+                    onClick={handleCarouselClick}
+                  />
+                )
+              })}
+        </div>
       </div>
 
       <div className={styles.mainContent}>

@@ -12,7 +12,7 @@
   padding-left: 40px;
   padding-right: 40px;
   font-family: 'DM Sans', sans-serif;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .header {
@@ -124,11 +124,18 @@
 
 /* Carousel of cards (match filtering) */
 
+.carouselStickyShell {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #ffffff;
+  margin-bottom: 30px;
+}
+
 .carousel {
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  margin-bottom: 30px;
   padding: 10px 0;
   border-top: 1px solid #dedede;
   border-bottom: 1px solid #dedede;
@@ -367,7 +374,7 @@
     justify-content: flex-start;
   }
 
-  .carousel {
+  .carouselStickyShell {
     margin-bottom: 17px;
   }
 }
