@@ -108,7 +108,7 @@ const DashboardTile = ({
                 fontSize: '0.6em',
                 top: '-0.3em',
                 left: '0.9em',
-                letterSpacing: 'normal'
+                letterSpacing: '0.05em'
               }}
             >
               {tieScores[index]}

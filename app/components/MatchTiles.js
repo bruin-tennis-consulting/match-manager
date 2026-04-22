@@ -47,6 +47,12 @@ const MatchTiles = ({
 
   // Render function for scores
   const renderScore = (score, index, isPlayer1, tieScores) => {
+    console.log('Rendering score:', {
+      score,
+      index,
+      isPlayer1,
+      tieScores
+    })
     const lastSetIndex =
       player1FinalScores[2].score == null ? 1 : player1FinalScores.length - 1
     const isLastSet = index === lastSetIndex
@@ -78,7 +84,7 @@ const MatchTiles = ({
                 fontSize: '0.6em',
                 top: '-0.3em',
                 left: '0.9em',
-                letterSpacing: 'normal'
+                letterSpacing: '0.05em'
               }}
             >
               {tieScores[index]}
