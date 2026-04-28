@@ -16,6 +16,7 @@ import MatchTiles from '@/app/components/MatchTiles'
 import ExtendedList from '@/app/components/ExtendedList'
 import Notes from '@/app/components/Notes'
 import HtmlCarousel from '@/app/components/HtmlCarousel'
+import VisualNote from '@/app/components/VisualNote'
 
 const findDisplayName = (key) => {
   // Search through all sections of filterGroups
@@ -59,6 +60,7 @@ const MatchPage = ({ params }) => {
   const autoplaySuppressedRef = useRef(false)
   const tableRef = useRef(null)
   const iframeRef = useRef(null)
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0)
   const filterSubmitRef = useRef(null)
 
   const pathname = usePathname() // usePathname now imported from next/navigation
@@ -691,14 +693,61 @@ const MatchPage = ({ params }) => {
           Detailed Point List
         </button>
         {showHTML ? (
-          <HtmlCarousel htmlUrl={matchData?.htmlFile} />
+          <div
+            style={{
+              display: 'flex',
+              width: '100%',
+              gap: '2vw',
+              alignItems: 'flex-start'
+            }}
+          >
+            <div style={{ flex: 2.5, minWidth: 0 }}>
+              <HtmlCarousel
+                htmlUrl={matchData?.htmlFile}
+                onSlideChange={setActiveSlideIndex}
+              />
+            </div>
+            <div
+              style={{ flex: 1, minWidth: 0, position: 'sticky', top: '2vw' }}
+            >
+              <VisualNote
+                matchData={matchData}
+                updateMatch={updateMatch}
+                matchId={params.slug}
+                visualType={`html_${activeSlideIndex}`}
+                onNoteSaved={(updatedData) => setMatchData(updatedData)}
+              />
+            </div>
+          </div>
         ) : showPDF ? (
-          <iframe
-            className={styles.VisualsView}
-            src={matchData?.pdfFile}
-            width="90%"
-            height="1550"
-          />
+          <div
+            style={{
+              display: 'flex',
+              width: '100%',
+              gap: '2vw',
+              alignItems: 'flex-start'
+            }}
+          >
+            <div style={{ flex: 2.5, minWidth: 0 }}>
+              <iframe
+                className={styles.VisualsView}
+                src={matchData?.pdfFile}
+                width="100%"
+                height="1550"
+              />
+            </div>
+            <div
+              style={{ flex: 1, minWidth: 0, position: 'sticky', top: '2vw' }}
+            >
+              <VisualNote
+                matchData={matchData}
+                updateMatch={updateMatch}
+                matchId={params.slug}
+                visualType="pdf"
+                onNoteSaved={(updatedData) => setMatchData(updatedData)}
+              />
+            </div>
+          </div>
         ) : (
           <div ref={tableRef} className={styles.ExtendedList}>
             <ExtendedList
