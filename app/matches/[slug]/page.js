@@ -62,6 +62,7 @@ const MatchPage = ({ params }) => {
   const iframeRef = useRef(null)
   const [activeSlideIndex, setActiveSlideIndex] = useState(0)
   const filterSubmitRef = useRef(null)
+  const [noteCollapsed, setNoteCollapsed] = useState(false)
 
   const pathname = usePathname() // usePathname now imported from next/navigation
   const docId = pathname.substring(pathname.lastIndexOf('/') + 1)
@@ -701,14 +702,25 @@ const MatchPage = ({ params }) => {
               alignItems: 'flex-start'
             }}
           >
-            <div style={{ flex: 2.5, minWidth: 0 }}>
+            <div
+              style={{
+                flex: noteCollapsed ? 1 : 2.5,
+                minWidth: 0,
+                transition: 'flex 0.4s ease'
+              }}
+            >
               <HtmlCarousel
                 htmlUrl={matchData?.htmlFile}
                 onSlideChange={setActiveSlideIndex}
               />
             </div>
             <div
-              style={{ flex: 1, minWidth: 0, position: 'sticky', top: '2vw' }}
+              style={{
+                flex: noteCollapsed ? 'none' : 1,
+                minWidth: 0,
+                position: 'sticky',
+                top: '2vw'
+              }}
             >
               <VisualNote
                 matchData={matchData}
@@ -716,6 +728,7 @@ const MatchPage = ({ params }) => {
                 matchId={params.slug}
                 visualType={`html_${activeSlideIndex}`}
                 onNoteSaved={(updatedData) => setMatchData(updatedData)}
+                onCollapsedChange={setNoteCollapsed}
               />
             </div>
           </div>
@@ -728,7 +741,13 @@ const MatchPage = ({ params }) => {
               alignItems: 'flex-start'
             }}
           >
-            <div style={{ flex: 2.5, minWidth: 0 }}>
+            <div
+              style={{
+                flex: noteCollapsed ? 1 : 2.5,
+                minWidth: 0,
+                transition: 'flex 0.4s ease'
+              }}
+            >
               <iframe
                 className={styles.VisualsView}
                 src={matchData?.pdfFile}
@@ -737,7 +756,12 @@ const MatchPage = ({ params }) => {
               />
             </div>
             <div
-              style={{ flex: 1, minWidth: 0, position: 'sticky', top: '2vw' }}
+              style={{
+                flex: noteCollapsed ? 'none' : 1,
+                minWidth: 0,
+                position: 'sticky',
+                top: '2vw'
+              }}
             >
               <VisualNote
                 matchData={matchData}
@@ -745,6 +769,7 @@ const MatchPage = ({ params }) => {
                 matchId={params.slug}
                 visualType="pdf"
                 onNoteSaved={(updatedData) => setMatchData(updatedData)}
+                onCollapsedChange={setNoteCollapsed}
               />
             </div>
           </div>

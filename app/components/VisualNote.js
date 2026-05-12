@@ -7,11 +7,13 @@ export default function VisualNote({
   updateMatch,
   matchId,
   visualType,
-  onNoteSaved
+  onNoteSaved,
+  onCollapsedChange
 }) {
   const noteField = `${visualType}Note`
   const [notes, setNotes] = useState('')
   const [saveMessage, setSaveMessage] = useState('')
+  const [isExpanded, setIsExpanded] = useState(true)
   const textareaRef = useRef(null)
   const saveTimeoutRef = useRef(null)
 
@@ -24,11 +26,11 @@ export default function VisualNote({
   }, [matchData, noteField])
 
   useEffect(() => {
-    if (textareaRef.current) {
+    if (textareaRef.current && isExpanded) {
       textareaRef.current.style.height = 'auto'
       textareaRef.current.style.height = `${Math.max(textareaRef.current.scrollHeight, 150)}px`
     }
-  }, [notes])
+  }, [notes, isExpanded])
 
   useEffect(() => {
     // Only trigger autosave if notes string differs from what's currently saved in matchData
@@ -63,55 +65,112 @@ export default function VisualNote({
     return () => clearTimeout(saveTimeoutRef.current)
   }, [notes, matchData, noteField, updateMatch, matchId])
 
+  const handleToggle = () => {
+    const newExpanded = !isExpanded
+    setIsExpanded(newExpanded)
+    if (onCollapsedChange) onCollapsedChange(!newExpanded)
+  }
+
   return (
     <div
       style={{
-        width: '100%',
-        backgroundColor: '#fff',
+        backgroundColor: '#fafafa',
         border: '1px solid #eaeaea',
         borderRadius: '10px',
+        overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden'
+        transition: 'width 0.28s cubic-bezier(0.25, 0.1, 0.25, 1)',
+        width: isExpanded ? '100%' : '48px'
       }}
     >
+      {/* Toggle header */}
       <div
+        onClick={handleToggle}
         style={{
           display: 'flex',
-          justifyContent: 'space-between',
-          padding: '1vw',
-          borderBottom: '1px solid #eaeaea',
-          backgroundColor: '#fafafa'
+          alignItems: isExpanded ? 'center' : 'center',
+          justifyContent: isExpanded ? 'space-between' : 'center',
+          flexDirection: isExpanded ? 'row' : 'column',
+          padding: isExpanded ? '1vw' : '1vw 0',
+          gap: isExpanded ? '0' : '0.5vw',
+          borderBottom: isExpanded ? '1px solid #eaeaea' : 'none',
+          backgroundColor: '#fafafa',
+          cursor: 'pointer',
+          userSelect: 'none',
+          whiteSpace: 'nowrap'
         }}
       >
-        <span style={{ fontWeight: 'bold', fontSize: '1.2vw' }}>Notes</span>
-        <span
+        <div
           style={{
-            color: saveMessage.includes('Error') ? 'red' : '#888',
-            fontSize: '0.9vw'
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5vw',
+            flexDirection: isExpanded ? 'row' : 'column'
           }}
         >
-          {saveMessage}
-        </span>
+          <span
+            style={{
+              fontSize: '0.9vw',
+              color: '#666'
+            }}
+          >
+            {isExpanded ? '▼' : '◀'}
+          </span>
+          <span
+            style={{
+              fontWeight: 'bold',
+              fontSize: isExpanded ? '1.2vw' : '1vw',
+              writingMode: isExpanded ? 'horizontal-tb' : 'vertical-rl',
+              textOrientation: 'mixed',
+              letterSpacing: isExpanded ? 'normal' : '1px'
+            }}
+          >
+            Notes
+          </span>
+        </div>
+        {isExpanded && (
+          <span
+            style={{
+              color: saveMessage.includes('Error') ? 'red' : '#888',
+              fontSize: '0.9vw'
+            }}
+          >
+            {saveMessage}
+          </span>
+        )}
       </div>
-      <textarea
-        ref={textareaRef}
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        placeholder="Add your notes here..."
+
+      {/* Textarea body */}
+      <div
         style={{
-          width: '100%',
-          minHeight: '150px',
-          padding: '1vw',
-          border: 'none',
-          backgroundColor: 'transparent',
-          fontSize: '1vw',
-          fontFamily: 'inherit',
-          resize: 'none',
-          outline: 'none',
+          opacity: isExpanded ? 1 : 0,
+          transition: 'opacity 0.2s ease',
           overflow: 'hidden'
         }}
-      />
+      >
+        {isExpanded && (
+          <textarea
+            ref={textareaRef}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Add your notes here..."
+            style={{
+              width: '100%',
+              minHeight: '150px',
+              padding: '1vw',
+              border: 'none',
+              backgroundColor: '#fff',
+              fontSize: '1vw',
+              fontFamily: 'inherit',
+              resize: 'none',
+              outline: 'none',
+              overflow: 'hidden',
+              boxSizing: 'border-box'
+            }}
+          />
+        )}
+      </div>
     </div>
   )
 }
