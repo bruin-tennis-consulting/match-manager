@@ -41,12 +41,15 @@ async function getPlayerData(playerId) {
       return null
     }
 
+    console.log(playerId)
     // Find player by matching the cleaned versions of first and last names
-    const [firstName, lastName] = playerId.split('-')
+    // Assume Multi-word names include middle/multiword last names in last name
+    const [firstName, ...lastNameParts] = playerId.split('-')
+    const lastName = lastNameParts.join('-')
     const targetPlayer = mensTeam.players.find(
       (player) =>
-        cleanString(player.firstName) === firstName &&
-        cleanString(player.lastName) === lastName
+        cleanString(player.firstName) === cleanString(firstName) &&
+        cleanString(player.lastName) === cleanString(lastName)
     )
 
     if (!targetPlayer) {

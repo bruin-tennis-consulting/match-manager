@@ -47,7 +47,8 @@ export default function PlayerManagement() {
     age: '',
     hand: 'right',
     heightFeet: '',
-    heightInches: ''
+    heightInches: '',
+    active: true
   })
   const [playerHeadPhotoFile, setPlayerHeadPhotoFile] = useState(null)
   const [playerLargePhotoFile, setPlayerLargePhotoFile] = useState(null)
@@ -313,6 +314,7 @@ export default function PlayerManagement() {
         class: newPlayer.class,
         age: newPlayer.age,
         hand: newPlayer.hand,
+        active: true,
         height:
           (newPlayer.heightFeet || '0') +
           "'" +
@@ -361,7 +363,8 @@ export default function PlayerManagement() {
         age: '',
         hand: 'right',
         heightFeet: '',
-        heightInches: ''
+        heightInches: '',
+        active: true
       })
       setPlayerHeadPhotoFile(null)
       setPlayerLargePhotoFile(null)
@@ -634,7 +637,8 @@ export default function PlayerManagement() {
                       age: '',
                       hand: 'right',
                       heightFeet: '',
-                      heightInches: ''
+                      heightInches: '',
+                      active: true
                     })
                     setPlayerHeadPhotoFile(null)
                     setPlayerLargePhotoFile(null)
@@ -657,7 +661,7 @@ export default function PlayerManagement() {
                 />
                 <input
                   type="text"
-                  placeholder="Last Name"
+                  placeholder="Last Name (If middle name or multi-word last name, include here)"
                   value={newPlayer.lastName}
                   onChange={(e) =>
                     setNewPlayer({ ...newPlayer, lastName: e.target.value })
@@ -750,7 +754,41 @@ export default function PlayerManagement() {
                     </label>
                   </div>
                 </div>
-
+                <div className={styles.inputGroup}>
+                  <label className={styles.inputLabel}>Active:</label>
+                  <div className={styles.radioGroup}>
+                    <label>
+                      <input
+                        type="radio"
+                        name="playerActive"
+                        value="true"
+                        checked={newPlayer.active === true}
+                        onChange={() =>
+                          setNewPlayer({
+                            ...newPlayer,
+                            active: true
+                          })
+                        }
+                      />{' '}
+                      Active
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name="playerActive"
+                        value="false"
+                        checked={newPlayer.active === false}
+                        onChange={() =>
+                          setNewPlayer({
+                            ...newPlayer,
+                            active: false
+                          })
+                        }
+                      />{' '}
+                      Inactive
+                    </label>
+                  </div>
+                </div>
                 <div className={styles.inputGroup}>
                   {' '}
                   {/* For Age and Class side-by-side */}
@@ -1020,6 +1058,41 @@ export default function PlayerManagement() {
                           }
                         />{' '}
                         Ambidextrous
+                      </label>
+                    </div>
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label className={styles.inputLabel}>Active:</label>
+                    <div className={styles.radioGroup}>
+                      <label>
+                        <input
+                          type="radio"
+                          name="editPlayerActive"
+                          value="true"
+                          checked={editingPlayer.active === true}
+                          onChange={() =>
+                            setEditingPlayer({
+                              ...editingPlayer,
+                              active: true
+                            })
+                          }
+                        />{' '}
+                        Active
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name="editPlayerActive"
+                          value="false"
+                          checked={editingPlayer.active === false}
+                          onChange={() =>
+                            setEditingPlayer({
+                              ...editingPlayer,
+                              active: false
+                            })
+                          }
+                        />{' '}
+                        Inactive
                       </label>
                     </div>
                   </div>

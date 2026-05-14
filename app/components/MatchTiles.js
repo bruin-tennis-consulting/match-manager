@@ -2,6 +2,7 @@ import React from 'react'
 import Image from 'next/image'
 import styles from '@/app/styles/MatchTiles.module.css'
 import { useTeamLogos } from '@/app/hooks/useTeamLogos'
+import { getTeamAbbreviation } from '@/app/services/teamAbbreviations'
 
 // Calculate opacity for individual scores
 const isOpaque = (player1Scores, player2Scores) => {
@@ -46,6 +47,12 @@ const MatchTiles = ({
 
   // Render function for scores
   const renderScore = (score, index, isPlayer1, tieScores) => {
+    console.log('Rendering score:', {
+      score,
+      index,
+      isPlayer1,
+      tieScores
+    })
     const lastSetIndex =
       player1FinalScores[2].score == null ? 1 : player1FinalScores.length - 1
     const isLastSet = index === lastSetIndex
@@ -77,7 +84,7 @@ const MatchTiles = ({
                 fontSize: '0.6em',
                 top: '-0.3em',
                 left: '0.9em',
-                letterSpacing: '1vw'
+                letterSpacing: '0.05em'
               }}
             >
               {tieScores[index]}
@@ -165,10 +172,10 @@ const MatchTiles = ({
         <div className={styles.matchInfoContainer}>
           <div className={styles.containerTitle}>Matchup</div>
           <div className={styles.containerInfo}>
-            {clientTeam.replace(/\s+\([MW]\)$/, '')}
+            {getTeamAbbreviation(clientTeam)}
           </div>
           <div className={styles.containerInfo}>
-            {opponentTeam.replace(/\s+\([MW]\)$/, '')}
+            {getTeamAbbreviation(opponentTeam)}
           </div>
         </div>
       )}

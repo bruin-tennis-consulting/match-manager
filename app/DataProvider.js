@@ -92,7 +92,8 @@ export const DataProvider = ({ children }) => {
   }, [])
 
   const updateMatch = useCallback(
-    async (matchId, updatedData) => {
+    async (matchId, updatedData, options = {}) => {
+      const { skipRefetch = false, skipMatchesStateUpdate = false } = options
       try {
         // Get the match collection reference
         const matchToUpdate = matches.find((match) => match.id === matchId)
@@ -100,16 +101,20 @@ export const DataProvider = ({ children }) => {
           throw new Error('Match not found')
         }
 
-        setMatches((prevMatches) =>
-          prevMatches.map((match) =>
-            match.id === matchId ? { ...match, ...updatedData } : match
+        if (!skipMatchesStateUpdate) {
+          setMatches((prevMatches) =>
+            prevMatches.map((match) =>
+              match.id === matchId ? { ...match, ...updatedData } : match
+            )
           )
-        )
+        }
 
         const matchDocRef = doc(db, matchToUpdate.collection, matchId)
         await updateDoc(matchDocRef, updatedData)
 
-        await fetchMatches()
+        if (!skipRefetch) {
+          await fetchMatches()
+        }
       } catch (err) {
         setError(err)
         console.error('Error updating match:', err)

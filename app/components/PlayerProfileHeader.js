@@ -53,8 +53,8 @@ const PlayerProfileHeader = ({ playerData }) => {
           src={photoToUse}
           alt={`${playerData.name}'s profile photo`}
           className={styles.profilePicture}
-          width={200}
-          height={200}
+          width={320}
+          height={320}
           onError={(e) => {
             if (e.target.src !== defaultPhotoBig.src) {
               e.target.src = defaultPhotoBig.src

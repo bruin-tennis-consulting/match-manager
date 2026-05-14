@@ -22,12 +22,14 @@ const RosterList = () => {
           setMensRoster([])
           return
         }
-        const playersArray = mensTeam.players.map((player) => ({
-          firstName: player.firstName || '',
-          lastName: player.lastName || '',
-          photo: player.photo || null,
-          largePlayerPhoto: player.largePlayerPhoto || null
-        }))
+        const playersArray = mensTeam.players
+          .filter((player) => player.active === true)
+          .map((player) => ({
+            firstName: player.firstName || '',
+            lastName: player.lastName || '',
+            photo: player.photo || null,
+            largePlayerPhoto: player.largePlayerPhoto || null
+          }))
         setMensRoster(playersArray)
       } catch (error) {
         console.error('Error retrieving teams:', error)
