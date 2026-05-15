@@ -1,10 +1,10 @@
 // lib/coaches.ts
-import { db } from './supabase'
+import { supabase } from '../../supabase'
 
 // create new coach entry if they don't exist, or return existing one if they do
 // runs every login, but idempotent due to upsert with onConflict: 'firebase_uid'
 export async function upsertCoach(firebaseUser) {
-  const { data, error } = await db
+  const { data, error } = await supabase
     .from('coaches')
     .upsert(
       {
@@ -22,7 +22,7 @@ export async function upsertCoach(firebaseUser) {
 }
 
 export async function getCoach(firebaseUid) {
-  const { data } = await db
+  const { data } = await supabase
     .from('coaches')
     .select('id, display_name, email')
     .eq('firebase_uid', firebaseUid)
