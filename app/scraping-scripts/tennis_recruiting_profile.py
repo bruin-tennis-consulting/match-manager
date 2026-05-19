@@ -326,7 +326,8 @@ def _parse_match_results(soup, page: dict) -> list[dict]:
 
     results = []
     for row in div.find_all("tr"):
-        cells = row.find_all("td")
+        # don't recurse because some player names have flags/icons inside nested tables
+        cells = row.find_all("td", recursive=False)
         if len(cells) < 4:
             continue
 
