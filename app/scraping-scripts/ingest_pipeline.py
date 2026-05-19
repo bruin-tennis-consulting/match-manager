@@ -12,6 +12,7 @@ Or import and call individual functions:
 """
 
 import os
+import time
 from pathlib import Path
 import re
 from datetime import datetime, timezone
@@ -49,6 +50,10 @@ _PLAYER_COLUMNS = {
 # player_extra will be written into it automatically.
 #   ALTER TABLE players ADD COLUMN raw_data jsonb;
 _PLAYER_HAS_RAW_DATA = False
+
+# Politeness delay between profile fetches (seconds).
+# The site has no published rate limit; 2s is conservative but safe.
+_FETCH_DELAY_SECONDS = 2.0
 
 
 def _split_name(full_name: str | None) -> tuple[str | None, str | None]:
@@ -163,12 +168,12 @@ def extract_source_id_from_url(url: str) -> str | None:
 # Job tracking
 # ---------------------------------------------------------------------------
 
-def create_job(source: str) -> dict:
+def create_job(source: str, metadata: dict | None = None) -> dict:
     job = supabase.table("ingest_jobs").insert({
         "source":     source,
         "status":     "running",
         "started_at": datetime.now(timezone.utc).isoformat(),
-        "metadata":   {},
+        "metadata":   metadata or {},
     }).execute()
     return job.data[0]
 
@@ -186,21 +191,6 @@ def finish_job(job_id: str, status: str, count: int = 0, error: str | None = Non
 # Tournament resolution
 # ---------------------------------------------------------------------------
 
-# Maps the prefix found in tennisrecruiting.net tournament name strings
-# to a canonical level label stored in tournaments.level.
-#
-# ITF junior grade prefixes (most → least prestigious):
-#   JGS  = Grade A (Grand Slam juniors)
-#   JM   = Junior Masters / World Finals
-#   J500 = Grade 1 (500-point events)
-#   J300 = Grade 2
-#   J200 = Grade 3
-#   J100 = Grade 4
-#   J060 = Grade 5
-# USTA domestic prefixes:
-#   L1   = Level 1 (Nationals / Kalamazoo)
-#   L2   = Level 2
-#   L3   = Level 3
 _TOURNAMENT_LEVEL_MAP: dict[str, str] = {
     "JGS":  "ITF_Grade_A",
     "JM":   "ITF_Junior_Masters",
@@ -216,13 +206,6 @@ _TOURNAMENT_LEVEL_MAP: dict[str, str] = {
 
 
 def _infer_tournament_level(name: str | None) -> str | None:
-    """
-    Infer a level string from the tournament name prefix.
-
-    The site prefixes tournament names with their grade/level code,
-    e.g. "J500 FORT LAUDERDALE", "JGS WIMBLEDON JUNIORS", "L1 USTA B16,18 …"
-    Returns None when no known prefix is matched.
-    """
     if not name:
         return None
     prefix = name.strip().split()[0].upper()
@@ -230,41 +213,13 @@ def _infer_tournament_level(name: str | None) -> str | None:
 
 
 def _tournament_upsert_key(name: str, start_date: str | None) -> str:
-    """
-    Stable string key used to deduplicate tournaments within a single run
-    before they are written to Supabase.
-
-    Format: "<normalised_name>|<start_date>"  e.g. "J500 FORT LAUDERDALE|2025-12-08"
-    start_date may be None for tournaments whose date couldn't be parsed.
-    """
     return f"{(name or '').strip().upper()}|{start_date or ''}"
 
 
 def resolve_tournament_ids_batch(tournaments: list[dict]) -> dict[str, str]:
-    """
-    Upsert a list of tournament dicts and return a mapping of
-    upsert-key → tournaments.id (UUID).
-
-    Each dict must contain at least:
-        name        : str   (required — used in the upsert key)
-        start_date  : str | None   (ISO date, used in the upsert key)
-
-    Optional fields written on insert / updated on conflict:
-        end_date, location, level, source
-
-    Upsert conflict target: (name, start_date).
-    Add a unique constraint in Postgres:
-        ALTER TABLE tournaments ADD CONSTRAINT tournaments_name_start_date_key
-            UNIQUE (name, start_date);
-
-    Returns
-    -------
-    dict mapping upsert_key (str) -> tournament UUID (str)
-    """
     if not tournaments:
         return {}
 
-    # Deduplicate within the batch — keep first occurrence of each key
     seen: dict[str, dict] = {}
     for t in tournaments:
         key = _tournament_upsert_key(t.get("name"), t.get("start_date"))
@@ -279,7 +234,6 @@ def resolve_tournament_ids_batch(tournaments: list[dict]) -> dict[str, str]:
             "location":   t.get("location"),
             "level":      t.get("level") or _infer_tournament_level(t.get("name")),
             "source":     t.get("source", "tennisrecruiting.net"),
-            # surface is not available from this source — left null
         }
         for t in seen.values()
     ]
@@ -289,7 +243,6 @@ def resolve_tournament_ids_batch(tournaments: list[dict]) -> dict[str, str]:
         on_conflict="name,start_date",
     ).execute()
 
-    # Build key → id map from the returned rows
     id_map: dict[str, str] = {}
     for row in result.data:
         key = _tournament_upsert_key(row["name"], row.get("start_date"))
@@ -299,20 +252,96 @@ def resolve_tournament_ids_batch(tournaments: list[dict]) -> dict[str, str]:
 
 
 # ---------------------------------------------------------------------------
+# Seed player list
+# ---------------------------------------------------------------------------
+
+# Top-10 boys CRL (class of 2026) as of May 2026, plus high-value opponents
+# observed in Kennedy's activity page. Comments show why each is included.
+#
+# Strategy: seeding from highly-ranked players maximises the number of
+# meaningful match edges ingested early, because top players play each other
+# frequently at Grade A / Level 1 events.
+#
+# To expand the graph further, run collect_opponent_ids() after each batch
+# to discover new IDs from match_results rows where opponent profiles are
+# still stubs (full_name only, no grad_year/region/etc.).
+
+SEED_PLAYER_IDS: list[tuple[int, str]] = [
+    # --- Top-10 boys CRL 2026 ---
+    (928355,  "Jack Kennedy          — #1 CRL, committed Virginia"),
+    (946607,  "Tanishk Konduri       — #2 CRL, 2026"),
+    (870512,  "Ronit Karki           — top-10 CRL, Wimbledon R16 vs Kennedy"),
+    (875494,  "Darwin Blanch         — beat Kennedy at Kalamazoo SF"),
+    (901346,  "Jack Satterfield      — appears twice in Kennedy activity"),
+    (893061,  "Matisse Farzam        — Kalamazoo QF vs Kennedy"),
+    (905437,  "Keaton Hance          — Kalamazoo PL-F vs Kennedy"),
+    (923164,  "Rishvanth Krishna     — 2027, high-value opponent"),
+    (943818,  "Winston Lee           — 2025, 5-star"),
+    (917817,  "Bode Campbell         — 2025, 4-star"),
+    # --- High-value opponents from Kennedy's activity ---
+    (1019268, "Thijs Boogaard        — beat Kennedy in Orange Bowl final"),
+    (859960,  "Benjamin Willwerth    — ITF World Finals, Blue Chip"),
+    (972314,  "Oliver Bonding        — 2025, Wimbledon R64 vs Kennedy"),
+]
+
+
+def collect_opponent_ids() -> list[int]:
+    """
+    Query match_results for opponent_ids whose player row is still a stub
+    (no grad_year set, which is the most reliable indicator that a full
+    profile has never been ingested).
+
+    Use this to discover the next wave of player IDs to ingest.
+    """
+    res = (
+        supabase.table("match_results")
+        .select("opponent_id")
+        .execute()
+    )
+    if not res.data:
+        return []
+
+    opponent_ids = list({r["opponent_id"] for r in res.data if r.get("opponent_id")})
+    if not opponent_ids:
+        return []
+
+    # Find which of those have no grad_year yet (stub rows)
+    stubs = (
+        supabase.table("players")
+        .select("id")
+        .in_("id", opponent_ids)
+        .is_("grad_year", "null")
+        .execute()
+    )
+    stub_uuids = {r["id"] for r in stubs.data}
+
+    # Resolve back to source IDs via player_aliases
+    if not stub_uuids:
+        return []
+
+    aliases = (
+        supabase.table("player_aliases")
+        .select("alias_name")
+        .eq("source", "tennisrecruiting.net")
+        .in_("player_id", list(stub_uuids))
+        .execute()
+    )
+    return [int(r["alias_name"]) for r in aliases.data if r["alias_name"].isdigit()]
+
+
+# ---------------------------------------------------------------------------
 # Profile ingestion
 # ---------------------------------------------------------------------------
 
 def ingest_player_profile(source_player_id: int) -> int:
     """
-    Fetches and ingests a single player profile + activity page by
-    tennisrecruiting.net ID.  Returns the number of records written (1).
+    Fetches and ingests a single player profile + activity page.
+    Returns 1 on success.
     """
     base_url = "https://www.tennisrecruiting.net"
 
-    # ------------------------------------------------------------------
-    # 1. Fetch and parse both pages
-    # ------------------------------------------------------------------
     profile_soup  = fetch_from_web(f"{base_url}/player.asp?id={source_player_id}")
+    time.sleep(_FETCH_DELAY_SECONDS)
     activity_soup = fetch_from_web(f"{base_url}/player/activity.asp?id={source_player_id}")
 
     data = parse_profile(profile_soup)
@@ -322,9 +351,6 @@ def ingest_player_profile(source_player_id: int) -> int:
     player_extra = data["player_extra"]
     aliases      = data["aliases"]
 
-    # ------------------------------------------------------------------
-    # 2. Resolve or create the internal player ID
-    # ------------------------------------------------------------------
     internal_id = resolve_player_id(
         source="tennisrecruiting.net",
         alias=player["_source_id"],
@@ -332,11 +358,6 @@ def ingest_player_profile(source_player_id: int) -> int:
         player_fields=player,
     )
 
-    # ------------------------------------------------------------------
-    # 3. Update public.players with all schema columns from the profile.
-    #    If the table has a raw_data jsonb column, player_extra is written
-    #    there too (controlled by the _PLAYER_HAS_RAW_DATA flag).
-    # ------------------------------------------------------------------
     update_fields = {
         k: v for k, v in player.items()
         if k in _PLAYER_COLUMNS and v is not None
@@ -345,18 +366,12 @@ def ingest_player_profile(source_player_id: int) -> int:
         update_fields["raw_data"] = player_extra
     supabase.table("players").update(update_fields).eq("id", internal_id).execute()
 
-    # ------------------------------------------------------------------
-    # 4. Upsert all aliases (USTA, ITF, UTR, WTN, tennisrecruiting.net)
-    # ------------------------------------------------------------------
     for alias in aliases:
         supabase.table("player_aliases").upsert(
             {**alias, "player_id": internal_id},
             on_conflict="source,alias_name",
         ).execute()
 
-    # ------------------------------------------------------------------
-    # 5. Rankings — upsert on (player_id, source, ranking_date)
-    # ------------------------------------------------------------------
     ranking_rows = []
     for r in data["rankings"]:
         raw = {
@@ -378,10 +393,6 @@ def ingest_player_profile(source_player_id: int) -> int:
             on_conflict="player_id,source,ranking_date",
         ).execute()
 
-    # ------------------------------------------------------------------
-    # 6. Tournaments — upsert one row per unique (name, start_date) and
-    #    build a key→UUID map for use in match rows below.
-    # ------------------------------------------------------------------
     match_results = data["match_results"]
 
     unique_tournaments = list({
@@ -398,11 +409,6 @@ def ingest_player_profile(source_player_id: int) -> int:
 
     tournament_id_map = resolve_tournament_ids_batch(unique_tournaments)
 
-    # ------------------------------------------------------------------
-    # 7. Match results — batch-resolve opponents, then upsert
-    # ------------------------------------------------------------------
-
-    # Collect unique opponent source IDs
     seen: set[str] = set()
     unique_opponent_lookups: list[dict] = []
     for m in match_results:
@@ -432,12 +438,8 @@ def ingest_player_profile(source_player_id: int) -> int:
             winner_id = opponent_id
         else:
             winner_id = None
-            print(
-                f"  [!] Could not resolve winner for loss on {m['played_at']} "
-                f"(opponent source ID: {opp_source_id})"
-            )
 
-        t_key       = _tournament_upsert_key(m.get("tournament_name"), m.get("tournament_start"))
+        t_key         = _tournament_upsert_key(m.get("tournament_name"), m.get("tournament_start"))
         tournament_id = tournament_id_map.get(t_key)
 
         match_rows.append({
@@ -465,6 +467,13 @@ def ingest_player_profile(source_player_id: int) -> int:
             on_conflict="player_id,opponent_id,played_at,score",
         ).execute()
 
+    print(
+        f"  [{source_player_id}] {player.get('full_name', '?'):30s} "
+        f"| {len(match_rows):2d} matches  "
+        f"| {len(ranking_rows):2d} rankings  "
+        f"| {len(unique_opponent_lookups):2d} opponents resolved"
+    )
+
     return 1
 
 
@@ -473,10 +482,6 @@ def ingest_player_profile(source_player_id: int) -> int:
 # ---------------------------------------------------------------------------
 
 def ingest_homepage_rankings() -> int:
-    """
-    Scrapes the homepage top-10 CRL/RPI rankings for every class year
-    and writes them to player_rankings.  Returns the number of rows inserted.
-    """
     soup    = fetch_from_web("https://www.tennisrecruiting.net/")
     results = parse_rankings(soup)
 
@@ -542,33 +547,47 @@ def ingest_homepage_rankings() -> int:
 # ---------------------------------------------------------------------------
 
 def main():
-    job    = create_job("tennis_recruiting_ingest")
+    player_ids = [pid for pid, _ in SEED_PLAYER_IDS]
+
+    job = create_job(
+        "tennis_recruiting_ingest",
+        metadata={"player_ids": player_ids, "count": len(player_ids)},
+    )
     total  = 0
     failed = []
 
-    player_ids = [928355]
-
-    for source_player_id in player_ids:
+    print(f"Ingesting {len(player_ids)} seed players ...")
+    for i, source_player_id in enumerate(player_ids):
         try:
             total += ingest_player_profile(source_player_id)
         except Exception as e:
             print(f"  [!] Failed to ingest player {source_player_id}: {e}")
             failed.append(source_player_id)
 
+        # Delay between players (not just between the two pages for one player)
+        if i < len(player_ids) - 1:
+            time.sleep(_FETCH_DELAY_SECONDS)
+
+    print("\nIngesting homepage rankings ...")
     try:
         total += ingest_homepage_rankings()
     except Exception as e:
         print(f"  [!] Failed to ingest homepage rankings: {e}")
 
-    if failed:
-        status = "partial" if total > 0 else "failed"
-        error  = f"Failed player IDs: {failed}"
-    else:
-        status = "success"
-        error  = None
+    # Report stub opponents that could be ingested next
+    stub_ids = collect_opponent_ids()
+    if stub_ids:
+        print(f"\n{len(stub_ids)} opponent stub(s) discovered — add to SEED_PLAYER_IDS to backfill:")
+        for sid in stub_ids[:20]:   # show first 20
+            print(f"    {sid}")
+        if len(stub_ids) > 20:
+            print(f"    ... and {len(stub_ids) - 20} more")
 
+    status = ("partial" if total > 0 else "failed") if failed else "success"
+    error  = f"Failed player IDs: {failed}" if failed else None
     finish_job(job["id"], status, total, error)
-    print(f"Done — {total} records ingested. Failed: {failed or 'none'}")
+
+    print(f"\nDone — {total} players ingested. Failed: {failed or 'none'}")
 
 
 if __name__ == "__main__":
