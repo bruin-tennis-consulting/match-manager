@@ -17,7 +17,7 @@ Usage
     from usta_scraper import scrape_all
 
 Standings page:
-    https://www.usta.com/en/home/play/junior-tennis/programs/national/junior-rankings.html
+    https://www.usta.com/en/home/play/rankings.html
 
 Requirements
 ------------
@@ -31,58 +31,60 @@ import time
 from datetime import datetime, timezone
 from typing import Any
 
-from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
+from playwright.sync_api import Page, sync_playwright
 
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
 
-GENDERS       = ["Boys", "Girls"]
-AGE_DIVISIONS = ["18", "16", "14", "12"]   # USTA 18s, 16s, 14s, 12s
+GENDERS       = ["M", "F"]
+AGE_DIVISIONS = ["Y18", "Y16", "Y14", "Y12"]
 
-STANDINGS_URL = (
-    "https://www.usta.com/en/home/play/junior-tennis/"
-    "programs/national/junior-rankings.html"
-)
-OUTPUT_FILE = "usta_raw.json"
+STANDINGS_URL = "https://www.usta.com/en/home/play/rankings.html"
+OUTPUT_FILE   = "usta_raw.json"
 
-_PAGE_TIMEOUT        = 30_000   # ms — initial page load
-_FILTER_TIMEOUT      = 10_000   # ms — wait for table after setting a filter
-_FETCH_DELAY_SECONDS = 2.0      # polite delay between filter combinations
+_PAGE_TIMEOUT        = 60_000   # ms — initial page load
+_FILTER_WAIT_SECONDS = 3.0      # wait for grid to update after changing filters
+_FETCH_DELAY_SECONDS = 1.0      # polite delay between filter combinations
 
 
 # ---------------------------------------------------------------------------
 # Selectors
 # ---------------------------------------------------------------------------
-# NOTE: These are based on the known USTA page structure and verified against
-# the live site.  Update these constants if the page markup changes rather
-# than hunting for them throughout the code.
+# NOTE: The USTA page renders multiple ranking sections (Junior, Adult, NTRP,
+# etc.), each with its own set of filters.  We always use .first to target the
+# Junior section, which appears first in the DOM.
 
-_SEL_GENDER_DROPDOWN = "select[name*='gender'], select[id*='gender']"
-_SEL_AGE_DROPDOWN    = "select[name*='age'], select[id*='division'], select[id*='age']"
-_SEL_TABLE_ROWS      = "table tbody tr"
-_SEL_TABLE_LOADED    = "table tbody tr td"   # sentinel — wait for at least one cell
+_SEL_RANKING_LIST = 'select[aria-label="Ranking List"]'
+_SEL_GENDER       = 'select[aria-label="Gender"]'
+_SEL_AGE          = 'select[aria-label="Age"]'
+_SEL_PER_PAGE     = 'select[aria-label="Numbers of results per page"]'
+_SEL_DATA_ROWS    = ".v-grid__row:not(.v-grid__row--header-row)"
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _gender_full(label: str) -> str:
-    return {"Boys": "male", "Girls": "female"}.get(label, label.lower())
+def _gender_full(code: str) -> str:
+    return {"M": "male", "F": "female"}.get(code, code.lower())
+
+
+def _age_label(code: str) -> str:
+    """Convert USTA age code to a short numeric label, e.g. 'Y18' → '18'."""
+    return code.lstrip("Y")
 
 
 def _parse_uaid_from_href(href: str | None) -> str | None:
     """
     Extract the USTA UAID from a profile link, e.g.:
-        /player-profile?uaid=ABC-123
-        /player?id=XYZ
+        /en/home/play/player-search/profile.html#uaid=2010688342
     Returns None when no recognisable ID param is found.
     """
     if not href:
         return None
-    m = re.search(r"[?&](?:uaid|id|playerId)=([A-Za-z0-9_-]+)", href)
+    m = re.search(r"[?&#](?:uaid|id|playerId)=([A-Za-z0-9_-]+)", href)
     return m.group(1) if m else None
 
 
@@ -107,43 +109,49 @@ def _split_name(full_name: str) -> tuple[str | None, str | None]:
 def fetch_standings(page: Page, gender: str, age_division: str) -> list[dict]:
     """
     Select the gender and age-division filters on the USTA standings page and
-    return the rendered table rows as raw dicts.  Returns an empty list on any
-    timeout or parsing failure.
+    return the rendered grid rows as raw dicts.  Returns an empty list on any
+    failure.
     """
     try:
-        page.select_option(_SEL_GENDER_DROPDOWN, label=gender, timeout=_FILTER_TIMEOUT)
+        page.locator(_SEL_GENDER).first.select_option(gender)
         time.sleep(0.5)
-        page.select_option(_SEL_AGE_DROPDOWN, label=f"{age_division}s", timeout=_FILTER_TIMEOUT)
-        page.wait_for_selector(_SEL_TABLE_LOADED, timeout=_FILTER_TIMEOUT)
-    except PlaywrightTimeoutError as e:
-        print(f"  [!] Timeout waiting for table ({gender} | {age_division}s): {e}")
+        page.locator(_SEL_AGE).first.select_option(age_division)
+        time.sleep(_FILTER_WAIT_SECONDS)
+    except Exception as e:
+        print(f"  [!] Error setting filters ({gender} | {age_division}): {e}")
         return []
 
     rows = []
-    for tr in page.query_selector_all(_SEL_TABLE_ROWS):
-        cells = tr.query_selector_all("td")
-        if len(cells) < 3:
+    for row in page.query_selector_all(_SEL_DATA_ROWS):
+        # Each cell's text is separated by double newlines within the row
+        parts = [p.strip() for p in row.inner_text().strip().split("\n\n") if p.strip()]
+
+        # Need at least: national rank, section rank, district rank, name
+        if len(parts) < 4:
             continue
 
-        texts = [c.inner_text().strip() for c in cells]
-
-        # Look for a player-profile link anywhere in the row
+        # Look for a player-profile link containing the UAID
         href = None
-        for cell in cells:
-            a = cell.query_selector("a[href*='player']")
-            if a:
-                href = a.get_attribute("href")
-                break
+        a = row.query_selector("a[href*='uaid']")
+        if a:
+            href = a.get_attribute("href")
 
         rows.append({
-            "rank":          texts[0].rstrip("."),
-            "full_name":     texts[1] if len(texts) > 1 else None,
-            "section":       texts[2] if len(texts) > 2 else None,
-            "district":      texts[3] if len(texts) > 3 else None,
-            "points":        texts[4] if len(texts) > 4 else None,
-            "_href":         href,
-            "_gender":       gender,
-            "_age_division": age_division,
+            "rank":           parts[0].rstrip("."),
+            "section_rank":   parts[1] if len(parts) > 1 else None,
+            "district_rank":  parts[2] if len(parts) > 2 else None,
+            "full_name":      parts[3] if len(parts) > 3 else None,
+            "total_points":   parts[4] if len(parts) > 4 else None,
+            "singles_points": parts[5] if len(parts) > 5 else None,
+            "doubles_points": parts[6] if len(parts) > 6 else None,
+            "bonus_points":   parts[7] if len(parts) > 7 else None,
+            "city":           parts[8] if len(parts) > 8 else None,
+            "state":          parts[9] if len(parts) > 9 else None,
+            "section":        parts[10] if len(parts) > 10 else None,
+            "district":       parts[11] if len(parts) > 11 else None,
+            "_href":          href,
+            "_gender":        gender,
+            "_age_division":  age_division,
         })
 
     return rows
@@ -201,13 +209,18 @@ def parse_player(row: dict, scraped_gender: str, scraped_age: str) -> dict[str, 
     }
 
     player_extra = {
-        "uaid":          uaid,
-        "usta_ranking":  rank,
-        "usta_points":   _parse_points(row.get("points")),
-        "section":       row.get("section"),
-        "district":      row.get("district"),
-        "age_division":  f"{scraped_age}s",
-        "scraped_at":    datetime.now(timezone.utc).isoformat(),
+        "uaid":           uaid,
+        "usta_ranking":   rank,
+        "usta_points":    _parse_points(row.get("total_points")),
+        "singles_points": _parse_points(row.get("singles_points")),
+        "doubles_points": _parse_points(row.get("doubles_points")),
+        "bonus_points":   _parse_points(row.get("bonus_points")),
+        "city":           row.get("city"),
+        "state":          row.get("state"),
+        "section":        row.get("section"),
+        "district":       row.get("district"),
+        "age_division":   f"{_age_label(scraped_age)}s",
+        "scraped_at":     datetime.now(timezone.utc).isoformat(),
     }
 
     return {"player": player_out, "player_extra": player_extra, "raw": row}
@@ -226,6 +239,8 @@ def scrape_all() -> list[dict]:
     full_name as the dedup key to avoid duplicates caused by cross-division
     appearances.  If a player appears in multiple divisions (e.g. 18s and 16s),
     only the first occurrence is kept — same strategy as utr_scraper.
+
+    Only the top 100 players per combination are fetched (one page).
     """
     results  = []
     seen_ids = set()
@@ -235,11 +250,25 @@ def scrape_all() -> list[dict]:
         page    = browser.new_page()
 
         print(f"Navigating to {STANDINGS_URL} ...")
-        page.goto(STANDINGS_URL, wait_until="networkidle", timeout=_PAGE_TIMEOUT)
+        page.goto(STANDINGS_URL, wait_until="domcontentloaded", timeout=_PAGE_TIMEOUT)
+        page.wait_for_timeout(6000)
+
+        # Dismiss cookie consent if present
+        try:
+            page.click("button:has-text('Accept All Cookies')", timeout=3000)
+            page.wait_for_timeout(1000)
+        except Exception:
+            pass
+
+        # One-time setup: combined standings list, 100 results per page
+        page.locator(_SEL_RANKING_LIST).first.select_option("combined")
+        time.sleep(0.5)
+        page.locator(_SEL_PER_PAGE).first.select_option("100")
+        time.sleep(_FILTER_WAIT_SECONDS)
 
         for gender in GENDERS:
             for age in AGE_DIVISIONS:
-                print(f"Fetching {gender} | {age}s ...")
+                print(f"Fetching {gender} | {age} ...")
                 raw_rows = fetch_standings(page, gender, age)
 
                 new = 0
