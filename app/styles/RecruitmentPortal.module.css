@@ -74,19 +74,54 @@
 
 .resetBtn {
   padding: 8px 16px;
-  background: transparent;
-  border: 1px solid #d1d5db;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
   border-radius: 6px;
   font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  color: #374151;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+}
+
+.resetBtn:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #111827;
+}
+
+.sortToggle {
+  display: flex;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.sortBtn {
+  padding: 8px 14px;
+  background: white;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
   color: #6b7280;
   font-family: 'DM Sans', sans-serif;
   transition: all 0.15s;
 }
 
-.resetBtn:hover {
-  border-color: #2c61ab;
-  color: #2c61ab;
+.sortBtn:first-child {
+  border-right: 1px solid #d1d5db;
+}
+
+.sortBtn:hover:not(.sortActive) {
+  background: #f8fafc;
+  color: #374151;
+}
+
+.sortActive {
+  background: #2c61ab;
+  color: white;
 }
 
 /* Results count */

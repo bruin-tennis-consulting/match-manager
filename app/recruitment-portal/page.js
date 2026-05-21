@@ -33,6 +33,7 @@ export default function RecruitmentPortal() {
   const [filterGender, setFilterGender] = useState('all')
   const [filterAge, setFilterAge] = useState('all')
   const [filterState, setFilterState] = useState('all')
+  const [sortBy, setSortBy] = useState('usta') // 'usta' | 'utr'
 
   useEffect(() => {
     fetch('/api/players')
@@ -54,7 +55,7 @@ export default function RecruitmentPortal() {
   }, [players])
 
   const filtered = useMemo(() => {
-    return players.filter((p) => {
+    let result = players.filter((p) => {
       if (
         searchName &&
         !p.full_name?.toLowerCase().includes(searchName.toLowerCase())
@@ -63,23 +64,35 @@ export default function RecruitmentPortal() {
       if (filterGender !== 'all' && p.gender !== filterGender) return false
       if (filterAge !== 'all' && p.usta_age_division !== filterAge) return false
       if (filterState !== 'all' && p.usta_state !== filterState) return false
+      if (sortBy === 'utr' && p.utr_rating == null) return false
       return true
     })
-  }, [players, searchName, filterGender, filterAge, filterState])
+
+    if (sortBy === 'utr') {
+      result = [...result].sort(
+        (a, b) => (b.utr_rating ?? 0) - (a.utr_rating ?? 0)
+      )
+    }
+
+    return result
+  }, [players, searchName, filterGender, filterAge, filterState, sortBy])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const rangeStart = filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
+  const rangeEnd = Math.min(page * PAGE_SIZE, filtered.length)
+  const paginated = filtered.slice(rangeStart - 1, rangeEnd)
 
   // Reset to page 1 whenever filters change
   useEffect(() => {
     setPage(1)
-  }, [searchName, filterGender, filterAge, filterState])
+  }, [searchName, filterGender, filterAge, filterState, sortBy])
 
   function resetFilters() {
     setSearchName('')
     setFilterGender('all')
     setFilterAge('all')
     setFilterState('all')
+    setSortBy('usta')
   }
 
   if (loading) return <div className={styles.loading}>Loading players...</div>
@@ -137,15 +150,29 @@ export default function RecruitmentPortal() {
             </option>
           ))}
         </select>
+        <div className={styles.sortToggle}>
+          <button
+            className={`${styles.sortBtn} ${sortBy === 'usta' ? styles.sortActive : ''}`}
+            onClick={() => setSortBy('usta')}
+          >
+            USTA
+          </button>
+          <button
+            className={`${styles.sortBtn} ${sortBy === 'utr' ? styles.sortActive : ''}`}
+            onClick={() => setSortBy('utr')}
+          >
+            UTR
+          </button>
+        </div>
         <button className={styles.resetBtn} onClick={resetFilters}>
           Reset
         </button>
       </div>
 
       <div className={styles.resultsCount}>
-        {filtered.length} player{filtered.length !== 1 ? 's' : ''}
-        {filtered.length !== players.length &&
-          ` (filtered from ${players.length})`}
+        {filtered.length === 0
+          ? 'No players found'
+          : `Showing ${rangeStart}–${rangeEnd} of ${filtered.length} player${filtered.length !== 1 ? 's' : ''}${filtered.length !== players.length ? ` (filtered from ${players.length})` : ''}`}
       </div>
 
       {/* Table */}
@@ -153,7 +180,7 @@ export default function RecruitmentPortal() {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>USTA Rank</th>
+              <th>{sortBy === 'utr' ? 'UTR Rating' : 'USTA Rank'}</th>
               <th>Name</th>
               <th>Gender</th>
               <th>Age</th>
@@ -170,7 +197,11 @@ export default function RecruitmentPortal() {
                 className={`${styles.row} ${selected?.id === p.id ? styles.rowSelected : ''}`}
                 onClick={() => setSelected(selected?.id === p.id ? null : p)}
               >
-                <td className={styles.rankCell}>{p.usta_rank ?? '—'}</td>
+                <td className={styles.rankCell}>
+                  {sortBy === 'utr'
+                    ? (p.utr_rating ?? '—')
+                    : (p.usta_rank ?? '—')}
+                </td>
                 <td className={styles.nameCell}>{p.full_name}</td>
                 <td>
                   {p.gender === 'male'
