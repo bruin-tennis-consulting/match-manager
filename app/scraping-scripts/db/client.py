@@ -11,6 +11,7 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parent.parent.parent.parent / ".env")
+# load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 
 SUPABASE_URL: str = os.environ["SUPABASE_URL"]
 SUPABASE_KEY: str = os.environ["SUPABASE_KEY"]

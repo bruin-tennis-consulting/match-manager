@@ -472,6 +472,80 @@ def _upsert_match_mapping(
     ).execute()
 
 
+def _get_or_create_stub_player(
+    source: str,
+    source_id: str | int | None,
+    name: str | None,
+    player_map: dict[tuple[str, str], str],
+) -> str | None:
+    """
+    Return a canonical player UUID for an opponent we've seen in match data
+    but haven't scraped a full profile for yet.
+
+    Resolution order:
+      1. Already in player_map from this run — return immediately.
+      2. Already in resolution.player_mappings in the DB — load and return.
+      3. Create a minimal canonical.players stub (name only) and add a
+         player_mapping with method="stub" so a future profile scrape will
+         find and enrich it via the normal exact_external_id / name matching
+         path rather than creating a duplicate.
+
+    Returns None only when we have neither a source_id nor a name to work with.
+    """
+    if not source_id and not name:
+        return None
+
+    sid_str = str(source_id) if source_id else None
+
+    # 1. Already resolved in this run
+    if sid_str:
+        existing = player_map.get((source, sid_str))
+        if existing:
+            return existing
+
+    # 2. Already in the DB mapping table
+    if sid_str:
+        db_result = (
+            _resolution("player_mappings")
+            .select("canonical_id")
+            .eq("source", source)
+            .eq("source_id", sid_str)
+            .execute()
+        )
+        if db_result.data:
+            canonical_id = db_result.data[0]["canonical_id"]
+            if sid_str:
+                player_map[(source, sid_str)] = canonical_id
+            return canonical_id
+
+    # 3. Create a minimal stub — name only, no profile data yet
+    parts     = (name or "").strip().split(None, 1)
+    stub_row  = {
+        "full_name":  name,
+        "first_name": parts[0] if parts else None,
+        "last_name":  parts[1] if len(parts) > 1 else None,
+        "created_at": _now(),
+        "updated_at": _now(),
+    }
+    insert_result = _canonical("players").insert(stub_row).execute()
+    canonical_id  = insert_result.data[0]["id"]
+
+    # Register the mapping so future profile scrapes enrich this stub
+    # instead of creating a duplicate
+    if sid_str:
+        _upsert_player_mapping(
+            source      = source,
+            source_id   = sid_str,
+            canonical_id= canonical_id,
+            alias_name  = name,
+            confidence  = 0.7,          # lower confidence — name-only stub
+            method      = "stub",
+        )
+        player_map[(source, sid_str)] = canonical_id
+
+    return canonical_id
+
+
 def _create_canonical_match(
     rj: dict,
     source: str,
@@ -480,14 +554,23 @@ def _create_canonical_match(
 ) -> str | None:
     """
     Insert a new canonical.matches stub from a raw_json blob.
+    If the opponent has no canonical player yet, creates a name-only stub
+    so opponent_id is never null.
     Returns UUID or None if the primary player can't be resolved.
     """
     player_id = player_map.get((source, str(rj.get("player_source_id", ""))))
     if not player_id:
         return None
 
-    opp_raw    = rj.get("opponent_source_id")
+    opp_raw     = rj.get("opponent_source_id")
+    opp_name    = rj.get("opponent_name")
     opponent_id = player_map.get((source, str(opp_raw))) if opp_raw else None
+
+    # Create a stub if we know who the opponent is but haven't scraped them yet
+    if opponent_id is None:
+        opponent_id = _get_or_create_stub_player(
+            source, opp_raw, opp_name, player_map
+        )
 
     outcome   = rj.get("outcome")
     winner_id = player_id if outcome == "win" else (opponent_id or None)
@@ -559,7 +642,7 @@ def resolve_matches(
             canon_index[(oid, pid, date)].append(c)
 
     resolved = dict(existing)
-    counts   = {"exact": 0, "date_only": 0, "new": 0, "skipped": 0}
+    counts   = {"exact": 0, "date_only": 0, "new": 0, "skipped": 0, "stubs": 0}
 
     for row in unresolved:
         source          = row["source"]
@@ -568,11 +651,22 @@ def resolve_matches(
 
         player_id   = player_map.get((source, str(rj.get("player_source_id", ""))))
         opp_raw     = rj.get("opponent_source_id")
+        opp_name    = rj.get("opponent_name")
         opponent_id = player_map.get((source, str(opp_raw))) if opp_raw else None
 
         if not player_id:
             counts["skipped"] += 1
             continue
+
+        # If the opponent isn't resolved yet, create a name-only stub now so
+        # the canon_index lookup and the eventual match insert both have a
+        # valid opponent UUID. A full profile scrape will enrich the stub later.
+        if opponent_id is None and (opp_raw or opp_name):
+            opponent_id = _get_or_create_stub_player(
+                source, opp_raw, opp_name, player_map
+            )
+            if opponent_id:
+                counts["stubs"] += 1
 
         played_at    = rj.get("played_at")
         raw_score    = rj.get("score")
@@ -622,6 +716,7 @@ def resolve_matches(
         f"  [resolution] Matches: {counts['exact']} exact, "
         f"{counts['date_only']} date-only, "
         f"{counts['new']} created, "
+        f"{counts['stubs']} opponent stubs, "
         f"{counts['skipped']} skipped  "
         f"({len(resolved)} total mapped)"
     )

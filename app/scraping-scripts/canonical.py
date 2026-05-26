@@ -99,8 +99,15 @@ def promote_rankings(player_map: dict[tuple[str, str], str]) -> int:
         })
 
     if rows:
+        # Deduplicate by the conflict key before sending — multiple raw rows
+        # (e.g. homepage scrape + profile scrape) can target the same
+        # (player_id, ranking_type, ranking_date). Last one wins.
+        deduped = {
+            (r["player_id"], r["ranking_type"], r["ranking_date"]): r
+            for r in rows
+        }.values()
         _canonical("player_rankings").upsert(
-            rows,
+            list(deduped),
             on_conflict="player_id,ranking_type,ranking_date",
         ).execute()
 
