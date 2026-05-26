@@ -1,36 +1,49 @@
 """
 resolution.py
 =============
-Reads from raw.* and populates resolution.player_mappings and
-resolution.tournament_mappings for ALL sources.
+Reads from raw schema and populates resolution schema mappings for all sources.
+Creates canonical stubs as a side effect when no match is found.
 
-Matching strategy (players)
+Flow per entity type:
+    raw.players      -> resolution.player_mappings     (+ canonical.players stubs)
+    raw.tournaments  -> resolution.tournament_mappings (+ canonical.tournaments stubs)
+    raw.matches      -> resolution.match_mappings      (+ canonical.matches stubs)
+
+Matching strategy — players
 ---------------------------
-1. Exact match on a known external ID already in canonical.players
-   (utr_id, usta_id).  Confidence = 1.0,  method = "exact_external_id".
-2. Exact match on full_name + grad_year + gender.
-   Confidence = 0.95, method = "exact_name_grad_year".
-3. Exact match on full_name + gender alone (USTA has no grad_year).
-   Confidence = 0.85, method = "exact_name_gender".
-4. Fuzzy name match within same gender (+ grad_year when available).
-   Confidence = 0.75, method = "fuzzy_name".
-5. No match → create new canonical.players stub.
-   Confidence = 1.0,  method = "new".
+1. exact_external_id   — utr_id or usta_id already in canonical.players.  conf=1.0
+2. exact_name_grad_year — full_name + grad_year + gender match.           conf=0.95
+3. exact_name_gender   — full_name + gender (USTA has no grad_year).      conf=0.85
+4. fuzzy_name          — SequenceMatcher >= 0.85 within same gender bucket. conf=0.75
+5. new                 — no match; create canonical stub.                  conf=1.0
 
-Each source exposes its external IDs differently; _extract_external_ids()
-handles the per-source mapping.
+Matching strategy — tournaments
+--------------------------------
+1. exact   — name + start_date match in canonical.tournaments.  conf=1.0
+2. new     — no match; create canonical stub.                   conf=1.0
+
+Matching strategy — matches
+----------------------------
+Must run AFTER players + tournaments so canonical IDs are available.
+1. same_players_date_score — same canonical pair + played_at + normalised score. conf=1.0
+2. same_players_date       — same canonical pair + played_at, score differs.     conf=0.9
+3. new                     — no match; create canonical stub.                    conf=1.0
 
 Public API
 ----------
-    resolve_players(sources)     -> dict[(source, source_id), canonical_uuid]
-    resolve_tournaments(sources) -> dict[(source, source_id), canonical_uuid]
-    resolve_all(sources)         -> tuple[dict, dict]
+    resolve_players(sources)                            -> player_map
+    resolve_tournaments(sources)                        -> tournament_map
+    resolve_matches(player_map, tournament_map, sources) -> match_map
+    resolve_all(sources)                                -> (player_map, tournament_map, match_map)
 
-    All sources resolved when sources=None (default).
+All maps: {(source, source_id): canonical_uuid}
+All sources resolved when sources=None (default).
 """
 
 from __future__ import annotations
 
+import re
+from collections import defaultdict
 from difflib import SequenceMatcher
 from datetime import datetime, timezone
 
@@ -38,10 +51,11 @@ from db.client import supabase
 
 ALL_SOURCES = ["tennisrecruiting.net", "USTA", "UTR"]
 
+# Schema-scoped table accessors
+_raw        = lambda t: supabase.schema("raw").table(t)
+_resolution = lambda t: supabase.schema("resolution").table(t)
+_canonical  = lambda t: supabase.schema("canonical").table(t)
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -51,12 +65,17 @@ def _similarity(a: str, b: str) -> float:
     return SequenceMatcher(None, a.lower().strip(), b.lower().strip()).ratio()
 
 
+# ---------------------------------------------------------------------------
+# External ID extraction — per-source mapping
+# ---------------------------------------------------------------------------
+
 def _extract_external_ids(source: str, raw_json: dict) -> dict[str, str | None]:
     """
-    Pull the external IDs we can use for cross-source matching out of a
-    raw_json blob.  Each source stores them in a different place.
+    Pull cross-source-matchable external IDs from a raw_json blob.
+    Each source stores them in a different location.
     """
-    extra = raw_json.get("player_extra", {})
+    extra  = raw_json.get("player_extra", {})
+    player = raw_json.get("player", {})
 
     if source == "tennisrecruiting.net":
         return {
@@ -65,35 +84,30 @@ def _extract_external_ids(source: str, raw_json: dict) -> dict[str, str | None]:
         }
     if source == "UTR":
         # The UTR source_id IS the utr_id
-        player = raw_json.get("player", {})
         return {
             "utr_id":  str(player["_source_id"]) if player.get("_source_id") else None,
             "usta_id": None,
         }
     if source == "USTA":
-        # The USTA source_id IS the usta_id (uaid)
-        player = raw_json.get("player", {})
-        src_id = player.get("_source_id")
+        # The USTA source_id IS the usta uaid
         return {
             "utr_id":  None,
-            "usta_id": str(src_id) if src_id else None,
+            "usta_id": str(player["_source_id"]) if player.get("_source_id") else None,
         }
     return {"utr_id": None, "usta_id": None}
 
 
-# ---------------------------------------------------------------------------
-# Player resolution — shared internals
-# ---------------------------------------------------------------------------
+# ===========================================================================
+# PLAYERS
+# ===========================================================================
 
 def _load_canonical_players() -> list[dict]:
-    result = supabase.table("canonical.players").select("*").execute()
-    return result.data or []
+    return _canonical("players").select("*").execute().data or []
 
 
 def _load_existing_player_mappings(sources: list[str]) -> dict[tuple[str, str], str]:
-    """Returns {(source, source_id): canonical_uuid} for already-resolved rows."""
     result = (
-        supabase.table("resolution.player_mappings")
+        _resolution("player_mappings")
         .select("source,source_id,canonical_id")
         .in_("source", sources)
         .execute()
@@ -102,14 +116,10 @@ def _load_existing_player_mappings(sources: list[str]) -> dict[tuple[str, str], 
 
 
 def _upsert_player_mapping(
-    source: str,
-    source_id: str,
-    canonical_id: str,
-    alias_name: str | None,
-    confidence: float,
-    method: str,
+    source: str, source_id: str, canonical_id: str,
+    alias_name: str | None, confidence: float, method: str,
 ) -> None:
-    supabase.table("resolution.player_mappings").upsert(
+    _resolution("player_mappings").upsert(
         {
             "canonical_id": canonical_id,
             "source":       source,
@@ -124,48 +134,41 @@ def _upsert_player_mapping(
 
 
 def _create_canonical_player(source: str, raw_json: dict) -> str:
-    """Insert a new canonical.players row and return its UUID."""
-    p     = raw_json.get("player", {})
-    extra = raw_json.get("player_extra", {})
-    ids   = _extract_external_ids(source, raw_json)
-
-    row = {
-        "full_name":     p.get("full_name"),
-        "first_name":    p.get("first_name"),
-        "last_name":     p.get("last_name"),
-        "date_of_birth": p.get("date_of_birth"),
-        "grad_year":     p.get("grad_year"),
-        "gender":        p.get("gender"),
-        "region":        p.get("region"),
-        "country_code":  p.get("country_code"),
-        "height":        p.get("height"),
-        "dominant_hand": p.get("dominant_hand"),
-        "play_style":    p.get("play_style"),
-        "utr_id":        ids.get("utr_id"),
-        "usta_id":       ids.get("usta_id"),
-        "created_at":    _now(),
-        "updated_at":    _now(),
-    }
-    result = supabase.table("canonical.players").insert(row).execute()
+    """Insert a new canonical.players row. Returns UUID."""
+    p   = raw_json.get("player", {})
+    ids = _extract_external_ids(source, raw_json)
+    result = _canonical("players").insert(
+        {
+            "full_name":     p.get("full_name"),
+            "first_name":    p.get("first_name"),
+            "last_name":     p.get("last_name"),
+            "date_of_birth": p.get("date_of_birth"),
+            "grad_year":     p.get("grad_year"),
+            "gender":        p.get("gender"),
+            "region":        p.get("region"),
+            "country_code":  p.get("country_code"),
+            "height":        p.get("height"),
+            "dominant_hand": p.get("dominant_hand"),
+            "play_style":    p.get("play_style"),
+            "utr_id":        ids.get("utr_id"),
+            "usta_id":       ids.get("usta_id"),
+            "created_at":    _now(),
+            "updated_at":    _now(),
+        }
+    ).execute()
     return result.data[0]["id"]
 
 
-def _update_canonical_player_ids(canonical_id: str, ids: dict[str, str | None]) -> None:
-    """
-    When we match an existing canonical player via name, write back any
-    external IDs we now know from the new source (e.g. USTA match fills
-    in usta_id on a row that only had utr_id before).
-    """
+def _backfill_canonical_player_ids(canonical_id: str, ids: dict[str, str | None]) -> None:
+    """Write back any external IDs we learned from a new source without overwriting existing ones."""
     updates = {k: v for k, v in ids.items() if v is not None}
     if updates:
         updates["updated_at"] = _now()
-        supabase.table("canonical.players").update(updates).eq("id", canonical_id).execute()
+        _canonical("players").update(updates).eq("id", canonical_id).execute()
 
 
 def _match_player(
-    source: str,
-    raw_json: dict,
-    canonical_players: list[dict],
+    source: str, raw_json: dict, canonical_players: list[dict],
 ) -> tuple[str | None, float, str]:
     """
     Try to find an existing canonical player for a raw record.
@@ -179,9 +182,9 @@ def _match_player(
     utr_id    = ids.get("utr_id")
     usta_id   = ids.get("usta_id")
 
-    # 1. External ID — strongest signal, cross-source safe
+    # 1. External ID — strongest cross-source signal
     for canon in canonical_players:
-        if utr_id and canon.get("utr_id") == utr_id:
+        if utr_id  and canon.get("utr_id")  == utr_id:
             return canon["id"], 1.0, "exact_external_id"
         if usta_id and canon.get("usta_id") == usta_id:
             return canon["id"], 1.0, "exact_external_id"
@@ -189,13 +192,13 @@ def _match_player(
     if not name:
         return None, 0.0, "no_name"
 
-    # 2. Exact name + grad_year + gender  (TennisRecruiting, UTR have grad_year)
+    # 2. Exact name + grad_year + gender  (TR and UTR always have grad_year)
     if grad_year:
         for canon in canonical_players:
             if (
                 canon.get("full_name", "").strip().lower() == name.lower()
                 and canon.get("grad_year") == grad_year
-                and canon.get("gender") == gender
+                and canon.get("gender")    == gender
             ):
                 return canon["id"], 0.95, "exact_name_grad_year"
 
@@ -207,9 +210,8 @@ def _match_player(
         ):
             return canon["id"], 0.85, "exact_name_gender"
 
-    # 4. Fuzzy name — restrict bucket to same gender + grad_year when available
-    best_score = 0.0
-    best_id    = None
+    # 4. Fuzzy name — same gender bucket, same grad_year bucket when available
+    best_score, best_id = 0.0, None
     for canon in canonical_players:
         if canon.get("gender") != gender:
             continue
@@ -217,8 +219,7 @@ def _match_player(
             continue
         sim = _similarity(name, canon.get("full_name") or "")
         if sim > best_score:
-            best_score = sim
-            best_id    = canon["id"]
+            best_score, best_id = sim, canon["id"]
 
     if best_id and best_score >= 0.85:
         return best_id, round(best_score * 0.9, 4), "fuzzy_name"
@@ -226,56 +227,46 @@ def _match_player(
     return None, 0.0, "no_match"
 
 
-# ---------------------------------------------------------------------------
-# Player resolution — public
-# ---------------------------------------------------------------------------
-
 def resolve_players(sources: list[str] | None = None) -> dict[tuple[str, str], str]:
     """
     Resolve all unresolved raw.players rows for the given sources.
     Returns {(source, source_id): canonical_uuid}.
     """
-    sources = sources or ALL_SOURCES
+    sources  = sources or ALL_SOURCES
     existing = _load_existing_player_mappings(sources)
 
-    raw_result = (
-        supabase.table("raw.players")
+    raw_rows = (
+        _raw("players")
         .select("source,source_id,raw_json")
         .in_("source", sources)
         .execute()
+        .data or []
     )
-    raw_rows = raw_result.data or []
-
     unresolved = [r for r in raw_rows if (r["source"], r["source_id"]) not in existing]
+
     if not unresolved:
-        print(f"  [resolution] Players: nothing new to resolve ({len(existing)} already mapped)")
+        print(f"  [resolution] Players: nothing new  ({len(existing)} already mapped)")
         return existing
 
     canonical_players = _load_canonical_players()
     resolved = dict(existing)
-
-    counts = {"matched": 0, "new": 0}
+    counts   = {"matched": 0, "new": 0}
 
     for row in unresolved:
-        source    = row["source"]
-        source_id = row["source_id"]
-        raw_json  = row["raw_json"]
-        alias     = raw_json.get("player", {}).get("full_name")
+        source, source_id, raw_json = row["source"], row["source_id"], row["raw_json"]
+        alias = raw_json.get("player", {}).get("full_name")
 
         canonical_id, confidence, method = _match_player(source, raw_json, canonical_players)
 
         if canonical_id is None:
             canonical_id = _create_canonical_player(source, raw_json)
-            confidence   = 1.0
-            method       = "new"
-            new_row = supabase.table("canonical.players").select("*").eq("id", canonical_id).execute()
+            confidence, method = 1.0, "new"
+            new_row = _canonical("players").select("*").eq("id", canonical_id).execute()
             if new_row.data:
                 canonical_players.append(new_row.data[0])
             counts["new"] += 1
         else:
-            # Back-fill any external IDs we learned from this source
-            ids = _extract_external_ids(source, raw_json)
-            _update_canonical_player_ids(canonical_id, ids)
+            _backfill_canonical_player_ids(canonical_id, _extract_external_ids(source, raw_json))
             counts["matched"] += 1
 
         _upsert_player_mapping(source, source_id, canonical_id, alias, confidence, method)
@@ -288,13 +279,28 @@ def resolve_players(sources: list[str] | None = None) -> dict[tuple[str, str], s
     return resolved
 
 
-# ---------------------------------------------------------------------------
-# Tournament resolution — only TennisRecruiting has tournament data for now
-# ---------------------------------------------------------------------------
+# ===========================================================================
+# TOURNAMENTS
+# ===========================================================================
+
+_TOURNAMENT_LEVEL_MAP = {
+    "JGS": "ITF_Grade_A",  "JM":  "ITF_Junior_Masters",
+    "J500": "ITF_Grade_1", "J300": "ITF_Grade_2",
+    "J200": "ITF_Grade_3", "J100": "ITF_Grade_4",
+    "J060": "ITF_Grade_5", "L1":  "USTA_Level_1",
+    "L2":  "USTA_Level_2", "L3":  "USTA_Level_3",
+}
+
+
+def _infer_tournament_level(name: str | None) -> str | None:
+    if not name:
+        return None
+    return _TOURNAMENT_LEVEL_MAP.get(name.strip().split()[0].upper())
+
 
 def _load_existing_tournament_mappings(sources: list[str]) -> dict[tuple[str, str], str]:
     result = (
-        supabase.table("resolution.tournament_mappings")
+        _resolution("tournament_mappings")
         .select("source,source_id,canonical_id")
         .in_("source", sources)
         .execute()
@@ -302,42 +308,10 @@ def _load_existing_tournament_mappings(sources: list[str]) -> dict[tuple[str, st
     return {(r["source"], r["source_id"]): r["canonical_id"] for r in (result.data or [])}
 
 
-def _infer_tournament_level(name: str | None) -> str | None:
-    if not name:
-        return None
-    level_map = {
-        "JGS": "ITF_Grade_A", "JM": "ITF_Junior_Masters",
-        "J500": "ITF_Grade_1", "J300": "ITF_Grade_2",
-        "J200": "ITF_Grade_3", "J100": "ITF_Grade_4",
-        "J060": "ITF_Grade_5", "L1": "USTA_Level_1",
-        "L2": "USTA_Level_2", "L3": "USTA_Level_3",
-    }
-    prefix = name.strip().split()[0].upper()
-    return level_map.get(prefix)
-
-
-def _create_canonical_tournament(source: str, raw_json: dict) -> str:
-    row = {
-        "name":       raw_json.get("name"),
-        "start_date": raw_json.get("start"),
-        "end_date":   raw_json.get("end"),
-        "location":   raw_json.get("location"),
-        "level":      _infer_tournament_level(raw_json.get("name")),
-        "source":     source,
-        "created_at": _now(),
-    }
-    result = supabase.table("canonical.tournaments").insert(row).execute()
-    return result.data[0]["id"]
-
-
 def _upsert_tournament_mapping(
-    source: str,
-    source_id: str,
-    canonical_id: str,
-    confidence: float,
-    method: str,
+    source: str, source_id: str, canonical_id: str, confidence: float, method: str,
 ) -> None:
-    supabase.table("resolution.tournament_mappings").upsert(
+    _resolution("tournament_mappings").upsert(
         {
             "canonical_id": canonical_id,
             "source":       source,
@@ -350,6 +324,21 @@ def _upsert_tournament_mapping(
     ).execute()
 
 
+def _create_canonical_tournament(source: str, raw_json: dict) -> str:
+    result = _canonical("tournaments").insert(
+        {
+            "name":       raw_json.get("name"),
+            "start_date": raw_json.get("start"),
+            "end_date":   raw_json.get("end"),
+            "location":   raw_json.get("location"),
+            "level":      _infer_tournament_level(raw_json.get("name")),
+            "source":     source,
+            "created_at": _now(),
+        }
+    ).execute()
+    return result.data[0]["id"]
+
+
 def resolve_tournaments(sources: list[str] | None = None) -> dict[tuple[str, str], str]:
     """
     Resolve all unresolved raw.tournaments rows for the given sources.
@@ -358,25 +347,23 @@ def resolve_tournaments(sources: list[str] | None = None) -> dict[tuple[str, str
     sources  = sources or ALL_SOURCES
     existing = _load_existing_tournament_mappings(sources)
 
-    raw_result = (
-        supabase.table("raw.tournaments")
+    raw_rows = (
+        _raw("tournaments")
         .select("source,source_tournament_id,raw_json")
         .in_("source", sources)
         .execute()
+        .data or []
     )
-    raw_rows   = raw_result.data or []
     unresolved = [
         r for r in raw_rows
         if (r["source"], r["source_tournament_id"]) not in existing
     ]
 
     if not unresolved:
-        print(f"  [resolution] Tournaments: nothing new to resolve ({len(existing)} already mapped)")
+        print(f"  [resolution] Tournaments: nothing new  ({len(existing)} already mapped)")
         return existing
 
-    canonical_tournaments = (
-        supabase.table("canonical.tournaments").select("*").execute().data or []
-    )
+    canonical_tournaments = _canonical("tournaments").select("*").execute().data or []
     resolved = dict(existing)
     counts   = {"matched": 0, "new": 0}
 
@@ -387,21 +374,21 @@ def resolve_tournaments(sources: list[str] | None = None) -> dict[tuple[str, str
         name      = (raw_json.get("name") or "").strip()
         start     = raw_json.get("start")
 
-        canonical_id = None
-        for canon in canonical_tournaments:
-            if (
-                (canon.get("name") or "").strip().lower() == name.lower()
-                and canon.get("start_date") == start
-            ):
-                canonical_id = canon["id"]
-                break
+        canonical_id = next(
+            (
+                c["id"] for c in canonical_tournaments
+                if (c.get("name") or "").strip().lower() == name.lower()
+                and c.get("start_date") == start
+            ),
+            None,
+        )
 
         if canonical_id is None:
             canonical_id = _create_canonical_tournament(source, raw_json)
-            new_t = supabase.table("canonical.tournaments").select("*").eq("id", canonical_id).execute()
+            new_t = _canonical("tournaments").select("*").eq("id", canonical_id).execute()
             if new_t.data:
                 canonical_tournaments.append(new_t.data[0])
-            counts["new"]     += 1
+            counts["new"] += 1
             method = "new"
         else:
             counts["matched"] += 1
@@ -417,12 +404,241 @@ def resolve_tournaments(sources: list[str] | None = None) -> dict[tuple[str, str
     return resolved
 
 
-# ---------------------------------------------------------------------------
-# Convenience
-# ---------------------------------------------------------------------------
+# ===========================================================================
+# MATCHES
+# ===========================================================================
 
-def resolve_all(sources: list[str] | None = None) -> tuple[dict, dict]:
-    """Run full resolution pass for all sources. Returns (player_map, tournament_map)."""
+def _scores_compatible(a: str | None, b: str | None) -> bool:
+    """
+    Return True if two score strings are plausibly the same match.
+    Normalises separators and strips tiebreak detail before comparing.
+    e.g. "6-4 6-2" == "6-4;6-2" == "6-4, 6-2"
+         "7-6(4) 6-2" == "7-6 6-2"
+    """
+    if not a or not b:
+        return False
+    def _strip(s: str) -> str:
+        s = re.sub(r"\(\d+\)", "", s)
+        s = re.sub(r"[\s;,]+", " ", s.strip())
+        return s.lower()
+    return _strip(a) == _strip(b)
+
+
+def _parse_sets(score: str | None) -> list[dict] | None:
+    """Parse "6-4;3-6;7-5(4)" -> [{"p":6,"o":4}, {"p":3,"o":6}, {"p":7,"o":5,"tb":4}]."""
+    if not score:
+        return None
+    sets = []
+    for s in re.sub(r"[;,\s]+", " ", score.strip()).split():
+        tb_m = re.search(r"\((\d+)\)", s)
+        tb   = int(tb_m.group(1)) if tb_m else None
+        s    = re.sub(r"\(\d+\)", "", s)
+        parts = s.split("-")
+        if len(parts) != 2:
+            return None
+        try:
+            entry: dict = {"p": int(parts[0]), "o": int(parts[1])}
+        except ValueError:
+            return None
+        if tb is not None:
+            entry["tb"] = tb
+        sets.append(entry)
+    return sets or None
+
+
+def _load_existing_match_mappings(sources: list[str]) -> dict[tuple[str, str], str]:
+    result = (
+        _resolution("match_mappings")
+        .select("source,source_match_id,canonical_id")
+        .in_("source", sources)
+        .execute()
+    )
+    return {(r["source"], r["source_match_id"]): r["canonical_id"] for r in (result.data or [])}
+
+
+def _upsert_match_mapping(
+    source: str, source_match_id: str, canonical_id: str, confidence: float, method: str,
+) -> None:
+    _resolution("match_mappings").upsert(
+        {
+            "canonical_id":    canonical_id,
+            "source":          source,
+            "source_match_id": source_match_id,
+            "confidence":      confidence,
+            "match_method":    method,
+            "created_at":      _now(),
+        },
+        on_conflict="source,source_match_id",
+    ).execute()
+
+
+def _create_canonical_match(
+    rj: dict,
+    source: str,
+    player_map: dict[tuple[str, str], str],
+    tournament_map: dict[tuple[str, str], str],
+) -> str | None:
+    """
+    Insert a new canonical.matches stub from a raw_json blob.
+    Returns UUID or None if the primary player can't be resolved.
+    """
+    player_id = player_map.get((source, str(rj.get("player_source_id", ""))))
+    if not player_id:
+        return None
+
+    opp_raw    = rj.get("opponent_source_id")
+    opponent_id = player_map.get((source, str(opp_raw))) if opp_raw else None
+
+    outcome   = rj.get("outcome")
+    winner_id = player_id if outcome == "win" else (opponent_id or None)
+
+    t_name        = (rj.get("tournament_name") or "").strip().upper()
+    t_start       = rj.get("tournament_start") or ""
+    tournament_id = tournament_map.get((source, f"{t_name}|{t_start}"))
+
+    result = _canonical("matches").insert(
+        {
+            "player_id":     player_id,
+            "opponent_id":   opponent_id,
+            "winner_id":     winner_id,
+            "tournament_id": tournament_id,
+            "outcome":       outcome,
+            "score":         rj.get("score"),
+            "sets":          _parse_sets(rj.get("score")),
+            "round":         rj.get("round"),
+            "best_of":       rj.get("best_of"),
+            "status":        rj.get("status", "completed"),
+            "source":        source,
+            "played_at":     rj.get("played_at"),
+            "ingested_at":   _now(),
+        }
+    ).execute()
+    return result.data[0]["id"]
+
+
+def resolve_matches(
+    player_map:     dict[tuple[str, str], str],
+    tournament_map: dict[tuple[str, str], str],
+    sources: list[str] | None = None,
+) -> dict[tuple[str, str], str]:
+    """
+    Resolve all unresolved raw.matches rows for the given sources.
+    Must run after resolve_players + resolve_tournaments.
+    Returns {(source, source_match_id): canonical_uuid}.
+    """
+    sources  = sources or ALL_SOURCES
+    existing = _load_existing_match_mappings(sources)
+
+    raw_rows = (
+        _raw("matches")
+        .select("source,source_match_id,raw_json")
+        .in_("source", sources)
+        .execute()
+        .data or []
+    )
+    unresolved = [
+        r for r in raw_rows
+        if (r["source"], r["source_match_id"]) not in existing
+    ]
+
+    if not unresolved:
+        print(f"  [resolution] Matches: nothing new  ({len(existing)} already mapped)")
+        return existing
+
+    # Load all canonical matches and index by (player_id, opponent_id, played_at).
+    # Store both orderings of the player pair: TennisRecruiting reports each match
+    # from one player's perspective, so the same match appears as
+    #   player=A, opponent=B, outcome=win  (on A's page)
+    #   player=B, opponent=A, outcome=loss (on B's page)
+    canon_rows = _canonical("matches").select("*").execute().data or []
+    canon_index: dict[tuple, list[dict]] = defaultdict(list)
+    for c in canon_rows:
+        pid, oid, date = c.get("player_id"), c.get("opponent_id"), c.get("played_at")
+        if pid and oid and date:
+            canon_index[(pid, oid, date)].append(c)
+            canon_index[(oid, pid, date)].append(c)
+
+    resolved = dict(existing)
+    counts   = {"exact": 0, "date_only": 0, "new": 0, "skipped": 0}
+
+    for row in unresolved:
+        source          = row["source"]
+        source_match_id = row["source_match_id"]
+        rj              = row["raw_json"]
+
+        player_id   = player_map.get((source, str(rj.get("player_source_id", ""))))
+        opp_raw     = rj.get("opponent_source_id")
+        opponent_id = player_map.get((source, str(opp_raw))) if opp_raw else None
+
+        if not player_id:
+            counts["skipped"] += 1
+            continue
+
+        played_at    = rj.get("played_at")
+        raw_score    = rj.get("score")
+        lookup_key   = (player_id, opponent_id, played_at) if opponent_id else None
+        canonical_id = None
+        confidence   = 1.0
+        method       = "new"
+
+        if lookup_key:
+            candidates = canon_index.get(lookup_key, [])
+            # Prefer score-matching candidate first
+            for candidate in candidates:
+                if _scores_compatible(raw_score, candidate.get("score")):
+                    canonical_id = candidate["id"]
+                    confidence   = 1.0
+                    method       = "same_players_date_score"
+                    counts["exact"] += 1
+                    break
+            # Fall back to date-only match
+            if canonical_id is None and candidates:
+                canonical_id = candidates[0]["id"]
+                confidence   = 0.9
+                method       = "same_players_date"
+                counts["date_only"] += 1
+
+        if canonical_id is None:
+            canonical_id = _create_canonical_match(rj, source, player_map, tournament_map)
+            if canonical_id is None:
+                counts["skipped"] += 1
+                continue
+            # Add to in-memory index so later rows in this batch can match against it
+            new_c = _canonical("matches").select("*").eq("id", canonical_id).execute()
+            if new_c.data:
+                c    = new_c.data[0]
+                pid  = c.get("player_id")
+                oid  = c.get("opponent_id")
+                date = c.get("played_at")
+                if pid and oid and date:
+                    canon_index[(pid, oid, date)].append(c)
+                    canon_index[(oid, pid, date)].append(c)
+            counts["new"] += 1
+
+        _upsert_match_mapping(source, source_match_id, canonical_id, confidence, method)
+        resolved[(source, source_match_id)] = canonical_id
+
+    print(
+        f"  [resolution] Matches: {counts['exact']} exact, "
+        f"{counts['date_only']} date-only, "
+        f"{counts['new']} created, "
+        f"{counts['skipped']} skipped  "
+        f"({len(resolved)} total mapped)"
+    )
+    return resolved
+
+
+# ===========================================================================
+# Convenience
+# ===========================================================================
+
+def resolve_all(sources: list[str] | None = None) -> tuple[dict, dict, dict]:
+    """
+    Full resolution pass for all sources.
+    Returns (player_map, tournament_map, match_map).
+    Order matters: matches depend on players + tournaments.
+    """
     player_map     = resolve_players(sources)
     tournament_map = resolve_tournaments(sources)
-    return player_map, tournament_map
+    match_map      = resolve_matches(player_map, tournament_map, sources)
+    return player_map, tournament_map, match_map

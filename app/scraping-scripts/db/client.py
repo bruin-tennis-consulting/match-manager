@@ -2,9 +2,6 @@
 db/client.py
 ============
 Supabase client and shared DB utilities.
-
-Resolution helpers (resolve_player_id, resolve_player_ids_batch) have been
-removed — that logic now lives in resolution.py.
 """
 
 import os
@@ -13,54 +10,35 @@ from datetime import datetime, timezone
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
-# ---------------------------------------------------------------------------
-# Client
-# ---------------------------------------------------------------------------
 load_dotenv(Path(__file__).resolve().parent.parent.parent.parent / ".env")
 
 SUPABASE_URL: str = os.environ["SUPABASE_URL"]
-SUPABASE_KEY: str = os.environ["SUPABASE_KEY"]   # service role key
-
+SUPABASE_KEY: str = os.environ["SUPABASE_KEY"]
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-
-# ---------------------------------------------------------------------------
-# Column allow-list for canonical.players
-# Used by canonical.py when building upsert payloads.
-# ---------------------------------------------------------------------------
-
+# Allow-list of columns that exist on canonical.players.
+# Used by resolution.py when building insert/update payloads.
 PLAYER_COLUMNS = {
-    "full_name",
-    "first_name",
-    "last_name",
-    "date_of_birth",
-    "grad_year",
-    "gender",
-    "region",
-    "country_code",
-    "height",
-    "dominant_hand",
-    "play_style",
-    "utr_id",
-    "usta_id",
-    "ita_id",
+    "full_name", "first_name", "last_name", "date_of_birth",
+    "grad_year", "gender", "region", "country_code",
+    "height", "dominant_hand", "play_style",
+    "utr_id", "usta_id", "ita_id",
 }
 
+_raw = lambda t: supabase.schema("raw").table(t)
 
-# ---------------------------------------------------------------------------
-# Ingest job helpers  (raw.ingest_jobs)
-# ---------------------------------------------------------------------------
 
 def create_job(source: str, metadata: dict | None = None) -> dict:
-    """Insert a new ingest job row and return it."""
-    row = {
-        "source":     source,
-        "status":     "running",
-        "started_at": datetime.now(timezone.utc).isoformat(),
-        "metadata":   metadata or {},
-    }
-    result = supabase.schema("raw").table("ingest_jobs").insert(row).execute()
+    """Insert a new ingest job row into raw.ingest_jobs and return it."""
+    result = _raw("ingest_jobs").insert(
+        {
+            "source":     source,
+            "status":     "running",
+            "started_at": datetime.now(timezone.utc).isoformat(),
+            "metadata":   metadata or {},
+        }
+    ).execute()
     return result.data[0]
 
 
@@ -70,12 +48,12 @@ def finish_job(
     records_ingested: int = 0,
     error_message: str | None = None,
 ) -> None:
-    """Update an ingest job row on completion."""
-    supabase.schema("raw").table("ingest_jobs").update(
+    """Update a raw.ingest_jobs row on completion."""
+    _raw("ingest_jobs").update(
         {
-            "status":            status,
-            "records_ingested":  records_ingested,
-            "error_message":     error_message,
-            "finished_at":       datetime.now(timezone.utc).isoformat(),
+            "status":           status,
+            "records_ingested": records_ingested,
+            "error_message":    error_message,
+            "finished_at":      datetime.now(timezone.utc).isoformat(),
         }
     ).eq("id", job_id).execute()

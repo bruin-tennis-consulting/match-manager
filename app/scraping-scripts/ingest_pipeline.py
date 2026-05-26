@@ -28,7 +28,7 @@ import argparse
 import time
 
 from db.client import create_job, finish_job
-from resolution import resolve_all, _load_existing_player_mappings, _load_existing_tournament_mappings
+from resolution import resolve_all
 from canonical import promote_all
 
 # ---------------------------------------------------------------------------
@@ -154,8 +154,10 @@ def _collect_tr_stub_opponents() -> list[int]:
     """Opponents seen in raw.matches but not yet in raw.players."""
     from db.client import supabase
 
+    _raw = lambda t: supabase.schema("raw").table(t)
+
     matches = (
-        supabase.schema("raw").table("matches")
+        _raw("matches")
         .select("raw_json")
         .eq("source", "tennisrecruiting.net")
         .execute()
@@ -173,7 +175,7 @@ def _collect_tr_stub_opponents() -> list[int]:
         return []
 
     existing = (
-        supabase.schema("raw").table("players")
+        _raw("players")
         .select("source_id")
         .eq("source", "tennisrecruiting.net")
         .in_("source_id", list(all_opp_ids))
@@ -241,13 +243,14 @@ def main():
     # ------------------------------------------------------------------
     player_map     = {}
     tournament_map = {}
+    match_map      = {}
 
     if do_resolve:
         print(f"\n{'='*60}")
         print(f"  PHASE 2 — RESOLVE  ({', '.join(db_keys)})")
         print(f"{'='*60}")
         try:
-            player_map, tournament_map = resolve_all(sources=db_keys)
+            player_map, tournament_map, match_map = resolve_all(sources=db_keys)
         except Exception as e:
             print(f"  [!] Resolution failed: {e}")
             finish_job(job["id"], "failed", total_records, str(e))
@@ -263,15 +266,22 @@ def main():
 
         if not do_resolve:
             # Load maps from DB when resolution was skipped in this run
+            from resolution import (
+                _load_existing_player_mappings,
+                _load_existing_tournament_mappings,
+                _load_existing_match_mappings,
+            )
             player_map     = _load_existing_player_mappings(db_keys)
             tournament_map = _load_existing_tournament_mappings(db_keys)
+            match_map      = _load_existing_match_mappings(db_keys)
             print(
-                f"  Loaded {len(player_map)} player mappings "
-                f"and {len(tournament_map)} tournament mappings from DB"
+                f"  Loaded {len(player_map)} player, "
+                f"{len(tournament_map)} tournament, "
+                f"{len(match_map)} match mappings from DB"
             )
 
         try:
-            counts = promote_all(player_map, tournament_map)
+            counts = promote_all(player_map, tournament_map, match_map)
             total_records += counts["rankings"] + counts["matches"]
         except Exception as e:
             print(f"  [!] Canonical promotion failed: {e}")
