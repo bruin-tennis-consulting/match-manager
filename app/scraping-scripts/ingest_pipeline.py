@@ -276,7 +276,7 @@ def main():
 
         try:
             counts = promote_all(player_map, tournament_map, match_map)
-            total_records += counts["rankings"] + counts["matches"]
+            total_records += counts.get("players", 0) + counts["rankings"] + counts["matches"]
         except Exception as e:
             print(f"  [!] Canonical promotion failed: {e}")
             finish_job(job["id"], "failed", total_records, str(e))

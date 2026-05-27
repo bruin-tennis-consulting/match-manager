@@ -20,6 +20,7 @@ Flow:
 
 Public API
 ----------
+    promote_players(player_map)                         -> int
     promote_rankings(player_map)                        -> int
     promote_matches(match_map)                          -> int
     promote_all(player_map, tournament_map, match_map)  -> dict
@@ -30,7 +31,7 @@ from __future__ import annotations
 import re
 from datetime import datetime, timezone
 
-from db.client import supabase
+from db.client import supabase, fetch_all
 
 _RATING_SOURCES = {"UTR", "WTN"}
 
@@ -79,11 +80,68 @@ def _fetch_in_batches(table_name: str, column: str, values: list, fields: str, b
     return results
 
 # ---------------------------------------------------------------------------
+# Players
+# ---------------------------------------------------------------------------
+
+def promote_players(player_map: dict[tuple[str, str], str]) -> int:
+    """
+    Enrich canonical.players stubs that were created by resolve_players or match opponents.
+    Fills in any fields that are currently null.
+    """
+    if not player_map:
+        return 0
+
+    raw_rows = fetch_all("raw", "players")
+
+    canonical_ids_needed = {
+        player_map[(r["source"], r["source_id"])]
+        for r in raw_rows
+        if (r["source"], r["source_id"]) in player_map
+    }
+
+    if not canonical_ids_needed:
+        return 0
+
+    existing_rows = _fetch_in_batches("players", "id", list(canonical_ids_needed), "*")
+    current_by_id = {r["id"]: r for r in existing_rows}
+
+    enriched = 0
+    skipped  = 0
+
+    for r in raw_rows:
+        if str(r.get("source_id")) == "889776":
+            print(f"Found Vincler in raw_rows! canonical_ids_needed={canonical_ids_needed}")
+        canonical_id = player_map.get((r["source"], str(r["source_id"])))
+        if not canonical_id:
+            skipped += 1
+            continue
+
+        current = current_by_id.get(canonical_id)
+        if not current:
+            skipped += 1
+            continue
+
+        p = r.get("raw_json", {}).get("player", {})
+        updates = {}
+
+        for field in ["date_of_birth", "grad_year", "gender", "region", "country_code", "height", "dominant_hand", "play_style"]:
+            if current.get(field) is None and p.get(field) is not None:
+                updates[field] = p[field]
+
+        if updates:
+            _canonical("players").update(updates).eq("id", canonical_id).execute()
+            current_by_id[canonical_id].update(updates)
+            enriched += 1
+
+    print(f"  [canonical] Players: {enriched} enriched, {skipped} skipped")
+    return enriched
+
+# ---------------------------------------------------------------------------
 # Rankings
 # ---------------------------------------------------------------------------
 
 def promote_rankings(player_map: dict[tuple[str, str], str]) -> int:
-    raw_rows = _raw("rankings").select("*").execute().data or []
+    raw_rows = fetch_all("raw", "rankings")
 
     rows    = []
     skipped = 0
@@ -181,7 +239,7 @@ def promote_matches(match_map: dict[tuple[str, str], str]) -> int:
         print("  [canonical] Matches: no match_map — skipping")
         return 0
 
-    raw_rows = _raw("matches").select("*").execute().data or []
+    raw_rows = fetch_all("raw", "matches")
 
     # Collect the set of canonical UUIDs we actually need to fetch
     canonical_ids_needed = {
@@ -247,6 +305,7 @@ def promote_all(
     tournament_map: dict[tuple[str, str], str],
     match_map:      dict[tuple[str, str], str],
 ) -> dict:
+    n_players  = promote_players(player_map)
     n_rankings = promote_rankings(player_map)
     n_matches  = promote_matches(match_map)
-    return {"rankings": n_rankings, "matches": n_matches}
+    return {"players": n_players, "rankings": n_rankings, "matches": n_matches}
