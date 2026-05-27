@@ -1,7 +1,10 @@
 'use client'
 import Link from 'next/link'
 import { useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import RosterList from './RosterList'
+import SearchBox from '@/app/components/SearchBox'
+import { useData } from '@/app/DataProvider'
 import styles from '@/app/styles/Navbar.module.css'
 import rosterIcon from '@/public/rosterIcon.svg'
 import Image from 'next/image'
@@ -9,6 +12,19 @@ import Image from 'next/image'
 // Navbar is wrapped by Auth: show this when signed in
 const NavbarMobile = () => {
   const [showRoster, setShowRoster] = useState(false)
+  const { searchTerm, handleSearch, handleClearSearch } = useData()
+  const pathname = usePathname()
+  const router = useRouter()
+
+  const handleSearchSubmit = (query) => {
+    // Set the search term
+    handleSearch(query)
+    // Redirect to home if not already there
+    if (pathname !== '/') {
+      router.push('/')
+    }
+  }
+
   return (
     <div>
       <div className={styles.mobileContainer}>
@@ -28,6 +44,11 @@ const NavbarMobile = () => {
             </button>
           </div>
         </header>
+        <SearchBox
+          searchTerm={searchTerm}
+          onSubmit={handleSearchSubmit}
+          onClear={handleClearSearch}
+        />
       </div>
       <div className={styles.rosterContainer}>
         {showRoster && <RosterList />}

@@ -1,14 +1,18 @@
 'use client'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 import { useAuth } from '@/app/AuthWrapper'
+import { useData } from '@/app/DataProvider'
+import SearchBox from '@/app/components/SearchBox'
 import styles from '@/app/styles/Navbar.module.css'
 
 // Navbar is wrapped by Auth: show this when signed in
 const Navbar = () => {
   const { handleSignOut } = useAuth()
+  const { searchTerm, handleSearch, handleClearSearch } = useData()
   const pathname = usePathname()
+  const router = useRouter()
 
   // Check if we're on a management-related page
   const isManagementPage =
@@ -16,6 +20,15 @@ const Navbar = () => {
     pathname.startsWith('/match-list/') ||
     pathname === '/player-management' ||
     pathname === '/match-management'
+
+  const handleSearchSubmit = (query) => {
+    // Set the search term
+    handleSearch(query)
+    // Redirect to home if not already there
+    if (pathname !== '/') {
+      router.push('/')
+    }
+  }
 
   return (
     <div className={styles.container}>
@@ -26,6 +39,11 @@ const Navbar = () => {
               BSA | Tennis Consulting
             </Link>
           </h1>
+          <SearchBox
+            searchTerm={searchTerm}
+            onSubmit={handleSearchSubmit}
+            onClear={handleClearSearch}
+          />
           <nav className={styles.navLinks}>
             {isManagementPage && (
               <>

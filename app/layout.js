@@ -32,8 +32,10 @@ export default function RootLayout({ children }) {
       <body>
         <div className={`${dmSans.className} root`}>
           <AuthProvider>
-            <ConditionalNavbar />
-            <DataProvider>{children}</DataProvider>
+            <DataProvider>
+              <ConditionalNavbar />
+              {children}
+            </DataProvider>
           </AuthProvider>
         </div>
         <Footer />

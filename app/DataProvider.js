@@ -18,10 +18,13 @@ import {
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
+import Fuse from 'fuse.js'
+
 import { db, storage } from '@/app/services/initializeFirebase.js'
 import { useAuth } from '@/app/AuthWrapper.js'
 import getTeams from '@/app/services/getTeams.js'
 import { getLogoFromCache, setLogoInCache } from '@/app/services/logoCache'
+import { searchableProperties } from '@/app/services/searchableProperties.js'
 
 const DataContext = createContext()
 
@@ -38,6 +41,10 @@ export const DataProvider = ({ children }) => {
   })
   const [logosLoading, setLogosLoading] = useState(!Object.keys(logos).length)
   const [logosError, setLogosError] = useState(null)
+
+  // For Search
+  const [searchTerm, setSearchTerm] = useState('')
+  const [searchIndex, setSearchIndex] = useState(null)
 
   const { userProfile } = useAuth()
 
@@ -167,6 +174,25 @@ export const DataProvider = ({ children }) => {
     [fetchMatches, setMatches, setError]
   )
 
+  // Build search index from matches
+  const buildSearchIndex = useCallback((matchesToIndex) => {
+    if (matchesToIndex && matchesToIndex.length > 0) {
+      const fuse = new Fuse(matchesToIndex, {
+        keys: searchableProperties,
+        threshold: 0.4
+      })
+      setSearchIndex(fuse)
+    }
+  }, [])
+
+  const handleSearch = useCallback((term) => {
+    setSearchTerm(term)
+  }, [])
+
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm('')
+  }, [])
+
   const fetchLogos = useCallback(async () => {
     setLogosLoading(true)
     setLogosError(null)
@@ -210,7 +236,12 @@ export const DataProvider = ({ children }) => {
         refresh: fetchMatches,
         fetchMatchDetails,
         updateMatch,
-        createMatch
+        createMatch,
+        searchTerm,
+        handleSearch,
+        handleClearSearch,
+        searchIndex,
+        buildSearchIndex
       }}
     >
       {children}
@@ -233,7 +264,12 @@ export const useData = () => {
     refresh,
     fetchMatchDetails,
     updateMatch,
-    createMatch
+    createMatch,
+    searchTerm,
+    handleSearch,
+    handleClearSearch,
+    searchIndex,
+    buildSearchIndex
   } = context
 
   // Optionally keep `refresh` available for manual use in components
@@ -245,6 +281,11 @@ export const useData = () => {
     refresh,
     fetchMatchDetails,
     updateMatch,
-    createMatch
+    createMatch,
+    searchTerm,
+    handleSearch,
+    handleClearSearch,
+    searchIndex,
+    buildSearchIndex
   }
 }
