@@ -69,6 +69,20 @@ def _similarity(a: str, b: str) -> float:
 # External ID extraction — per-source mapping
 # ---------------------------------------------------------------------------
 
+_TR_BASE_URL    = "https://www.tennisrecruiting.net"
+_TR_NO_PHOTO    = "/img/nophoto.gif"
+
+
+def _extract_image_url(source: str, raw_json: dict) -> str | None:
+    """Return a full image URL for a player, or None if no real photo is available."""
+    if source != "tennisrecruiting.net":
+        return None
+    photo = (raw_json.get("player_extra") or {}).get("photo_path")
+    if photo and photo != _TR_NO_PHOTO:
+        return f"{_TR_BASE_URL}{photo}"
+    return None
+
+
 def _extract_external_ids(source: str, raw_json: dict) -> dict[str, str | None]:
     """
     Pull cross-source-matchable external IDs from a raw_json blob.
@@ -135,8 +149,9 @@ def _upsert_player_mapping(
 
 def _create_canonical_player(source: str, raw_json: dict) -> str:
     """Insert a new canonical.players row. Returns UUID."""
-    p   = raw_json.get("player", {})
-    ids = _extract_external_ids(source, raw_json)
+    p         = raw_json.get("player", {})
+    ids       = _extract_external_ids(source, raw_json)
+    image_url = _extract_image_url(source, raw_json)
     result = _canonical("players").insert(
         {
             "full_name":     p.get("full_name"),
@@ -152,6 +167,7 @@ def _create_canonical_player(source: str, raw_json: dict) -> str:
             "play_style":    p.get("play_style"),
             "utr_id":        ids.get("utr_id"),
             "usta_id":       ids.get("usta_id"),
+            "image_url":     image_url,
             "created_at":    _now(),
             "updated_at":    _now(),
         }

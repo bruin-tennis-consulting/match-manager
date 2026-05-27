@@ -24,7 +24,7 @@ PLAYER_COLUMNS = {
     "full_name", "first_name", "last_name", "date_of_birth",
     "grad_year", "gender", "region", "country_code",
     "height", "dominant_hand", "play_style",
-    "utr_id", "usta_id", "ita_id",
+    "utr_id", "usta_id", "ita_id", "image_url",
 }
 
 _raw = lambda t: supabase.schema("raw").table(t)
