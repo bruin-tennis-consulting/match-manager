@@ -1,31 +1,22 @@
 """
 ingest_pipeline.py
 ==================
-Single entrypoint for the full pipeline across all sources:
-
-    1. SCRAPE  — fetch from each source → raw.*
-    2. RESOLVE — match raw entities    → resolution.*  (+ canonical stubs)
-    3. PROMOTE — build canonical.*     from raw + resolution
+Single entrypoint for the full pipeline across all sources.
 
 Usage
 -----
-    # Full run (all sources, all phases):
     python ingest_pipeline.py
-
-    # Specific sources:
     python ingest_pipeline.py --sources tennisrecruiting usta utr
-
-    # Specific phases:
     python ingest_pipeline.py --scrape-only
     python ingest_pipeline.py --resolve-only
     python ingest_pipeline.py --promote-only
 
-    # Combine — e.g. scrape + resolve but not promote:
-    python ingest_pipeline.py --scrape-only --resolve-only
+    Tennis Recruiting Backfill (50)
+    python ingest_pipeline.py --backfill-stubs
 """
 
 import argparse
-import time
+import re
 
 from db.client import create_job, finish_job
 from resolution import resolve_all
@@ -33,30 +24,19 @@ from canonical import promote_all
 
 # ---------------------------------------------------------------------------
 # Source registry
-# Each entry: (short_name, scrape_fn, source_string_in_db)
-# Add new sources here as you build them.
 # ---------------------------------------------------------------------------
 
-def _get_sources(requested: list[str]) -> list[tuple]:
-    """
-    Lazily import scraper functions so missing dependencies don't crash
-    sources you're not running.
-    """
+def _get_sources(requested: list[str], backfill_stubs: bool = False) -> dict:
     registry = {}
 
     if "tennisrecruiting" in requested or "all" in requested:
-        from scrapers.tennisrecruiting_ingest import (
-            ingest_player_profile,
-            ingest_homepage_rankings,
-        )
         registry["tennisrecruiting"] = {
             "label":  "TennisRecruiting",
             "db_key": "tennisrecruiting.net",
-            "run":    _run_tennisrecruiting,
+            "run": lambda: _run_tennisrecruiting(backfill_stubs=backfill_stubs),
         }
 
     if "usta" in requested or "all" in requested:
-        from scrapers.usta_ingest import ingest_usta_rankings
         registry["usta"] = {
             "label":  "USTA",
             "db_key": "USTA",
@@ -64,7 +44,6 @@ def _get_sources(requested: list[str]) -> list[tuple]:
         }
 
     if "utr" in requested or "all" in requested:
-        from scrapers.utr_ingest import ingest_utr_rankings
         registry["utr"] = {
             "label":  "UTR",
             "db_key": "UTR",
@@ -75,10 +54,9 @@ def _get_sources(requested: list[str]) -> list[tuple]:
 
 
 # ---------------------------------------------------------------------------
-# Per-source scrape runners
+# Manual seed list (kept as a curated baseline)
 # ---------------------------------------------------------------------------
 
-# Seed list for TennisRecruiting profile scrapes
 _TR_SEED_PLAYERS: list[tuple[int, str]] = [
     (928355,  "Jack Kennedy          — #1 CRL, committed Virginia"),
     (946607,  "Tanishk Konduri       — #2 CRL, 2026"),
@@ -95,22 +73,24 @@ _TR_SEED_PLAYERS: list[tuple[int, str]] = [
     (972314,  "Oliver Bonding        — Wimbledon R64 vs Kennedy"),
 ]
 
-_FETCH_DELAY = 2.0
 
+# ---------------------------------------------------------------------------
+# Per-source scrape runners
+# ---------------------------------------------------------------------------
 
-def _run_tennisrecruiting() -> int:
-    from scrapers.tennisrecruiting_ingest import ingest_player_profile, ingest_homepage_rankings
+def _run_tennisrecruiting(backfill_stubs: bool = False) -> int:
+    from scrapers.tennisrecruiting_ingest import (
+        ingest_player_profiles,
+        ingest_homepage_rankings,
+    )
     from tennis_recruiting_top10 import fetch_from_web, parse_rankings
-    import re
 
-    total  = 0
-    failed = []
-
-    # Build seed list from homepage top-10
+    # --- Build seed list from homepage top-10 ---
     print("  Fetching homepage top-10 as seed list ...")
     soup = fetch_from_web("https://www.tennisrecruiting.net/")
     rankings = parse_rankings(soup)
-    homepage_ids = set()
+
+    homepage_ids: set[int] = set()
     for rank_type, years in rankings.items():
         for year, data in years.items():
             for gender in ("boys", "girls"):
@@ -119,39 +99,42 @@ def _run_tennisrecruiting() -> int:
                     if m:
                         homepage_ids.add(int(m.group(1)))
 
-    # Merge with manual seeds, deduped
     manual_ids = [pid for pid, _ in _TR_SEED_PLAYERS]
     ids = list(dict.fromkeys(manual_ids + list(homepage_ids)))
-    print(f"  {len(homepage_ids)} homepage seeds + {len(manual_ids)} manual seeds = {len(ids)} unique profiles")
+    print(
+        f"  {len(homepage_ids)} homepage seeds + {len(manual_ids)} manual seeds"
+        f" = {len(ids)} unique profiles"
+    )
 
-    # Append stub opponents (capped at 50)
-    stub_ids = _collect_tr_stub_opponents()
-    if stub_ids:
-        print(f"  Adding up to 50 stub opponents ...")
-        ids = ids + [sid for sid in stub_ids if sid not in ids][:50]
+    # --- Append backfill stub opponents (capped at 50) ---
+    if backfill_stubs:
+        stub_ids = _collect_tr_stub_opponents()
+        if stub_ids:
+            new_stubs = [sid for sid in stub_ids if sid not in ids][:50]
+            print(f"  Adding {len(new_stubs)} stub opponents (capped at 50) ...")
+            ids = ids + new_stubs
 
-    print(f"  Scraping {len(ids)} TennisRecruiting profiles ...")
-    for i, source_id in enumerate(ids):
-        try:
-            ingest_player_profile(source_id)
-            total += 1
-        except Exception as e:
-            print(f"    [!] Player {source_id} failed: {e}")
-            failed.append(source_id)
-        if i < len(ids) - 1:
-            time.sleep(_FETCH_DELAY)
+    # --- Batch ingest with staleness filtering + concurrency ---
+    success, failed = ingest_player_profiles(ids)
 
-    print("  Scraping homepage top-10 rankings ...")
+    # --- Homepage rankings (pass pre-fetched soup to avoid redundant request) ---
+    print("  Writing homepage top-10 rankings ...")
     try:
-        n = ingest_homepage_rankings()
+        n = ingest_homepage_rankings(soup=soup)
         print(f"    {n} ranking rows -> raw.rankings")
-        total += 1
     except Exception as e:
         print(f"    [!] Homepage rankings failed: {e}")
 
+    # --- Report remaining stubs ---
+    if backfill_stubs:
+        remaining = _collect_tr_stub_opponents()
+        if remaining:
+            print(f"\n  {len(remaining)} opponent stub(s) still unscraped.")
+
     if failed:
-        print(f"  Failed TennisRecruiting IDs: {failed}")
-    return total
+        print(f"  Failed IDs: {failed}")
+
+    return success
 
 
 def _run_usta() -> int:
@@ -211,11 +194,12 @@ def main():
         "--sources", nargs="+",
         choices=["tennisrecruiting", "usta", "utr", "all"],
         default=["all"],
-        help="Which sources to run (default: all)",
     )
     parser.add_argument("--scrape-only",  action="store_true")
     parser.add_argument("--resolve-only", action="store_true")
     parser.add_argument("--promote-only", action="store_true")
+    parser.add_argument("--backfill-stubs", action="store_true",
+                    help="Scrape up to 50 unseen stub opponents from raw.matches (tennisrecruiting only)")
     args = parser.parse_args()
 
     run_all    = not any([args.scrape_only, args.resolve_only, args.promote_only])
@@ -224,7 +208,8 @@ def main():
     do_promote = run_all or args.promote_only
 
     requested  = args.sources
-    source_reg = _get_sources(requested)
+    source_reg = _get_sources(requested, backfill_stubs=args.backfill_stubs)
+
     db_keys    = [s["db_key"] for s in source_reg.values()]
 
     job = create_job(
@@ -238,9 +223,7 @@ def main():
     total_records = 0
     all_failed    = []
 
-    # ------------------------------------------------------------------
     # Phase 1 — Scrape
-    # ------------------------------------------------------------------
     if do_scrape:
         print(f"\n{'='*60}")
         print(f"  PHASE 1 — SCRAPE  ({', '.join(source_reg.keys())})")
@@ -254,9 +237,7 @@ def main():
                 print(f"  [!] {spec['label']} scrape failed: {e}")
                 all_failed.append(key)
 
-    # ------------------------------------------------------------------
     # Phase 2 — Resolution
-    # ------------------------------------------------------------------
     player_map     = {}
     tournament_map = {}
     match_map      = {}
@@ -272,16 +253,13 @@ def main():
             finish_job(job["id"], "failed", total_records, str(e))
             raise
 
-    # ------------------------------------------------------------------
     # Phase 3 — Canonical promotion
-    # ------------------------------------------------------------------
     if do_promote:
         print(f"\n{'='*60}")
         print(f"  PHASE 3 — PROMOTE TO CANONICAL")
         print(f"{'='*60}")
 
         if not do_resolve:
-            # Load maps from DB when resolution was skipped in this run
             from resolution import (
                 _load_existing_player_mappings,
                 _load_existing_tournament_mappings,
@@ -304,9 +282,6 @@ def main():
             finish_job(job["id"], "failed", total_records, str(e))
             raise
 
-    # ------------------------------------------------------------------
-    # Finish
-    # ------------------------------------------------------------------
     status = ("partial" if total_records > 0 else "failed") if all_failed else "success"
     error  = f"Failed sources: {all_failed}" if all_failed else None
     finish_job(job["id"], status, total_records, error)

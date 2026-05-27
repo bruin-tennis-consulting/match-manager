@@ -42,6 +42,7 @@ RANK_TYPES = ["CRL", "RPI"]
 # Fetching
 # ---------------------------------------------------------------------------
 
+session = requests.Session()
 def fetch_from_web(url: str) -> BeautifulSoup:
     headers = {
         "User-Agent": (
@@ -54,7 +55,6 @@ def fetch_from_web(url: str) -> BeautifulSoup:
         "Connection": "keep-alive",
         "Upgrade-Insecure-Requests": "1",
     }
-    session = requests.Session()
     resp = session.get(url, headers=headers, timeout=15)
     resp.raise_for_status()
     return BeautifulSoup(resp.text, "html.parser")
