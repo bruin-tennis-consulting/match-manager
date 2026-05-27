@@ -7,7 +7,6 @@
 }
 
 .container {
-  padding: 20px;
   margin: 0 auto;
   padding-left: 40px;
   padding-right: 40px;
@@ -52,7 +51,7 @@
 }
 
 .matchSection {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .matchContainer {
@@ -117,7 +116,7 @@
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   padding: 10px 0;
   border-top: 1px solid #dedede;
   border-bottom: 1px solid #dedede;
