@@ -139,7 +139,19 @@ def _upsert_raw_player(source_id: int, raw_json: dict, source_url: str) -> str:
 # raw.rankings
 # ---------------------------------------------------------------------------
 
-def _upsert_raw_rankings(rankings: list[dict], source_id: int) -> None:
+def _upsert_raw_rankings(rankings: list[dict], source_id: int, player_extra: dict | None = None) -> None:
+    # Snapshot the player-level profile fields so canonical.py can read them
+    # from raw.rankings without a separate raw.players join.
+    extra_snapshot: dict = {}
+    if player_extra:
+        extra_snapshot = {k: v for k, v in {
+            "city":         player_extra.get("city"),
+            "state_code":   player_extra.get("state_code"),
+            "highschool":   player_extra.get("highschool"),
+            "committed_to": player_extra.get("committed_to"),
+            "stars":        player_extra.get("stars"),
+        }.items() if v is not None}
+
     rows = [
         {
             "source":           _SOURCE,
@@ -147,7 +159,7 @@ def _upsert_raw_rankings(rankings: list[dict], source_id: int) -> None:
             "ranking_type":     r["source"],
             "rank_value":       r.get("ranking") or r.get("rating"),
             "ranking_date":     r["ranking_date"],
-            "raw_json":         r.get("raw_data") or {},
+            "raw_json":         {**(r.get("raw_data") or {}), **extra_snapshot},
             "scraped_at":       _now(),
         }
         for r in rankings
@@ -246,7 +258,7 @@ def _process_player(source_id: int, profile_html: str, activity_html: str) -> st
         source_url=f"{_BASE_URL}/player.asp?id={source_id}",
     )
 
-    _upsert_raw_rankings(data["rankings"], source_id)
+    _upsert_raw_rankings(data["rankings"], source_id, data.get("player_extra"))
 
     for match in data["match_results"]:
         _upsert_raw_tournament(match)

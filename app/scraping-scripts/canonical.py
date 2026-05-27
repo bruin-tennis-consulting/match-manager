@@ -97,7 +97,7 @@ def promote_rankings(player_map: dict[tuple[str, str], str]) -> int:
         rank_value   = r.get("rank_value")
         ranking_type = r["ranking_type"]
         source       = r["source"]
-        is_rating    = any(s in ranking_type for s in _RATING_SOURCES)
+        is_rating    = any(s.lower() in ranking_type.lower() for s in _RATING_SOURCES)
         rj           = r.get("raw_json") or {}
 
         # raw.rankings stores the scraped raw_json directly — but our three
@@ -136,10 +136,20 @@ def promote_rankings(player_map: dict[tuple[str, str], str]) -> int:
         else:
             source_fields = {}
 
+        # UTR rank_value is the float rating; the actual positional rank lives in raw_json.
+        # All other ranking sources use rank_value directly as the positional rank.
+        if source == "UTR":
+            utr_pos = extra.get("utr_ranking")
+            computed_ranking = int(utr_pos) if utr_pos is not None else None
+        elif is_rating:
+            computed_ranking = None
+        else:
+            computed_ranking = int(rank_value) if rank_value is not None else None
+
         rows.append({
             "player_id":    canonical_id,
             "ranking_type": ranking_type,
-            "ranking":      None if is_rating else (int(rank_value) if rank_value is not None else None),
+            "ranking":      computed_ranking,
             "rank_value":   rank_value,
             "ranking_date": r["ranking_date"],
             "source":       source,

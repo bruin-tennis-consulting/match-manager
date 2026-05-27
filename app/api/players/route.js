@@ -1,60 +1,84 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/supabase'
 
-export async function GET() {
-  const { data: players, error } = await supabase
-    .schema('canonical')
-    .from('players')
-    .select(
-      `
-      id,
-      full_name,
-      first_name,
-      last_name,
-      gender,
-      country_code,
-      grad_year,
-      region,
-      player_rankings (
-        source,
-        ranking,
-        rank_value,
-        ranking_date,
-        points,
-        singles_points,
-        doubles_points,
-        bonus_points,
-        age_division,
-        section,
-        district,
-        state,
-        city,
-        three_month_rating,
-        trend_direction,
-        high_school,
-        high_school_state,
-        scraped_tag,
-        committed_to,
-        stars
-      )
-    `
-    )
-    .order('full_name')
+const PAGE_SIZE = 1000
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+export async function GET() {
+  let allPlayers = []
+  let from = 0
+
+  while (true) {
+    const { data, error } = await supabase
+      .schema('canonical')
+      .from('players')
+      .select(
+        `
+        id,
+        full_name,
+        first_name,
+        last_name,
+        gender,
+        country_code,
+        grad_year,
+        region,
+        player_rankings (
+          source,
+          ranking,
+          rank_value,
+          ranking_date,
+          ranking_type,
+          points,
+          singles_points,
+          doubles_points,
+          bonus_points,
+          age_division,
+          section,
+          district,
+          state,
+          city,
+          three_month_rating,
+          trend_direction,
+          high_school,
+          high_school_state,
+          scraped_tag,
+          committed_to,
+          stars
+        )
+      `
+      )
+      .order('full_name')
+      .range(from, from + PAGE_SIZE - 1)
+
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (!data || data.length === 0) break
+
+    allPlayers = allPlayers.concat(data)
+    if (data.length < PAGE_SIZE) break
+    from += PAGE_SIZE
   }
 
-  const result = players.map((p) => {
+  const result = allPlayers.map((p) => {
     const rankings = p.player_rankings || []
+
     const latest = (source) =>
       rankings
         .filter((r) => r.source === source)
         .sort((a, b) => b.ranking_date.localeCompare(a.ranking_date))[0]
 
+    // Prefer the CRL row (main TR national rank) over homepage / cross-source rows
+    const latestTR = () => {
+      const trAll = rankings.filter((r) => r.source === 'tennisrecruiting.net')
+      const crl = trAll.filter((r) => r.ranking_type === 'tennisrecruiting_crl')
+      const base = crl.length > 0 ? crl : trAll
+      return base.sort((a, b) =>
+        b.ranking_date.localeCompare(a.ranking_date)
+      )[0]
+    }
+
     const usta = latest('USTA')
     const utr = latest('UTR')
-    const tr = latest('tennisrecruiting.net')
+    const tr = latestTR()
 
     return {
       id: p.id,
