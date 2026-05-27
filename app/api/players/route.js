@@ -2,11 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabase } from '@/supabase'
 
 export async function GET() {
-  const { data: players, error } = await supabase
-    .schema('canonical')
-    .from('players')
-    .select(
-      `
+  const querySelect = `
       id,
       full_name,
       first_name,
@@ -38,23 +34,57 @@ export async function GET() {
         stars
       )
     `
-    )
-    .order('full_name')
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  let players = []
+  let hasMore = true
+  let from = 0
+  const limit = 1000
+
+  while (hasMore) {
+    const { data, error } = await supabase
+      .schema('canonical')
+      .from('players')
+      .select(querySelect)
+      .order('full_name')
+      .range(from, from + limit - 1)
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    if (data) {
+      players = players.concat(data)
+      if (data.length < limit) {
+        hasMore = false
+      } else {
+        from += limit
+      }
+    } else {
+      hasMore = false
+    }
   }
 
   const result = players.map((p) => {
     const rankings = p.player_rankings || []
+
     const latest = (source) =>
       rankings
         .filter((r) => r.source === source)
         .sort((a, b) => b.ranking_date.localeCompare(a.ranking_date))[0]
 
+    // Prefer the CRL row (main TR national rank) over homepage / cross-source rows
+    const latestTR = () => {
+      const trAll = rankings.filter((r) => r.source === 'tennisrecruiting.net')
+      const crl = trAll.filter((r) => r.ranking_type === 'tennisrecruiting_crl')
+      const base = crl.length > 0 ? crl : trAll
+      return base.sort((a, b) =>
+        b.ranking_date.localeCompare(a.ranking_date)
+      )[0]
+    }
+
     const usta = latest('USTA')
     const utr = latest('UTR')
-    const tr = latest('tennisrecruiting.net')
+    const tr = latestTR()
 
     return {
       id: p.id,

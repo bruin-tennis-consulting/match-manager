@@ -29,6 +29,26 @@ PLAYER_COLUMNS = {
 
 _raw = lambda t: supabase.schema("raw").table(t)
 
+def fetch_all(schema: str, table_name: str, select_str: str = "*", in_filter: tuple[str, list] | None = None) -> list[dict]:
+    """Fetch all rows from a table, paginating past Supabase's 1000-row limit."""
+    all_rows = []
+    page_size = 1000
+    start = 0
+    while True:
+        query = supabase.schema(schema).table(table_name).select(select_str)
+        if in_filter and in_filter[1]:
+            query = query.in_(in_filter[0], in_filter[1])
+        result = query.range(start, start + page_size - 1).execute()
+        
+        data = result.data or []
+        all_rows.extend(data)
+        
+        if len(data) < page_size:
+            break
+        start += page_size
+        
+    return all_rows
+
 
 def create_job(source: str, metadata: dict | None = None) -> dict:
     """Insert a new ingest job row into raw.ingest_jobs and return it."""

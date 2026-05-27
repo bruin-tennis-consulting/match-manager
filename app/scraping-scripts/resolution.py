@@ -47,7 +47,7 @@ from collections import defaultdict
 from difflib import SequenceMatcher
 from datetime import datetime, timezone
 
-from db.client import supabase
+from db.client import supabase, fetch_all
 
 ALL_SOURCES = ["tennisrecruiting.net", "USTA", "UTR"]
 
@@ -102,7 +102,7 @@ def _extract_external_ids(source: str, raw_json: dict) -> dict[str, str | None]:
 # ===========================================================================
 
 def _load_canonical_players() -> list[dict]:
-    return _canonical("players").select("*").execute().data or []
+    return fetch_all("canonical", "players")
 
 
 def _load_existing_player_mappings(sources: list[str]) -> dict[tuple[str, str], str]:
@@ -250,13 +250,7 @@ def resolve_players(sources: list[str] | None = None) -> dict[tuple[str, str], s
     sources  = sources or ALL_SOURCES
     existing = _load_existing_player_mappings(sources)
 
-    raw_rows = (
-        _raw("players")
-        .select("source,source_id,raw_json")
-        .in_("source", sources)
-        .execute()
-        .data or []
-    )
+    raw_rows = fetch_all("raw", "players", "source,source_id,raw_json", ("source", sources))
     unresolved = [r for r in raw_rows if (r["source"], r["source_id"]) not in existing]
 
     if not unresolved:
@@ -362,13 +356,7 @@ def resolve_tournaments(sources: list[str] | None = None) -> dict[tuple[str, str
     sources  = sources or ALL_SOURCES
     existing = _load_existing_tournament_mappings(sources)
 
-    raw_rows = (
-        _raw("tournaments")
-        .select("source,source_tournament_id,raw_json")
-        .in_("source", sources)
-        .execute()
-        .data or []
-    )
+    raw_rows = fetch_all("raw", "tournaments", "source,source_tournament_id,raw_json", ("source", sources))
     unresolved = [
         r for r in raw_rows
         if (r["source"], r["source_tournament_id"]) not in existing
@@ -378,7 +366,7 @@ def resolve_tournaments(sources: list[str] | None = None) -> dict[tuple[str, str
         print(f"  [resolution] Tournaments: nothing new  ({len(existing)} already mapped)")
         return existing
 
-    canonical_tournaments = _canonical("tournaments").select("*").execute().data or []
+    canonical_tournaments = fetch_all("canonical", "tournaments")
     resolved = dict(existing)
     counts   = {"matched": 0, "new": 0}
 
@@ -641,13 +629,7 @@ def resolve_matches(
     sources  = sources or ALL_SOURCES
     existing = _load_existing_match_mappings(sources)
 
-    raw_rows = (
-        _raw("matches")
-        .select("source,source_match_id,raw_json")
-        .in_("source", sources)
-        .execute()
-        .data or []
-    )
+    raw_rows = fetch_all("raw", "matches", "source,source_match_id,raw_json", ("source", sources))
     unresolved = [
         r for r in raw_rows
         if (r["source"], r["source_match_id"]) not in existing
@@ -664,7 +646,7 @@ def resolve_matches(
     # same match arrives as two raw rows with the player pair in reverse order.
     # Using _make_match_key collapses both orderings to a single entry, preventing
     # the second perspective from being inserted as a new canonical match.
-    canon_rows = _canonical("matches").select("*").execute().data or []
+    canon_rows = fetch_all("canonical", "matches")
     canon_index: dict[tuple, list[dict]] = defaultdict(list)
     for c in canon_rows:
         pid, oid, date = c.get("player_id"), c.get("opponent_id"), c.get("played_at")
