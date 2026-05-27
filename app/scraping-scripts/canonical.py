@@ -79,6 +79,91 @@ def _fetch_in_batches(table_name: str, column: str, values: list, fields: str, b
     return results
 
 # ---------------------------------------------------------------------------
+# Players
+# ---------------------------------------------------------------------------
+def promote_players(player_map: dict[tuple[str, str], str]) -> int:
+    """
+    Enrich canonical.players stubs with fields that resolution.py
+    didn't write at creation time (city, state, high_school, etc.).
+    Never overwrites fields already populated — first source wins.
+    """
+    if not player_map:
+        print("  [canonical] Players: no player_map — skipping")
+        return 0
+
+    ENRICHABLE = {"city", "state", "high_school", "high_school_state",
+              "committed_to", "stars", "image_url",
+              "academy", "international", "video_urls"}
+
+    raw_rows = _raw("players").select("*").execute().data or []
+
+    canonical_ids = list({v for v in player_map.values()})
+    existing_rows = _fetch_in_batches(
+    "players", "id", canonical_ids,
+    "id,city,state,high_school,high_school_state,committed_to,stars,image_url,academy,international,video_urls")
+    current_by_id = {r["id"]: r for r in existing_rows}
+
+    enriched = 0
+    skipped  = 0
+
+    for r in raw_rows:
+        canonical_id = player_map.get((r["source"], r["source_id"]))
+        if not canonical_id:
+            skipped += 1
+            continue
+
+        current = current_by_id.get(canonical_id)
+        if not current:
+            skipped += 1
+            continue
+
+        rj    = r.get("raw_json", {})
+        extra = rj.get("player_extra", {})
+        src   = r["source"]
+
+        candidates = {}
+        if src == "tennisrecruiting.net":
+            candidates = {
+                "city":          extra.get("city"),
+                "state":         extra.get("state_code"),
+                "high_school":   extra.get("highschool"),
+                "committed_to":  extra.get("committed_to"),
+                "stars":         extra.get("stars"),
+                "image_url": (
+                    "https://www.tennisrecruiting.net" + extra["photo_path"]
+                    if extra.get("photo_path") and extra.get("photo_path") != "/img/nophoto.gif"
+                    else None
+                ),
+                "academy":       extra.get("academy"),
+                "international": extra.get("international"),
+                "video_urls":    extra.get("video_urls") or None,
+            }
+        elif src == "UTR":
+            candidates = {
+                "high_school":       extra.get("high_school"),
+                "high_school_state": extra.get("high_school_state"),
+            }
+        elif src == "USTA":
+            candidates = {
+                "city":  extra.get("city"),
+                "state": extra.get("state"),
+            }
+
+        updates = {
+            k: v for k, v in candidates.items()
+            if k in ENRICHABLE and v is not None and not current.get(k)
+        }
+
+        if updates:
+            updates["updated_at"] = _now()
+            _canonical("players").update(updates).eq("id", canonical_id).execute()
+            current_by_id[canonical_id].update(updates)
+            enriched += 1
+
+    print(f"  [canonical] Players: {enriched} enriched, {skipped} skipped")
+    return enriched
+
+# ---------------------------------------------------------------------------
 # Rankings
 # ---------------------------------------------------------------------------
 
@@ -247,6 +332,7 @@ def promote_all(
     tournament_map: dict[tuple[str, str], str],
     match_map:      dict[tuple[str, str], str],
 ) -> dict:
+    n_players  = promote_players(player_map)
     n_rankings = promote_rankings(player_map)
     n_matches  = promote_matches(match_map)
-    return {"rankings": n_rankings, "matches": n_matches}
+    return {"players": n_players, "rankings": n_rankings, "matches": n_matches}

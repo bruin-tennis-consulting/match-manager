@@ -136,6 +136,7 @@ def _upsert_player_mapping(
 def _create_canonical_player(source: str, raw_json: dict) -> str:
     """Insert a new canonical.players row. Returns UUID."""
     p   = raw_json.get("player", {})
+    extra = raw_json.get("player_extra", {})
     ids = _extract_external_ids(source, raw_json)
     result = _canonical("players").insert(
         {
@@ -152,6 +153,20 @@ def _create_canonical_player(source: str, raw_json: dict) -> str:
             "play_style":    p.get("play_style"),
             "utr_id":        ids.get("utr_id"),
             "usta_id":       ids.get("usta_id"),
+            # enriched fields from player_extra
+            "city":              extra.get("city"),
+            "state":             extra.get("state_code"),
+            "high_school":       extra.get("highschool"),
+            "committed_to":      extra.get("committed_to"),
+            "stars":             extra.get("stars"),
+            "academy":       extra.get("academy"),
+            "international": extra.get("international"),
+            "video_urls":    extra.get("video_urls") or None,
+            "image_url": (
+                "https://www.tennisrecruiting.net" + extra["photo_path"]
+                if extra.get("photo_path") and extra.get("photo_path") != "/img/nophoto.gif"
+                else None
+            ),
             "created_at":    _now(),
             "updated_at":    _now(),
         }
