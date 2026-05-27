@@ -66,14 +66,25 @@ export async function GET() {
 
   const result = players.map((p) => {
     const rankings = p.player_rankings || []
+
     const latest = (source) =>
       rankings
         .filter((r) => r.source === source)
         .sort((a, b) => b.ranking_date.localeCompare(a.ranking_date))[0]
 
+    // Prefer the CRL row (main TR national rank) over homepage / cross-source rows
+    const latestTR = () => {
+      const trAll = rankings.filter((r) => r.source === 'tennisrecruiting.net')
+      const crl = trAll.filter((r) => r.ranking_type === 'tennisrecruiting_crl')
+      const base = crl.length > 0 ? crl : trAll
+      return base.sort((a, b) =>
+        b.ranking_date.localeCompare(a.ranking_date)
+      )[0]
+    }
+
     const usta = latest('USTA')
     const utr = latest('UTR')
-    const tr = latest('tennisrecruiting.net')
+    const tr = latestTR()
 
     return {
       id: p.id,

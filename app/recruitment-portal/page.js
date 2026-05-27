@@ -5,6 +5,27 @@ import styles from '@/app/styles/RecruitmentPortal.module.css'
 
 const PAGE_SIZE = 25
 
+const AGE_DIVISION_LABELS = {
+  '18s': '18U',
+  '16s': '16U',
+  '14s': '14U',
+  '12s': '12U'
+}
+
+function inferAgeDivision(p) {
+  if (p.usta_age_division) return p.usta_age_division
+  if (!p.grad_year) return null
+  const yearsOut = p.grad_year - new Date().getFullYear()
+  if (yearsOut <= 1) return '18s'
+  if (yearsOut <= 3) return '16s'
+  if (yearsOut <= 5) return '14s'
+  return '12s'
+}
+
+function formatAgeDivision(div) {
+  return AGE_DIVISION_LABELS[div] ?? div ?? '—'
+}
+
 function getPageNumbers(current, total) {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
   if (current <= 4) return [1, 2, 3, 4, 5, '...', total]
@@ -30,10 +51,10 @@ export default function RecruitmentPortal() {
   const [page, setPage] = useState(1)
 
   const [searchName, setSearchName] = useState('')
-  const [filterGender, setFilterGender] = useState('all')
-  const [filterAge, setFilterAge] = useState('all')
+  const [filterGender, setFilterGender] = useState('female')
+  const [filterAge, setFilterAge] = useState('18s')
   const [filterState, setFilterState] = useState('all')
-  const [sortBy, setSortBy] = useState('usta') // 'usta' | 'utr' | 'tr'
+  const [sortBy, setSortBy] = useState('usta')
 
   useEffect(() => {
     fetch('/api/players')
@@ -72,12 +93,7 @@ export default function RecruitmentPortal() {
       )
         return false
       if (filterGender !== 'all' && p.gender !== filterGender) return false
-      if (
-        filterAge !== 'all' &&
-        p.usta_age_division !== filterAge &&
-        p.tr_age_division !== filterAge
-      )
-        return false
+      if (filterAge !== 'all' && inferAgeDivision(p) !== filterAge) return false
       if (
         filterState !== 'all' &&
         p.usta_state !== filterState &&
@@ -114,8 +130,8 @@ export default function RecruitmentPortal() {
 
   function resetFilters() {
     setSearchName('')
-    setFilterGender('all')
-    setFilterAge('all')
+    setFilterGender('female')
+    setFilterAge('18s')
     setFilterState('all')
     setSortBy('usta')
   }
@@ -149,8 +165,8 @@ export default function RecruitmentPortal() {
           onChange={(e) => setFilterGender(e.target.value)}
         >
           <option value="all">All Genders</option>
-          <option value="male">Boys</option>
           <option value="female">Girls</option>
+          <option value="male">Boys</option>
         </select>
         <select
           className={styles.select}
@@ -158,10 +174,10 @@ export default function RecruitmentPortal() {
           onChange={(e) => setFilterAge(e.target.value)}
         >
           <option value="all">All Ages</option>
-          <option value="18s">18s</option>
-          <option value="16s">16s</option>
-          <option value="14s">14s</option>
-          <option value="12s">12s</option>
+          <option value="18s">18U</option>
+          <option value="16s">16U</option>
+          <option value="14s">14U</option>
+          <option value="12s">12U</option>
         </select>
         <select
           className={styles.select}
@@ -221,6 +237,7 @@ export default function RecruitmentPortal() {
               <th>Name</th>
               <th>Gender</th>
               <th>Age</th>
+              <th>Class</th>
               <th>State</th>
               <th>Section</th>
               <th>USTA Pts</th>
@@ -249,8 +266,11 @@ export default function RecruitmentPortal() {
                       ? 'F'
                       : '—'}
                 </td>
-                <td>{p.usta_age_division ?? '—'}</td>
-                <td>{p.usta_state ?? '—'}</td>
+                <td>{formatAgeDivision(inferAgeDivision(p))}</td>
+                <td>
+                  {p.grad_year ? `'${String(p.grad_year).slice(-2)}` : '—'}
+                </td>
+                <td>{p.usta_state ?? p.tr_state ?? '—'}</td>
                 <td>{p.usta_section ?? '—'}</td>
                 <td>
                   {p.usta_points != null ? p.usta_points.toLocaleString() : '—'}
@@ -305,7 +325,7 @@ export default function RecruitmentPortal() {
                 <div className={styles.modalMeta}>
                   {selected.gender === 'male' ? 'Boys' : 'Girls'}
                   {selected.usta_age_division
-                    ? ` · ${selected.usta_age_division}`
+                    ? ` · ${formatAgeDivision(selected.usta_age_division)}`
                     : ''}
                   {selected.grad_year
                     ? ` · Class of ${selected.grad_year}`
@@ -349,7 +369,7 @@ export default function RecruitmentPortal() {
                     />
                     <Stat
                       label="Age Division"
-                      value={selected.usta_age_division}
+                      value={formatAgeDivision(selected.usta_age_division)}
                     />
                     <Stat label="Section" value={selected.usta_section} />
                     <Stat label="District" value={selected.usta_district} />
