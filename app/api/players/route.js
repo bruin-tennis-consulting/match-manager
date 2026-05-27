@@ -31,7 +31,8 @@ export async function GET() {
         high_school_state,
         scraped_tag,
         committed_to,
-        stars
+        stars,
+        ranking_type
       )
     `
 
@@ -64,66 +65,72 @@ export async function GET() {
     }
   }
 
-  const result = players.map((p) => {
-    const rankings = p.player_rankings || []
+  const result = players
+    .filter((p) => (p.player_rankings || []).length > 0)
+    .map((p) => {
+      const rankings = p.player_rankings || []
 
-    const latest = (source) =>
-      rankings
-        .filter((r) => r.source === source)
-        .sort((a, b) => b.ranking_date.localeCompare(a.ranking_date))[0]
+      const latest = (source) =>
+        rankings
+          .filter((r) => r.source === source)
+          .sort((a, b) => b.ranking_date.localeCompare(a.ranking_date))[0]
 
-    // Prefer the CRL row (main TR national rank) over homepage / cross-source rows
-    const latestTR = () => {
-      const trAll = rankings.filter((r) => r.source === 'tennisrecruiting.net')
-      const crl = trAll.filter((r) => r.ranking_type === 'tennisrecruiting_crl')
-      const base = crl.length > 0 ? crl : trAll
-      return base.sort((a, b) =>
-        b.ranking_date.localeCompare(a.ranking_date)
-      )[0]
-    }
+      // Prefer the CRL row (main TR national rank) over homepage / cross-source rows
+      const latestTR = () => {
+        const trAll = rankings.filter(
+          (r) => r.source === 'tennisrecruiting.net'
+        )
+        const crl = trAll.filter(
+          (r) => r.ranking_type === 'tennisrecruiting_crl'
+        )
+        const base = crl.length > 0 ? crl : trAll
+        return base.sort((a, b) =>
+          b.ranking_date.localeCompare(a.ranking_date)
+        )[0]
+      }
 
-    const usta = latest('USTA')
-    const utr = latest('UTR')
-    const tr = latestTR()
+      const usta = latest('USTA')
+      const utr = latest('UTR')
+      const tr = latestTR()
 
-    return {
-      id: p.id,
-      full_name: p.full_name,
-      first_name: p.first_name,
-      last_name: p.last_name,
-      gender: p.gender,
-      country_code: p.country_code,
-      grad_year: p.grad_year,
-      region: p.region,
-      // USTA
-      usta_rank: usta?.ranking ?? null,
-      usta_points: usta?.points ?? null,
-      usta_singles: usta?.singles_points ?? null,
-      usta_doubles: usta?.doubles_points ?? null,
-      usta_bonus: usta?.bonus_points ?? null,
-      usta_age_division: usta?.age_division ?? null,
-      usta_section: usta?.section ?? null,
-      usta_district: usta?.district ?? null,
-      usta_state: usta?.state ?? null,
-      usta_city: usta?.city ?? null,
-      // UTR
-      utr_rating: utr?.rank_value ?? null,
-      utr_ranking: utr?.ranking ?? null,
-      utr_three_month: utr?.three_month_rating ?? null,
-      utr_trend: utr?.trend_direction ?? null,
-      utr_high_school: utr?.high_school ?? null,
-      utr_high_school_state: utr?.high_school_state ?? null,
-      utr_scraped_tag: utr?.scraped_tag ?? null,
-      // TennisRecruiting
-      tr_rank: tr?.ranking ?? null,
-      tr_stars: tr?.stars ?? null,
-      tr_committed_to: tr?.committed_to ?? null,
-      tr_state: tr?.state ?? null,
-      tr_city: tr?.city ?? null,
-      tr_high_school: tr?.high_school ?? null,
-      tr_age_division: tr?.age_division ?? null
-    }
-  })
+      return {
+        id: p.id,
+        full_name: p.full_name,
+        first_name: p.first_name,
+        last_name: p.last_name,
+        gender: p.gender,
+        country_code: p.country_code,
+        grad_year: p.grad_year,
+        region: p.region,
+        // USTA
+        usta_rank: usta?.ranking ?? null,
+        usta_points: usta?.points ?? null,
+        usta_singles: usta?.singles_points ?? null,
+        usta_doubles: usta?.doubles_points ?? null,
+        usta_bonus: usta?.bonus_points ?? null,
+        usta_age_division: usta?.age_division ?? null,
+        usta_section: usta?.section ?? null,
+        usta_district: usta?.district ?? null,
+        usta_state: usta?.state ?? null,
+        usta_city: usta?.city ?? null,
+        // UTR
+        utr_rating: utr?.rank_value ?? null,
+        utr_ranking: utr?.ranking ?? null,
+        utr_three_month: utr?.three_month_rating ?? null,
+        utr_trend: utr?.trend_direction ?? null,
+        utr_high_school: utr?.high_school ?? null,
+        utr_high_school_state: utr?.high_school_state ?? null,
+        utr_scraped_tag: utr?.scraped_tag ?? null,
+        // TennisRecruiting
+        tr_rank: tr?.ranking ?? null,
+        tr_stars: tr?.stars ?? null,
+        tr_committed_to: tr?.committed_to ?? null,
+        tr_state: tr?.state ?? null,
+        tr_city: tr?.city ?? null,
+        tr_high_school: tr?.high_school ?? null,
+        tr_age_division: tr?.age_division ?? null
+      }
+    })
 
   result.sort((a, b) => {
     if (a.usta_rank !== null && b.usta_rank !== null)
