@@ -1,6 +1,6 @@
 .container {
   margin: 0 auto;
-  padding: 0 70px;
+  padding: 0 56px;
 }
 
 .header {
@@ -16,11 +16,27 @@
 }
 
 .profileContainer {
-  font-size: 1.18vw;
-  padding-bottom: 20px;
+  font-size: 1.1vw;
+  padding-bottom: 0;
+}
+
+/* Pull Statistics / Matches closer to the header; margins only (no font-size). */
+.sectionHeader {
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Fixed gap from stat boxes (end of profile header) — not tied to photo height */
+.profileContainer + .sectionHeader {
+  margin-top: 9.0rem;
+}
+
+.sectionHeader + .sectionHeader {
+  margin-top: 0.35rem;
 }
 
 .matchesContainer {
+  margin-top: 0.25rem;
   margin-bottom: 20px;
   overflow: hidden; /* NOTE: this is requied because overflow bug in dashbaord tile where width = 85vw */
 }

@@ -22,9 +22,21 @@ function Notes({
   const [isSaving, setIsSaving] = useState(false)
 
   const handleGoToNearestTimestamp = () => {
-    // Use matchData.pointsJson for latest data
     const currentPointsJson = matchData?.pointsJson || pointsJson || []
-    if (!videoObject || !currentPointsJson || currentPointsJson.length === 0) {
+    if (!videoObject) {
+      return
+    }
+
+    // Untagged match: anchor note to current YouTube time only (no score / no points)
+    if (!currentPointsJson || currentPointsJson.length === 0) {
+      try {
+        const t = Math.round(videoObject.getCurrentTime() * 1000)
+        setCurrentTimestamp(t)
+        setNearestPoint(null)
+        setShowNoteInput(true)
+      } catch (error) {
+        console.error('Error reading video time for note:', error)
+      }
       return
     }
 
@@ -54,36 +66,6 @@ function Notes({
         setCurrentTimestamp(nearest.Position)
         setNearestPoint(nearest)
         setShowNoteInput(true)
-
-        // Console log the information
-        console.log('=== Nearest Point Information ===')
-        console.log(
-          'Current Video Time:',
-          currentTime,
-          'ms',
-          `(${(currentTime / 1000).toFixed(2)}s)`
-        )
-        console.log(
-          'Nearest Point Position:',
-          nearest.Position,
-          'ms',
-          `(${(nearest.Position / 1000).toFixed(2)}s)`
-        )
-        console.log(
-          'Distance from current time:',
-          minDistance,
-          'ms',
-          `(${(minDistance / 1000).toFixed(2)}s)`
-        )
-        console.log('Point Details:', {
-          VideoId: videoId,
-          Name: nearest.Name,
-          Position: nearest.Position,
-          Duration: nearest.Duration,
-          pointScore: nearest.pointScore,
-          gameScore: nearest.gameScore,
-          setNum: nearest.setNum
-        })
       }
     } catch (error) {
       console.error('Error seeking to nearest timestamp:', error)
@@ -91,7 +73,7 @@ function Notes({
   }
 
   const handleSaveNote = async () => {
-    if (!noteText.trim() || !currentTimestamp || !nearestPoint) {
+    if (!noteText.trim() || currentTimestamp == null) {
       return
     }
 
@@ -105,10 +87,41 @@ function Notes({
 
     setIsSaving(true)
     try {
-      // Use matchData.pointsJson to ensure we have the latest data
       const currentPointsJson = matchData?.pointsJson || pointsJson || []
 
-      // Find the point in pointsJson and add note to its notes array
+      // Untagged: store on match as videoNotes
+      if (!nearestPoint) {
+        const existingVideoNotes = matchData?.videoNotes || []
+        const newNote = {
+          videoNote: true,
+          userId: authUser?.uid || 'anonymous',
+          timestamp: currentTimestamp,
+          noteText: noteText.trim(),
+          noteId: Date.now().toString(),
+          createdAt: new Date().toISOString()
+        }
+        const nextVideoNotes = [...existingVideoNotes, newNote]
+        await updateMatch(
+          matchId,
+          { videoNotes: nextVideoNotes },
+          { skipRefetch: true, skipMatchesStateUpdate: true }
+        )
+        if (onNoteSaved) {
+          onNoteSaved({
+            ...matchData,
+            videoNotes: nextVideoNotes
+          })
+        } else {
+          console.error('onNoteSaved callback is not defined!')
+        }
+        setNoteText('')
+        setShowNoteInput(false)
+        setCurrentTimestamp(null)
+        setNearestPoint(null)
+        return
+      }
+
+      // Tagged: unchanged — attach to nearest point in pointsJson
       const updatedPointsJson = currentPointsJson.map((point) => {
         // Match the point by Position (timestamp) and Name to ensure we get the right one
         const isMatch =
@@ -185,7 +198,7 @@ function Notes({
   }
 
   const handleDeleteNote = async (noteToDelete) => {
-    if (!noteToDelete || !noteToDelete.noteId || !noteToDelete.pointPosition) {
+    if (!noteToDelete || !noteToDelete.noteId) {
       console.error('Invalid note data for deletion')
       return
     }
@@ -203,7 +216,34 @@ function Notes({
     }
 
     try {
-      // Get current pointsJson
+      if (noteToDelete.videoNote) {
+        const existing = matchData?.videoNotes || []
+        const updatedVideoNotes = existing.filter(
+          (n) => n.noteId !== noteToDelete.noteId
+        )
+        if (updatedVideoNotes.length === existing.length) {
+          alert('Error: Could not find the note to delete')
+          return
+        }
+        await updateMatch(
+          matchId,
+          { videoNotes: updatedVideoNotes },
+          { skipRefetch: true, skipMatchesStateUpdate: true }
+        )
+        if (onNoteSaved) {
+          onNoteSaved({
+            ...matchData,
+            videoNotes: updatedVideoNotes
+          })
+        }
+        return
+      }
+
+      if (noteToDelete.pointPosition == null) {
+        console.error('Invalid point note for deletion')
+        return
+      }
+
       const currentPointsJson = matchData?.pointsJson || pointsJson || []
 
       let pointFound = false
@@ -305,9 +345,13 @@ function Notes({
     }
   }
 
-  // Collect all notes from all points in pointsJson - use matchData.pointsJson for latest data
   const currentPointsJson = matchData?.pointsJson || pointsJson || []
   const savedNotes = []
+
+  ;(matchData?.videoNotes || []).forEach((note) => {
+    savedNotes.push({ ...note, videoNote: true })
+  })
+
   currentPointsJson.forEach((point) => {
     if (point.notes && Array.isArray(point.notes) && point.notes.length > 0) {
       point.notes.forEach((note) => {
@@ -320,6 +364,12 @@ function Notes({
     }
   })
 
+  savedNotes.sort(
+    (a, b) =>
+      (a.timestamp ?? a.pointPosition ?? 0) -
+      (b.timestamp ?? b.pointPosition ?? 0)
+  )
+
   return (
     <div className={styles.notesContainer}>
       {!showNoteInput && !showNotesList ? (
@@ -328,11 +378,7 @@ function Notes({
             type="button"
             className={styles.getVideoIdButton}
             onClick={handleGoToNearestTimestamp}
-            disabled={
-              !videoObject ||
-              !matchData?.pointsJson ||
-              matchData.pointsJson.length === 0
-            }
+            disabled={!videoObject}
           >
             Add Note
           </button>
@@ -366,9 +412,18 @@ function Notes({
                   <div className={styles.noteItemHeader}>
                     <div className={styles.noteHeaderInfo}>
                       <span className={styles.noteTimestamp}>
-                        {(note.timestamp / 1000).toFixed(2)}s
+                        {(() => {
+                          const totalSeconds = note.timestamp / 1000
+                          const minutes = Math.floor(totalSeconds / 60)
+                          const seconds = totalSeconds % 60
+                          const secondsInt = Math.floor(seconds)
+                          const secondsDec = (seconds % 1)
+                            .toFixed(2)
+                            .substring(1)
+                          return `${minutes}:${secondsInt.toString().padStart(2, '0')}${secondsDec}`
+                        })()}
                       </span>
-                      {note.pointName && (
+                      {!note.videoNote && note.pointName && (
                         <span className={styles.notePointName}>
                           Point: {note.pointName}
                         </span>
@@ -379,7 +434,11 @@ function Notes({
                         type="button"
                         className={styles.jumpToButton}
                         onClick={() =>
-                          handleJumpToNote(note.pointPosition || note.timestamp)
+                          handleJumpToNote(
+                            note.videoNote
+                              ? note.timestamp
+                              : note.pointPosition || note.timestamp
+                          )
                         }
                         disabled={!videoObject}
                       >
@@ -412,7 +471,14 @@ function Notes({
             <span className={styles.timestampDisplay}>
               Timestamp:{' '}
               {currentTimestamp
-                ? `${(currentTimestamp / 1000).toFixed(2)}s`
+                ? (() => {
+                    const totalSeconds = currentTimestamp / 1000
+                    const minutes = Math.floor(totalSeconds / 60)
+                    const seconds = totalSeconds % 60
+                    const secondsInt = Math.floor(seconds)
+                    const secondsDec = (seconds % 1).toFixed(2).substring(1)
+                    return `${minutes}:${secondsInt.toString().padStart(2, '0')}${secondsDec}`
+                  })()
                 : 'N/A'}
             </span>
             {nearestPoint && (
