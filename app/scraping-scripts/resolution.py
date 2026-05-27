@@ -446,6 +446,20 @@ def _parse_sets(score: str | None) -> list[dict] | None:
     return sets or None
 
 
+def _make_match_key(pid: str, oid: str, date: str | None) -> tuple:
+    """
+    Build an order-independent match index key.
+
+    TennisRecruiting reports each match from both players' perspectives,
+    producing two raw rows with the player pair in opposite order.
+    Sorting the pair and truncating the date to YYYY-MM-DD ensures both
+    rows hash to the same key regardless of who is listed as player vs
+    opponent and regardless of time-of-day / timezone differences in
+    played_at values.
+    """
+    return (min(pid, oid), max(pid, oid), (date or "")[:10])
+
+
 def _load_existing_match_mappings(sources: list[str]) -> dict[tuple[str, str], str]:
     result = (
         _resolution("match_mappings")
@@ -628,18 +642,19 @@ def resolve_matches(
         print(f"  [resolution] Matches: nothing new  ({len(existing)} already mapped)")
         return existing
 
-    # Load all canonical matches and index by (player_id, opponent_id, played_at).
-    # Store both orderings of the player pair: TennisRecruiting reports each match
-    # from one player's perspective, so the same match appears as
-    #   player=A, opponent=B, outcome=win  (on A's page)
-    #   player=B, opponent=A, outcome=loss (on B's page)
+    # Load all canonical matches and index by a normalised, order-independent key:
+    #   (min(player_id, opponent_id), max(player_id, opponent_id), played_at[:10])
+    #
+    # TennisRecruiting reports each match from both players' perspectives, so the
+    # same match arrives as two raw rows with the player pair in reverse order.
+    # Using _make_match_key collapses both orderings to a single entry, preventing
+    # the second perspective from being inserted as a new canonical match.
     canon_rows = _canonical("matches").select("*").execute().data or []
     canon_index: dict[tuple, list[dict]] = defaultdict(list)
     for c in canon_rows:
         pid, oid, date = c.get("player_id"), c.get("opponent_id"), c.get("played_at")
         if pid and oid and date:
-            canon_index[(pid, oid, date)].append(c)
-            canon_index[(oid, pid, date)].append(c)
+            canon_index[_make_match_key(pid, oid, date)].append(c)
 
     resolved = dict(existing)
     counts   = {"exact": 0, "date_only": 0, "new": 0, "skipped": 0, "stubs": 0}
@@ -670,7 +685,7 @@ def resolve_matches(
 
         played_at    = rj.get("played_at")
         raw_score    = rj.get("score")
-        lookup_key   = (player_id, opponent_id, played_at) if opponent_id else None
+        lookup_key   = _make_match_key(player_id, opponent_id, played_at) if opponent_id else None
         canonical_id = None
         confidence   = 1.0
         method       = "new"
@@ -705,8 +720,7 @@ def resolve_matches(
                 oid  = c.get("opponent_id")
                 date = c.get("played_at")
                 if pid and oid and date:
-                    canon_index[(pid, oid, date)].append(c)
-                    canon_index[(oid, pid, date)].append(c)
+                    canon_index[_make_match_key(pid, oid, date)].append(c)
             counts["new"] += 1
 
         _upsert_match_mapping(source, source_match_id, canonical_id, confidence, method)

@@ -63,6 +63,20 @@ def _parse_sets(score: str | None) -> list[dict] | None:
         sets.append(entry)
     return sets or None
 
+def _fetch_in_batches(table_name: str, column: str, values: list, fields: str, batch_size: int = 200) -> list:
+    """Fetch rows where `column` is in `values`, batching to avoid URL-length limits."""
+    results = []
+    for i in range(0, len(values), batch_size):
+        chunk = values[i : i + batch_size]
+        rows = (
+            _canonical(table_name)
+            .select(fields)
+            .in_(column, chunk)
+            .execute()
+            .data or []
+        )
+        results.extend(rows)
+    return results
 
 # ---------------------------------------------------------------------------
 # Rankings
@@ -181,13 +195,7 @@ def promote_matches(match_map: dict[tuple[str, str], str]) -> int:
         return 0
 
     # Fetch all relevant canonical rows in one query
-    existing_rows = (
-        _canonical("matches")
-        .select("id,sets,round,best_of")
-        .in_("id", list(canonical_ids_needed))
-        .execute()
-        .data or []
-    )
+    existing_rows = _fetch_in_batches("matches", "id", list(canonical_ids_needed), "id,sets,round,best_of")
     current_by_id = {r["id"]: r for r in existing_rows}
 
     enriched = 0
