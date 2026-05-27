@@ -3,6 +3,7 @@ import { supabase } from '@/supabase'
 
 export async function GET() {
   const { data: players, error } = await supabase
+    .schema('canonical')
     .from('players')
     .select(
       `
@@ -17,8 +18,24 @@ export async function GET() {
       player_rankings (
         source,
         ranking,
+        rank_value,
         ranking_date,
-        raw_data
+        points,
+        singles_points,
+        doubles_points,
+        bonus_points,
+        age_division,
+        section,
+        district,
+        state,
+        city,
+        three_month_rating,
+        trend_direction,
+        high_school,
+        high_school_state,
+        scraped_tag,
+        committed_to,
+        stars
       )
     `
     )
@@ -30,14 +47,14 @@ export async function GET() {
 
   const result = players.map((p) => {
     const rankings = p.player_rankings || []
+    const latest = (source) =>
+      rankings
+        .filter((r) => r.source === source)
+        .sort((a, b) => b.ranking_date.localeCompare(a.ranking_date))[0]
 
-    const usta = rankings
-      .filter((r) => r.source === 'USTA')
-      .sort((a, b) => b.ranking_date.localeCompare(a.ranking_date))[0]
-
-    const utr = rankings
-      .filter((r) => r.source === 'UTR')
-      .sort((a, b) => b.ranking_date.localeCompare(a.ranking_date))[0]
+    const usta = latest('USTA')
+    const utr = latest('UTR')
+    const tr = latest('tennisrecruiting.net')
 
     return {
       id: p.id,
@@ -50,27 +67,34 @@ export async function GET() {
       region: p.region,
       // USTA
       usta_rank: usta?.ranking ?? null,
-      usta_points: usta?.raw_data?.usta_points ?? null,
-      usta_singles: usta?.raw_data?.singles_points ?? null,
-      usta_doubles: usta?.raw_data?.doubles_points ?? null,
-      usta_bonus: usta?.raw_data?.bonus_points ?? null,
-      usta_age_division: usta?.raw_data?.age_division ?? null,
-      usta_section: usta?.raw_data?.section ?? null,
-      usta_district: usta?.raw_data?.district ?? null,
-      usta_state: usta?.raw_data?.state ?? null,
-      usta_city: usta?.raw_data?.city ?? null,
+      usta_points: usta?.points ?? null,
+      usta_singles: usta?.singles_points ?? null,
+      usta_doubles: usta?.doubles_points ?? null,
+      usta_bonus: usta?.bonus_points ?? null,
+      usta_age_division: usta?.age_division ?? null,
+      usta_section: usta?.section ?? null,
+      usta_district: usta?.district ?? null,
+      usta_state: usta?.state ?? null,
+      usta_city: usta?.city ?? null,
       // UTR
-      utr_rating: utr?.raw_data?.utr_rating ?? null,
+      utr_rating: utr?.rank_value ?? null,
       utr_ranking: utr?.ranking ?? null,
-      utr_three_month: utr?.raw_data?.three_month_rating ?? null,
-      utr_trend: utr?.raw_data?.trend_direction ?? null,
-      utr_high_school: utr?.raw_data?.high_school ?? null,
-      utr_high_school_state: utr?.raw_data?.high_school_state ?? null,
-      utr_scraped_tag: utr?.raw_data?.scraped_tag ?? null
+      utr_three_month: utr?.three_month_rating ?? null,
+      utr_trend: utr?.trend_direction ?? null,
+      utr_high_school: utr?.high_school ?? null,
+      utr_high_school_state: utr?.high_school_state ?? null,
+      utr_scraped_tag: utr?.scraped_tag ?? null,
+      // TennisRecruiting
+      tr_rank: tr?.ranking ?? null,
+      tr_stars: tr?.stars ?? null,
+      tr_committed_to: tr?.committed_to ?? null,
+      tr_state: tr?.state ?? null,
+      tr_city: tr?.city ?? null,
+      tr_high_school: tr?.high_school ?? null,
+      tr_age_division: tr?.age_division ?? null
     }
   })
 
-  // Sort: USTA-ranked players first (by rank asc), then rest alphabetically
   result.sort((a, b) => {
     if (a.usta_rank !== null && b.usta_rank !== null)
       return a.usta_rank - b.usta_rank

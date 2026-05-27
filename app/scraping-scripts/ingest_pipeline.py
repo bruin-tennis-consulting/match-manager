@@ -100,10 +100,35 @@ _FETCH_DELAY = 2.0
 
 def _run_tennisrecruiting() -> int:
     from scrapers.tennisrecruiting_ingest import ingest_player_profile, ingest_homepage_rankings
+    from tennis_recruiting_top10 import fetch_from_web, parse_rankings
+    import re
 
     total  = 0
     failed = []
-    ids    = [pid for pid, _ in _TR_SEED_PLAYERS]
+
+    # Build seed list from homepage top-10
+    print("  Fetching homepage top-10 as seed list ...")
+    soup = fetch_from_web("https://www.tennisrecruiting.net/")
+    rankings = parse_rankings(soup)
+    homepage_ids = set()
+    for rank_type, years in rankings.items():
+        for year, data in years.items():
+            for gender in ("boys", "girls"):
+                for rank, name, url in data.get(gender, []):
+                    m = re.search(r"[?&]id=(\d+)", url)
+                    if m:
+                        homepage_ids.add(int(m.group(1)))
+
+    # Merge with manual seeds, deduped
+    manual_ids = [pid for pid, _ in _TR_SEED_PLAYERS]
+    ids = list(dict.fromkeys(manual_ids + list(homepage_ids)))
+    print(f"  {len(homepage_ids)} homepage seeds + {len(manual_ids)} manual seeds = {len(ids)} unique profiles")
+
+    # Append stub opponents (capped at 50)
+    stub_ids = _collect_tr_stub_opponents()
+    if stub_ids:
+        print(f"  Adding up to 50 stub opponents ...")
+        ids = ids + [sid for sid in stub_ids if sid not in ids][:50]
 
     print(f"  Scraping {len(ids)} TennisRecruiting profiles ...")
     for i, source_id in enumerate(ids):
@@ -123,15 +148,6 @@ def _run_tennisrecruiting() -> int:
         total += 1
     except Exception as e:
         print(f"    [!] Homepage rankings failed: {e}")
-
-    # Report opponents seen in matches but not yet profiled
-    stubs = _collect_tr_stub_opponents()
-    if stubs:
-        print(f"\n  {len(stubs)} opponent stub(s) found — add to _TR_SEED_PLAYERS to backfill:")
-        for sid in stubs[:20]:
-            print(f"    {sid}")
-        if len(stubs) > 20:
-            print(f"    ... and {len(stubs) - 20} more")
 
     if failed:
         print(f"  Failed TennisRecruiting IDs: {failed}")

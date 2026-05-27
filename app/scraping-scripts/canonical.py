@@ -69,10 +69,6 @@ def _parse_sets(score: str | None) -> list[dict] | None:
 # ---------------------------------------------------------------------------
 
 def promote_rankings(player_map: dict[tuple[str, str], str]) -> int:
-    """
-    Upsert raw.rankings rows into canonical.player_rankings.
-    player_map: {(source, source_player_id) -> canonical_uuid}
-    """
     raw_rows = _raw("rankings").select("*").execute().data or []
 
     rows    = []
@@ -86,7 +82,45 @@ def promote_rankings(player_map: dict[tuple[str, str], str]) -> int:
 
         rank_value   = r.get("rank_value")
         ranking_type = r["ranking_type"]
+        source       = r["source"]
         is_rating    = any(s in ranking_type for s in _RATING_SOURCES)
+        rj           = r.get("raw_json") or {}
+
+        # raw.rankings stores the scraped raw_json directly — but our three
+        # scrapers each nest their extra fields under "player_extra"
+        extra = rj.get("player_extra") or rj  # fall back to root if flat
+
+        if source == "UTR":
+            source_fields = {
+                "rank_value":        rank_value,
+                "three_month_rating": extra.get("three_month_rating"),
+                "trend_direction":   extra.get("trend_direction"),
+                "high_school":       extra.get("high_school"),
+                "high_school_state": extra.get("high_school_state"),
+                "scraped_tag":       extra.get("scraped_tag"),
+            }
+        elif source == "USTA":
+            source_fields = {
+                "points":         extra.get("usta_points"),
+                "singles_points": extra.get("singles_points"),
+                "doubles_points": extra.get("doubles_points"),
+                "bonus_points":   extra.get("bonus_points"),
+                "age_division":   extra.get("age_division"),
+                "section":        extra.get("section"),
+                "district":       extra.get("district"),
+                "state":          extra.get("state"),
+                "city":           extra.get("city"),
+            }
+        elif source == "tennisrecruiting.net":
+            source_fields = {
+                "city":              extra.get("city"),
+                "state":             extra.get("state_code"),  # null for international players
+                "high_school":       extra.get("highschool"),  # note: TR uses "highschool" not "high_school"
+                "committed_to":      extra.get("committed_to"),
+                "stars":             extra.get("stars"),
+            }
+        else:
+            source_fields = {}
 
         rows.append({
             "player_id":    canonical_id,
@@ -94,14 +128,12 @@ def promote_rankings(player_map: dict[tuple[str, str], str]) -> int:
             "ranking":      None if is_rating else (int(rank_value) if rank_value is not None else None),
             "rank_value":   rank_value,
             "ranking_date": r["ranking_date"],
-            "source":       r["source"],
+            "source":       source,
             "ingested_at":  _now(),
+            **source_fields,
         })
 
     if rows:
-        # Deduplicate by the conflict key before sending — multiple raw rows
-        # (e.g. homepage scrape + profile scrape) can target the same
-        # (player_id, ranking_type, ranking_date). Last one wins.
         deduped = {
             (r["player_id"], r["ranking_type"], r["ranking_date"]): r
             for r in rows

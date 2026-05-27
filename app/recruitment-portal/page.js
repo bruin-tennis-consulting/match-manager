@@ -33,12 +33,17 @@ export default function RecruitmentPortal() {
   const [filterGender, setFilterGender] = useState('all')
   const [filterAge, setFilterAge] = useState('all')
   const [filterState, setFilterState] = useState('all')
-  const [sortBy, setSortBy] = useState('usta') // 'usta' | 'utr'
+  const [sortBy, setSortBy] = useState('usta') // 'usta' | 'utr' | 'tr'
 
   useEffect(() => {
     fetch('/api/players')
       .then((r) => r.json())
       .then((data) => {
+        if (!Array.isArray(data)) {
+          setError(data.error ?? 'Unexpected response from server')
+          setLoading(false)
+          return
+        }
         setPlayers(data)
         setLoading(false)
       })
@@ -50,7 +55,12 @@ export default function RecruitmentPortal() {
 
   // Build state options from actual data
   const states = useMemo(() => {
-    const s = new Set(players.map((p) => p.usta_state).filter(Boolean))
+    const s = new Set(
+      [
+        ...players.map((p) => p.usta_state),
+        ...players.map((p) => p.tr_state)
+      ].filter(Boolean)
+    )
     return Array.from(s).sort()
   }, [players])
 
@@ -62,15 +72,30 @@ export default function RecruitmentPortal() {
       )
         return false
       if (filterGender !== 'all' && p.gender !== filterGender) return false
-      if (filterAge !== 'all' && p.usta_age_division !== filterAge) return false
-      if (filterState !== 'all' && p.usta_state !== filterState) return false
+      if (
+        filterAge !== 'all' &&
+        p.usta_age_division !== filterAge &&
+        p.tr_age_division !== filterAge
+      )
+        return false
+      if (
+        filterState !== 'all' &&
+        p.usta_state !== filterState &&
+        p.tr_state !== filterState
+      )
+        return false
       if (sortBy === 'utr' && p.utr_rating == null) return false
+      if (sortBy === 'tr' && p.tr_rank == null) return false
       return true
     })
 
     if (sortBy === 'utr') {
       result = [...result].sort(
         (a, b) => (b.utr_rating ?? 0) - (a.utr_rating ?? 0)
+      )
+    } else if (sortBy === 'tr') {
+      result = [...result].sort(
+        (a, b) => (a.tr_rank ?? Infinity) - (b.tr_rank ?? Infinity)
       )
     }
 
@@ -163,6 +188,12 @@ export default function RecruitmentPortal() {
           >
             UTR
           </button>
+          <button
+            className={`${styles.sortBtn} ${sortBy === 'tr' ? styles.sortActive : ''}`}
+            onClick={() => setSortBy('tr')}
+          >
+            TR
+          </button>
         </div>
         <button className={styles.resetBtn} onClick={resetFilters}>
           Reset
@@ -180,7 +211,13 @@ export default function RecruitmentPortal() {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>{sortBy === 'utr' ? 'UTR Rating' : 'USTA Rank'}</th>
+              <th>
+                {sortBy === 'utr'
+                  ? 'UTR Rating'
+                  : sortBy === 'tr'
+                    ? 'TR Rank'
+                    : 'USTA Rank'}
+              </th>
               <th>Name</th>
               <th>Gender</th>
               <th>Age</th>
@@ -200,7 +237,9 @@ export default function RecruitmentPortal() {
                 <td className={styles.rankCell}>
                   {sortBy === 'utr'
                     ? (p.utr_rating ?? '—')
-                    : (p.usta_rank ?? '—')}
+                    : sortBy === 'tr'
+                      ? (p.tr_rank ?? '—')
+                      : (p.usta_rank ?? '—')}
                 </td>
                 <td className={styles.nameCell}>{p.full_name}</td>
                 <td>
@@ -348,6 +387,26 @@ export default function RecruitmentPortal() {
                       value={selected.utr_high_school_state}
                     />
                     <Stat label="Category" value={selected.utr_scraped_tag} />
+                  </div>
+                </div>
+              )}
+
+              {/* TennisRecruiting */}
+              {selected.tr_rank != null && (
+                <div className={styles.section}>
+                  <div className={styles.sectionTitle}>Tennis Recruiting</div>
+                  <div className={styles.grid}>
+                    <Stat
+                      label="TR Rank"
+                      value={
+                        selected.tr_rank != null ? `#${selected.tr_rank}` : null
+                      }
+                    />
+                    <Stat label="Stars" value={selected.tr_stars} />
+                    <Stat label="Committed" value={selected.tr_committed_to} />
+                    <Stat label="High School" value={selected.tr_high_school} />
+                    <Stat label="State" value={selected.tr_state} />
+                    <Stat label="City" value={selected.tr_city} />
                   </div>
                 </div>
               )}
