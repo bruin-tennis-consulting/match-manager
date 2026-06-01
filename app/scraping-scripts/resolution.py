@@ -69,6 +69,20 @@ def _similarity(a: str, b: str) -> float:
 # External ID extraction — per-source mapping
 # ---------------------------------------------------------------------------
 
+_TR_BASE_URL    = "https://www.tennisrecruiting.net"
+_TR_NO_PHOTO    = "/img/nophoto.gif"
+
+
+def _extract_image_url(source: str, raw_json: dict) -> str | None:
+    """Return a full image URL for a player, or None if no real photo is available."""
+    if source != "tennisrecruiting.net":
+        return None
+    photo = (raw_json.get("player_extra") or {}).get("photo_path")
+    if photo and photo != _TR_NO_PHOTO:
+        return f"{_TR_BASE_URL}{photo}"
+    return None
+
+
 def _extract_external_ids(source: str, raw_json: dict) -> dict[str, str | None]:
     """
     Pull cross-source-matchable external IDs from a raw_json blob.
@@ -162,11 +176,7 @@ def _create_canonical_player(source: str, raw_json: dict) -> str:
             "academy":       extra.get("academy"),
             "international": extra.get("international"),
             "video_urls":    extra.get("video_urls") or None,
-            "image_url": (
-                "https://www.tennisrecruiting.net" + extra["photo_path"]
-                if extra.get("photo_path") and extra.get("photo_path") != "/img/nophoto.gif"
-                else None
-            ),
+            "image_url":     _extract_image_url(source, raw_json),
             "created_at":    _now(),
             "updated_at":    _now(),
         }

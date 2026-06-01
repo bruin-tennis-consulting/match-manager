@@ -264,13 +264,45 @@
 .modalHeader {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   padding: 20px 24px 16px;
   border-bottom: 1px solid #e5e7eb;
   position: sticky;
   top: 0;
   background: white;
   z-index: 1;
+}
+
+.modalHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.modalAvatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: top;
+  border: 2px solid #e5e7eb;
+  flex-shrink: 0;
+  background: #f1f5f9;
+}
+
+.modalAvatarFallback {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #2c61ab;
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 2px solid #e5e7eb;
 }
 
 .modalName {
