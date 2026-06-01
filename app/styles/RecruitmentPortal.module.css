@@ -73,6 +73,8 @@
 }
 
 .resetBtn {
+  margin-left: auto;
+
   padding: 8px 16px;
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
@@ -409,9 +411,19 @@
 }
 
 .videoGrid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
+}
+
+.videoItem {
+  width: 100%;
+}
+
+.videoEmbed {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
 }
 
 /* States */
