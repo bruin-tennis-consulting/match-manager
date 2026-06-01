@@ -409,6 +409,78 @@
   font-weight: 600;
   color: #111827;
 }
+.matchesList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.matchRow {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 8px 10px;
+  transition: background-color 0.15s;
+}
+
+.matchRow:hover {
+  background: #f1f5f9;
+}
+
+.matchHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.matchResultWin,
+.matchResultLoss {
+  width: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.matchResultWin {
+  color: #16a34a;
+}
+
+.matchResultLoss {
+  color: #dc2626;
+}
+
+.matchOpponent {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.matchDate {
+  margin-left: auto;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.matchDetails {
+  margin-top: 2px;
+  margin-left: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.matchScore {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.matchRound,
+.matchTournament {
+  font-size: 11px;
+  color: #6b7280;
+}
 
 .videoGrid {
   display: grid;
