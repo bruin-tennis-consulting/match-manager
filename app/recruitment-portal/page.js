@@ -105,6 +105,7 @@ export default function RecruitmentPortal() {
   // Build state options from actual data
   const currentYear = new Date().getFullYear()
   const videos = selected?.video_urls ?? []
+  const matches = selected?.recent_matches ?? []
 
   const classes = useMemo(() => {
     const s = new Set()
@@ -591,7 +592,66 @@ export default function RecruitmentPortal() {
                   </div>
                 </div>
               )}
+              {/* Recent Matches */}
+              {matches.length > 0 && (
+                <div className={styles.section}>
+                  <div className={styles.sectionTitle}>Recent Matches</div>
 
+                  <div className={styles.matchesList}>
+                    {matches.map((match) => {
+                      const won =
+                        selected.id === match.winner_id ||
+                        match.outcome?.toLowerCase() === 'w'
+
+                      return (
+                        <div key={match.id} className={styles.matchRow}>
+                          <div className={styles.matchHeader}>
+                            <span
+                              className={
+                                won
+                                  ? styles.matchResultWin
+                                  : styles.matchResultLoss
+                              }
+                            >
+                              {won ? 'W' : 'L'}
+                            </span>
+
+                            <span className={styles.matchOpponent}>
+                              {match.opponent?.full_name ?? 'Unknown Opponent'}
+                            </span>
+
+                            {match.played_at && (
+                              <span className={styles.matchDate}>
+                                {new Date(match.played_at).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className={styles.matchDetails}>
+                            {match.score && (
+                              <span className={styles.matchScore}>
+                                {match.score}
+                              </span>
+                            )}
+
+                            {match.round && (
+                              <span className={styles.matchRound}>
+                                {match.round}
+                              </span>
+                            )}
+
+                            {match.tournament?.name && (
+                              <span className={styles.matchTournament}>
+                                {match.tournament.name}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
               {/* Videos */}
               {videos.length > 0 && (
                 <div className={styles.section}>

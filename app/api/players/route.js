@@ -36,6 +36,27 @@ export async function GET() {
         committed_to,
         stars,
         ranking_type
+      ),
+      matches!matches_player_id_fkey (
+        id,
+        opponent_id,
+        winner_id,
+        tournament_id,
+        outcome,
+        score,
+        round,
+        best_of,
+        status,
+        source,
+        played_at,
+        opponent:opponent_id (
+          id,
+          full_name
+        ),
+        tournament:tournament_id (
+          id,
+          name
+        )
       )
     `
 
@@ -71,6 +92,7 @@ export async function GET() {
   const result = players
     .filter((p) => (p.player_rankings || []).length > 0)
     .map((p) => {
+      // rankings table
       const rankings = p.player_rankings || []
 
       const latest = (source) =>
@@ -95,6 +117,37 @@ export async function GET() {
       const usta = latest('USTA')
       const utr = latest('UTR')
       const tr = latestTR()
+
+      // matches table
+      const matches = p.matches || []
+
+      const recentMatches = matches
+        .filter((m) => m.played_at)
+        .sort((a, b) => b.played_at.localeCompare(a.played_at))
+        .slice(0, 10)
+        .map((m) => ({
+          id: m.id,
+          played_at: m.played_at,
+          outcome: m.outcome,
+          score: m.score,
+          round: m.round,
+          best_of: m.best_of,
+          status: m.status,
+          source: m.source,
+          winner_id: m.winner_id,
+          opponent: m.opponent
+            ? {
+                id: m.opponent.id,
+                full_name: m.opponent.full_name
+              }
+            : null,
+          tournament: m.tournament
+            ? {
+                id: m.tournament.id,
+                name: m.tournament.name
+              }
+            : null
+        }))
 
       return {
         id: p.id,
@@ -132,7 +185,9 @@ export async function GET() {
         tr_stars: tr?.stars ?? null,
         tr_committed_to: tr?.committed_to ?? null,
         tr_state: tr?.state ?? null,
-        tr_city: tr?.city ?? null
+        tr_city: tr?.city ?? null,
+        // Recent matches
+        recent_matches: recentMatches
       }
     })
 
