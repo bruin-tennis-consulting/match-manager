@@ -30,7 +30,7 @@ from __future__ import annotations
 import re
 from datetime import datetime, timezone
 
-from db.client import supabase
+from db.client import fetch_all, supabase
 
 _RATING_SOURCES = {"UTR", "WTN"}
 
@@ -63,24 +63,11 @@ def _parse_sets(score: str | None) -> list[dict] | None:
         sets.append(entry)
     return sets or None
 
-def _fetch_in_batches(table_name: str, column: str, values: list, fields: str, batch_size: int = 200) -> list:
-    """Fetch rows where `column` is in `values`, batching to avoid URL-length limits."""
-    results = []
-    for i in range(0, len(values), batch_size):
-        chunk = values[i : i + batch_size]
-        rows = (
-            _canonical(table_name)
-            .select(fields)
-            .in_(column, chunk)
-            .execute()
-            .data or []
-        )
-        results.extend(rows)
-    return results
 
 # ---------------------------------------------------------------------------
 # Players
 # ---------------------------------------------------------------------------
+
 def promote_players(player_map: dict[tuple[str, str], str]) -> int:
     """
     Enrich canonical.players stubs that were created by resolve_players or match opponents.
@@ -102,7 +89,8 @@ def promote_players(player_map: dict[tuple[str, str], str]) -> int:
         print("  [canonical] Players: no mapped rows to enrich")
         return 0
 
-    existing_rows = _fetch_in_batches("players", "id", list(canonical_ids_needed), "*")
+    # fetch_all handles both pagination and .in_() chunking
+    existing_rows = fetch_all("canonical", "players", "*", ("id", list(canonical_ids_needed)))
     current_by_id = {r["id"]: r for r in existing_rows}
 
     ENRICHABLE_EXTRA = {
@@ -192,12 +180,14 @@ def promote_players(player_map: dict[tuple[str, str], str]) -> int:
     print(f"  [canonical] Players: {enriched} enriched, {skipped} skipped")
     return enriched
 
+
 # ---------------------------------------------------------------------------
 # Rankings
 # ---------------------------------------------------------------------------
 
 def promote_rankings(player_map: dict[tuple[str, str], str]) -> int:
-    raw_rows = _raw("rankings").select("*").execute().data or []
+    # fetch_all paginates past the 1000-row cap
+    raw_rows = fetch_all("raw", "rankings")
 
     rows    = []
     skipped = 0
@@ -220,12 +210,12 @@ def promote_rankings(player_map: dict[tuple[str, str], str]) -> int:
 
         if source == "UTR":
             source_fields = {
-                "rank_value":        rank_value,
+                "rank_value":         rank_value,
                 "three_month_rating": extra.get("three_month_rating"),
-                "trend_direction":   extra.get("trend_direction"),
-                "high_school":       extra.get("high_school"),
-                "high_school_state": extra.get("high_school_state"),
-                "scraped_tag":       extra.get("scraped_tag"),
+                "trend_direction":    extra.get("trend_direction"),
+                "high_school":        extra.get("high_school"),
+                "high_school_state":  extra.get("high_school_state"),
+                "scraped_tag":        extra.get("scraped_tag"),
             }
         elif source == "USTA":
             source_fields = {
@@ -241,11 +231,11 @@ def promote_rankings(player_map: dict[tuple[str, str], str]) -> int:
             }
         elif source == "tennisrecruiting.net":
             source_fields = {
-                "city":              extra.get("city"),
-                "state":             extra.get("state_code"),  # null for international players
-                "high_school":       extra.get("highschool"),  # note: TR uses "highschool" not "high_school"
-                "committed_to":      extra.get("committed_to"),
-                "stars":             extra.get("stars"),
+                "city":         extra.get("city"),
+                "state":        extra.get("state_code"),
+                "high_school":  extra.get("highschool"),
+                "committed_to": extra.get("committed_to"),
+                "stars":        extra.get("stars"),
             }
         else:
             source_fields = {}
@@ -262,14 +252,18 @@ def promote_rankings(player_map: dict[tuple[str, str], str]) -> int:
         })
 
     if rows:
-        deduped = {
+        deduped = list({
             (r["player_id"], r["ranking_type"], r["ranking_date"]): r
             for r in rows
-        }.values()
-        _canonical("player_rankings").upsert(
-            list(deduped),
-            on_conflict="player_id,ranking_type,ranking_date",
-        ).execute()
+        }.values())
+
+        # Batch upsert in chunks to stay under PostgREST's request size limits
+        _BATCH_SIZE = 500
+        for i in range(0, len(deduped), _BATCH_SIZE):
+            _canonical("player_rankings").upsert(
+                deduped[i : i + _BATCH_SIZE],
+                on_conflict="player_id,ranking_type,ranking_date",
+            ).execute()
 
     print(f"  [canonical] Rankings: {len(rows)} upserted, {skipped} skipped (unmapped player)")
     return len(rows)
@@ -287,17 +281,14 @@ def promote_matches(match_map: dict[tuple[str, str], str]) -> int:
     in any fields that are currently null (sets, round, best_of). We never
     overwrite fields that are already populated — the first source to report
     a match wins on data fields.
-
-    Fetches all relevant canonical rows in one query to avoid N+1 lookups.
-    match_map: {(source, source_match_id) -> canonical_uuid}
     """
     if not match_map:
         print("  [canonical] Matches: no match_map — skipping")
         return 0
 
-    raw_rows = _raw("matches").select("*").execute().data or []
+    # fetch_all paginates past the 1000-row cap
+    raw_rows = fetch_all("raw", "matches")
 
-    # Collect the set of canonical UUIDs we actually need to fetch
     canonical_ids_needed = {
         match_map[(r["source"], r["source_match_id"])]
         for r in raw_rows
@@ -308,8 +299,12 @@ def promote_matches(match_map: dict[tuple[str, str], str]) -> int:
         print("  [canonical] Matches: no mapped rows to enrich")
         return 0
 
-    # Fetch all relevant canonical rows in one query
-    existing_rows = _fetch_in_batches("matches", "id", list(canonical_ids_needed), "id,sets,round,best_of")
+    # fetch_all handles both pagination and .in_() chunking
+    existing_rows = fetch_all(
+        "canonical", "matches",
+        "id,sets,round,best_of",
+        ("id", list(canonical_ids_needed)),
+    )
     current_by_id = {r["id"]: r for r in existing_rows}
 
     enriched = 0
@@ -343,7 +338,7 @@ def promote_matches(match_map: dict[tuple[str, str], str]) -> int:
 
         if updates:
             _canonical("matches").update(updates).eq("id", canonical_id).execute()
-            # Keep our in-memory view consistent so duplicate raw rows
+            # Keep in-memory view consistent so duplicate raw rows
             # don't re-enrich fields we just wrote
             current_by_id[canonical_id].update(updates)
             enriched += 1

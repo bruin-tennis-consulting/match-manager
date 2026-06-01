@@ -18,7 +18,7 @@ Usage
 import argparse
 import re
 
-from db.client import create_job, finish_job
+from db.client import create_job, fetch_all, finish_job
 from resolution import resolve_all
 from canonical import promote_all
 
@@ -151,21 +151,15 @@ def _run_utr() -> int:
 
 def _collect_tr_stub_opponents() -> list[int]:
     """Opponents seen in raw.matches but not yet in raw.players."""
-    from db.client import supabase
-
-    _raw = lambda t: supabase.schema("raw").table(t)
-
-    matches = (
-        _raw("matches")
-        .select("raw_json")
-        .eq("source", "tennisrecruiting.net")
-        .execute()
+    # fetch_all paginates past the 1000-row cap on both queries
+    match_rows = fetch_all(
+        "raw", "matches",
+        "raw_json",
+        ("source", ["tennisrecruiting.net"]),
     )
-    if not matches.data:
-        return []
 
     all_opp_ids: set[str] = set()
-    for row in matches.data:
+    for row in match_rows:
         opp_id = str(row["raw_json"].get("opponent_source_id", ""))
         if opp_id and opp_id != "unknown":
             all_opp_ids.add(opp_id)
@@ -173,14 +167,12 @@ def _collect_tr_stub_opponents() -> list[int]:
     if not all_opp_ids:
         return []
 
-    existing = (
-        _raw("players")
-        .select("source_id")
-        .eq("source", "tennisrecruiting.net")
-        .in_("source_id", list(all_opp_ids))
-        .execute()
+    existing_rows = fetch_all(
+        "raw", "players",
+        "source_id",
+        ("source_id", list(all_opp_ids)),  # fetch_all chunks this automatically
     )
-    existing_ids = {r["source_id"] for r in (existing.data or [])}
+    existing_ids = {r["source_id"] for r in existing_rows}
     return sorted(int(s) for s in all_opp_ids - existing_ids if s.isdigit())
 
 

@@ -135,13 +135,8 @@ def _load_canonical_players() -> list[dict]:
 
 
 def _load_existing_player_mappings(sources: list[str]) -> dict[tuple[str, str], str]:
-    result = (
-        _resolution("player_mappings")
-        .select("source,source_id,canonical_id")
-        .in_("source", sources)
-        .execute()
-    )
-    return {(r["source"], r["source_id"]): r["canonical_id"] for r in (result.data or [])}
+    rows = fetch_all("resolution", "player_mappings", "source,source_id,canonical_id", ("source", sources))
+    return {(r["source"], r["source_id"]): r["canonical_id"] for r in rows}
 
 
 def _match_player(
@@ -366,13 +361,8 @@ def _infer_tournament_level(name: str | None) -> str | None:
 
 
 def _load_existing_tournament_mappings(sources: list[str]) -> dict[tuple[str, str], str]:
-    result = (
-        _resolution("tournament_mappings")
-        .select("source,source_id,canonical_id")
-        .in_("source", sources)
-        .execute()
-    )
-    return {(r["source"], r["source_id"]): r["canonical_id"] for r in (result.data or [])}
+    rows = fetch_all("resolution", "tournament_mappings", "source,source_id,canonical_id", ("source", sources))
+    return {(r["source"], r["source_id"]): r["canonical_id"] for r in rows}
 
 
 def resolve_tournaments(sources: list[str] | None = None) -> dict[tuple[str, str], str]:
@@ -510,13 +500,8 @@ def _make_match_key(pid: str, oid: str, date: str | None) -> tuple:
 
 
 def _load_existing_match_mappings(sources: list[str]) -> dict[tuple[str, str], str]:
-    result = (
-        _resolution("match_mappings")
-        .select("source,source_match_id,canonical_id")
-        .in_("source", sources)
-        .execute()
-    )
-    return {(r["source"], r["source_match_id"]): r["canonical_id"] for r in (result.data or [])}
+    rows = fetch_all("resolution", "match_mappings", "source,source_match_id,canonical_id", ("source", sources))
+    return {(r["source"], r["source_match_id"]): r["canonical_id"] for r in rows}
 
 
 def _resolve_stubs_batch(
