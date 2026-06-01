@@ -26,6 +26,33 @@ function formatAgeDivision(div) {
   return AGE_DIVISION_LABELS[div] ?? div ?? '—'
 }
 
+// Years from the current class that each age division spans. USTA only gives us
+// an age division (e.g. 18U), which covers ~2 graduating classes, so when we
+// have no exact grad_year we estimate a 2-year range instead of a fake single
+// year. Offsets are kept in sync with inferAgeDivision's thresholds.
+const AGE_DIVISION_OFFSET = { '18s': 0, '16s': 2, '14s': 4, '12s': 6 }
+
+// Returns { estimated, short, full } for a player's graduating class, or null.
+// Exact grad_year (TR/UTR) -> single year. Age-division only (USTA) -> range.
+function getClassInfo(p) {
+  if (p.grad_year) {
+    return {
+      estimated: false,
+      short: `'${String(p.grad_year).slice(-2)}`,
+      full: String(p.grad_year)
+    }
+  }
+  const offset = AGE_DIVISION_OFFSET[inferAgeDivision(p)]
+  if (offset == null) return null
+  const a = new Date().getFullYear() + offset
+  const b = a + 1
+  return {
+    estimated: true,
+    short: `'${String(a).slice(-2)}–'${String(b).slice(-2)}`,
+    full: `${a}–${b}`
+  }
+}
+
 function getPageNumbers(current, total) {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
   if (current <= 4) return [1, 2, 3, 4, 5, '...', total]
@@ -51,7 +78,7 @@ export default function RecruitmentPortal() {
   const [page, setPage] = useState(1)
 
   const [searchName, setSearchName] = useState('')
-  const [filterGender, setFilterGender] = useState('female')
+  const [filterGender, setFilterGender] = useState('male')
   const [filterAge, setFilterAge] = useState('18s')
   const [filterState, setFilterState] = useState('all')
   const [sortBy, setSortBy] = useState('usta')
@@ -130,7 +157,7 @@ export default function RecruitmentPortal() {
 
   function resetFilters() {
     setSearchName('')
-    setFilterGender('female')
+    setFilterGender('male')
     setFilterAge('18s')
     setFilterState('all')
     setSortBy('usta')
@@ -268,7 +295,22 @@ export default function RecruitmentPortal() {
                 </td>
                 <td>{formatAgeDivision(inferAgeDivision(p))}</td>
                 <td>
-                  {p.grad_year ? `'${String(p.grad_year).slice(-2)}` : '—'}
+                  {(() => {
+                    const c = getClassInfo(p)
+                    if (!c) return '—'
+                    return (
+                      <span
+                        style={c.estimated ? { opacity: 0.55 } : undefined}
+                        title={
+                          c.estimated
+                            ? 'Estimated from age division — no exact grad year on file'
+                            : undefined
+                        }
+                      >
+                        {c.short}
+                      </span>
+                    )
+                  })()}
                 </td>
                 <td>{p.usta_state ?? p.tr_state ?? '—'}</td>
                 <td>{p.usta_section ?? '—'}</td>
@@ -327,9 +369,12 @@ export default function RecruitmentPortal() {
                   {selected.usta_age_division
                     ? ` · ${formatAgeDivision(selected.usta_age_division)}`
                     : ''}
-                  {selected.grad_year
-                    ? ` · Class of ${selected.grad_year}`
-                    : ''}
+                  {(() => {
+                    const c = getClassInfo(selected)
+                    return c
+                      ? ` · Class of ${c.full}${c.estimated ? ' (est.)' : ''}`
+                      : ''
+                  })()}
                   {selected.country_code ? ` · ${selected.country_code}` : ''}
                 </div>
               </div>
@@ -435,7 +480,15 @@ export default function RecruitmentPortal() {
               <div className={styles.section}>
                 <div className={styles.sectionTitle}>Player Info</div>
                 <div className={styles.grid}>
-                  <Stat label="Grad Year" value={selected.grad_year} />
+                  <Stat
+                    label="Grad Year"
+                    value={(() => {
+                      const c = getClassInfo(selected)
+                      return c
+                        ? `${c.full}${c.estimated ? ' (est.)' : ''}`
+                        : null
+                    })()}
+                  />
                   <Stat label="Country" value={selected.country_code} />
                   <Stat label="Region" value={selected.region} />
                 </div>
