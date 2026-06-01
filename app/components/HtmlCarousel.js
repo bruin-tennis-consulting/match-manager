@@ -8,7 +8,7 @@ import 'swiper/css/pagination'
 
 import styles from '@/app/styles/HtmlCarousel.module.css'
 
-const HtmlCarousel = ({ htmlUrl }) => {
+const HtmlCarousel = ({ htmlUrl, onSlideChange }) => {
   const [sections, setSections] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -98,6 +98,9 @@ const HtmlCarousel = ({ htmlUrl }) => {
         spaceBetween={30}
         slidesPerView={1}
         className={styles.swiper}
+        onSlideChange={(swiper) =>
+          onSlideChange && onSlideChange(swiper.activeIndex)
+        }
       >
         {sections.map((section, index) => (
           <SwiperSlide key={section.id} className={styles.slide}>
