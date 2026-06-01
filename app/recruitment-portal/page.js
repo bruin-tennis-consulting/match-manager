@@ -104,7 +104,18 @@ export default function RecruitmentPortal() {
 
   // Build state options from actual data
   const classes = useMemo(() => {
-    const s = new Set(players.map((p) => p._classInfo?.full).filter(Boolean))
+    const s = new Set()
+    players.forEach((p) => {
+      const info = p._classInfo
+      if (!info) return
+      if (info.estimated) {
+        const [a, b] = info.full.split('–').map(Number)
+        s.add(String(a))
+        s.add(String(b))
+      } else {
+        s.add(info.full)
+      }
+    })
     return Array.from(s).sort()
   }, [players])
 
@@ -128,8 +139,17 @@ export default function RecruitmentPortal() {
       )
         return false
       if (filterGender !== 'all' && p.gender !== filterGender) return false
-      if (filterClass !== 'all' && p._classInfo?.full !== filterClass)
-        return false
+      if (filterClass !== 'all') {
+        const info = p._classInfo
+        if (!info) return false
+        if (info.estimated) {
+          const [a, b] = info.full.split('–').map(Number)
+          if (Number(filterClass) !== a && Number(filterClass) !== b)
+            return false
+        } else {
+          if (info.full !== filterClass) return false
+        }
+      }
       if (
         filterState !== 'all' &&
         p.usta_state !== filterState &&
