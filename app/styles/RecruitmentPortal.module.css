@@ -124,6 +124,35 @@
   color: white;
 }
 
+.uncommittedToggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.uncommittedToggle:hover {
+  border-color: #2c61ab;
+  color: #2c61ab;
+}
+
+.uncommittedToggleActive {
+  background: #eff6ff;
+  border-color: #2c61ab;
+  color: #2c61ab;
+}
+
 /* Results count */
 .resultsCount {
   font-size: 13px;

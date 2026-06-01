@@ -80,6 +80,7 @@ export default function RecruitmentPortal() {
   const [searchName, setSearchName] = useState('')
   const [filterGender, setFilterGender] = useState('male')
   const [filterAge, setFilterAge] = useState('18s')
+  const [filterUncommitted, setFilterUncommitted] = useState(true)
   const [filterState, setFilterState] = useState('all')
   const [sortBy, setSortBy] = useState('usta')
 
@@ -112,6 +113,8 @@ export default function RecruitmentPortal() {
     return Array.from(s).sort()
   }, [players])
 
+  console.log(players)
+  console.log(players.filter((player) => player.first_name === 'Jack'))
   const filtered = useMemo(() => {
     let result = players.filter((p) => {
       if (
@@ -125,6 +128,12 @@ export default function RecruitmentPortal() {
         filterState !== 'all' &&
         p.usta_state !== filterState &&
         p.tr_state !== filterState
+      )
+        return false
+      if (
+        filterUncommitted &&
+        p.tr_committed_to != null &&
+        p.tr_committed_to !== ''
       )
         return false
       if (sortBy === 'utr' && p.utr_rating == null) return false
@@ -143,7 +152,15 @@ export default function RecruitmentPortal() {
     }
 
     return result
-  }, [players, searchName, filterGender, filterAge, filterState, sortBy])
+  }, [
+    players,
+    sortBy,
+    searchName,
+    filterGender,
+    filterAge,
+    filterState,
+    filterUncommitted
+  ])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const rangeStart = filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
@@ -153,7 +170,14 @@ export default function RecruitmentPortal() {
   // Reset to page 1 whenever filters change
   useEffect(() => {
     setPage(1)
-  }, [searchName, filterGender, filterAge, filterState, sortBy])
+  }, [
+    searchName,
+    filterGender,
+    filterAge,
+    filterState,
+    sortBy,
+    filterUncommitted
+  ])
 
   function resetFilters() {
     setSearchName('')
@@ -161,6 +185,7 @@ export default function RecruitmentPortal() {
     setFilterAge('18s')
     setFilterState('all')
     setSortBy('usta')
+    setFilterUncommitted(true)
   }
 
   if (loading) return <div className={styles.loading}>Loading players...</div>
@@ -238,6 +263,12 @@ export default function RecruitmentPortal() {
             TR
           </button>
         </div>
+        <button
+          className={`${styles.uncommittedToggle} ${filterUncommitted ? styles.uncommittedToggleActive : ''}`}
+          onClick={() => setFilterUncommitted((v) => !v)}
+        >
+          {filterUncommitted ? '✓ ' : ''}Uncommitted Only
+        </button>
         <button className={styles.resetBtn} onClick={resetFilters}>
           Reset
         </button>
