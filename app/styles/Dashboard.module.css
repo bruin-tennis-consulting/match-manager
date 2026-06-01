@@ -7,17 +7,11 @@
 }
 
 .container {
-  padding: 20px;
   margin: 0 auto;
   padding-left: 40px;
   padding-right: 40px;
   font-family: 'DM Sans', sans-serif;
   overflow-x: clip;
-}
-
-.header {
-  text-align: left;
-  margin-bottom: 10px;
 }
 
 .header h1 {
@@ -30,12 +24,6 @@
   font-weight: 600;
   margin-top: 5px;
   margin-bottom: 5px;
-}
-
-.headerContent {
-  display: flex;
-  justify-content: space-between;
-  margin-top: -15px;
 }
 
 .titleBar {
@@ -63,7 +51,7 @@
 }
 
 .matchSection {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .matchContainer {

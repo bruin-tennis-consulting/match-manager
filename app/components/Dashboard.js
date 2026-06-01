@@ -3,8 +3,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import Fuse from 'fuse.js'
-import debounce from 'lodash/debounce'
 
 import { useData } from '@/app/DataProvider'
 import styles from '@/app/styles/Dashboard.module.css'
@@ -12,9 +10,6 @@ import styles from '@/app/styles/Dashboard.module.css'
 import DashTileContainer from '@/app/components/DashTileContainer'
 import RosterList from '@/app/components/RosterList.js'
 import Loading from './Loading'
-
-import { searchableProperties } from '@/app/services/searchableProperties.js'
-import SearchIcon from '@/public/search'
 
 const cleanTeamName = (teamName) => {
   return teamName ? teamName.replace(/\s*\([MmWw]\)\s*$/, '').trim() : teamName
@@ -124,44 +119,6 @@ const CarouselItem = React.memo(({ match, isSelected, onClick, logo }) => {
   )
 })
 CarouselItem.displayName = 'CarouselItem'
-
-const SearchBox = React.memo(({ searchTerm, onSearch, onClear }) => {
-  const debouncedSearch = useCallback(
-    debounce((value) => onSearch(value), 300),
-    [onSearch]
-  )
-
-  const handleChange = (e) => {
-    const value = e.target.value
-    debouncedSearch(value)
-  }
-
-  return (
-    <div className={styles.searchContainer}>
-      <div className={styles.clearContainer}>
-        <div className={styles.searchWrapper}>
-          {searchTerm.length === 0 && (
-            <SearchIcon className={styles.searchIcon} />
-          )}
-          <input
-            type="text"
-            placeholder="Search"
-            className={styles.searchInput}
-            defaultValue={searchTerm}
-            onChange={handleChange}
-          />
-        </div>
-        {searchTerm && (
-          <button className={styles.clearButton} onClick={onClear}>
-            Clear
-          </button>
-        )}
-      </div>
-    </div>
-  )
-})
-
-SearchBox.displayName = 'SearchBox'
 
 // Season Filter Component
 const SeasonFilter = React.memo(
@@ -305,14 +262,13 @@ MatchSection.displayName = 'MatchSection'
 // Main Dashboard component
 const Dashboard = () => {
   const router = useRouter()
-  const { matches, logos } = useData()
-  const [searchTerm, setSearchTerm] = useState('')
+  const { matches, logos, searchTerm, searchIndex, buildSearchIndex } =
+    useData()
   const [selectedMatchSets, setSelectedMatchSets] = useState([])
   const [isMobile, setIsMobile] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [selectedSeason, setSelectedSeason] = useState(getCurrentSeason())
 
-  const [searchIndex, setSearchIndex] = useState(null)
   // Calculate formatted matches once
   const formattedMatches = useMemo(() => {
     const formatted = matches && matches.length ? formatMatches(matches) : []
@@ -363,28 +319,16 @@ const Dashboard = () => {
 
   // Create search index after component mounts and seasonFilteredMatches is available
   useEffect(() => {
-    if (seasonFilteredMatches.length && !searchIndex) {
-      const timer = setTimeout(() => {
-        const fuse = new Fuse(seasonFilteredMatches, {
-          keys: searchableProperties,
-          threshold: 0.4
-        })
-        setSearchIndex(fuse)
-      }, 100)
-
-      return () => clearTimeout(timer)
+    if (seasonFilteredMatches.length) {
+      buildSearchIndex(seasonFilteredMatches)
     }
-  }, [seasonFilteredMatches, searchIndex, searchableProperties])
+  }, [seasonFilteredMatches, buildSearchIndex])
 
   useEffect(() => {
     if (seasonFilteredMatches.length) {
-      const fuse = new Fuse(seasonFilteredMatches, {
-        keys: searchableProperties,
-        threshold: 0.4
-      })
-      setSearchIndex(fuse)
+      buildSearchIndex(seasonFilteredMatches)
     }
-  }, [selectedSeason, searchableProperties])
+  }, [seasonFilteredMatches, selectedSeason, buildSearchIndex])
 
   // Filtered match sets calculation using the searchIndex from state
   const filteredMatchSets = useMemo(() => {
@@ -423,7 +367,7 @@ const Dashboard = () => {
         })
       )
     ]
-  }, [searchTerm, filteredMatchSets, selectedMatchSets])
+  }, [searchTerm, filteredMatchSets, selectedMatchSets, seasonFilteredMatches])
 
   const handleTileClick = useCallback(
     (videoId) => {
@@ -431,14 +375,6 @@ const Dashboard = () => {
     },
     [router]
   )
-
-  const handleSearch = useCallback((inputValue) => {
-    setSearchTerm(inputValue)
-  }, [])
-
-  const handleClearSearch = useCallback(() => {
-    setSearchTerm('')
-  }, [])
 
   const handleCarouselClick = useCallback((item) => {
     setSelectedMatchSets((prev) =>
@@ -448,17 +384,6 @@ const Dashboard = () => {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <h2>Dashboard</h2>
-          <SearchBox
-            searchTerm={searchTerm}
-            onSearch={handleSearch}
-            onClear={handleClearSearch}
-          />
-        </div>
-      </header>
-
       <SeasonFilter
         availableSeasons={availableSeasons}
         selectedSeason={selectedSeason}
