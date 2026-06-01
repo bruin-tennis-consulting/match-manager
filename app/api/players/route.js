@@ -11,6 +11,7 @@ export async function GET() {
       country_code,
       grad_year,
       region,
+      academy,
       image_url,
       video_urls,
       player_rankings (
@@ -104,6 +105,7 @@ export async function GET() {
         country_code: p.country_code,
         grad_year: p.grad_year,
         region: p.region,
+        academy: p.academy ?? null,
         image_url: p.image_url ?? null,
         video_urls: p.video_urls ?? null,
         // USTA
@@ -130,9 +132,7 @@ export async function GET() {
         tr_stars: tr?.stars ?? null,
         tr_committed_to: tr?.committed_to ?? null,
         tr_state: tr?.state ?? null,
-        tr_city: tr?.city ?? null,
-        tr_high_school: tr?.high_school ?? null,
-        tr_age_division: tr?.age_division ?? null
+        tr_city: tr?.city ?? null
       }
     })
 

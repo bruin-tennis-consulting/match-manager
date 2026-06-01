@@ -120,7 +120,7 @@ export default function RecruitmentPortal() {
       }
     })
     return Array.from(s).sort()
-  }, [players])
+  }, [currentYear, players])
 
   const states = useMemo(() => {
     const s = new Set(
@@ -132,7 +132,7 @@ export default function RecruitmentPortal() {
     return Array.from(s).sort()
   }, [players])
 
-  console.log(players.filter((player) => player.first_name === 'Jesse'))
+  console.log(players.filter((player) => player.first_name === 'Michael'))
   const filtered = useMemo(() => {
     let result = players.filter((p) => {
       if (
@@ -495,8 +495,14 @@ export default function RecruitmentPortal() {
                         : null
                     })()}
                   />
-                  <Stat label="Country" value={selected.country_code} />
-                  <Stat label="Region" value={selected.region} />
+                  <Stat
+                    label="Location"
+                    value={[selected.region, selected.country_code]
+                      .filter(Boolean)
+                      .join(', ')}
+                  />
+                  <Stat label="Academy" value={selected.academy} />
+                  <Stat label="Committed" value={selected.tr_committed_to} />
                 </div>
               </div>
 
@@ -509,6 +515,9 @@ export default function RecruitmentPortal() {
                       label="National Rank"
                       value={`#${selected.usta_rank}`}
                     />
+                    <Stat label="Section" value={selected.usta_section} />
+                    <Stat label="State" value={selected.usta_state} />
+                    <Stat label="City" value={selected.usta_city} />
                     <Stat
                       label="Total Points"
                       value={selected.usta_points?.toLocaleString()}
@@ -529,10 +538,6 @@ export default function RecruitmentPortal() {
                       label="Age Division"
                       value={formatAgeDivision(selected.usta_age_division)}
                     />
-                    <Stat label="Section" value={selected.usta_section} />
-                    <Stat label="District" value={selected.usta_district} />
-                    <Stat label="State" value={selected.usta_state} />
-                    <Stat label="City" value={selected.usta_city} />
                   </div>
                 </div>
               )}
@@ -581,8 +586,6 @@ export default function RecruitmentPortal() {
                       }
                     />
                     <Stat label="Stars" value={selected.tr_stars} />
-                    <Stat label="Committed" value={selected.tr_committed_to} />
-                    <Stat label="High School" value={selected.tr_high_school} />
                     <Stat label="State" value={selected.tr_state} />
                     <Stat label="City" value={selected.tr_city} />
                   </div>
