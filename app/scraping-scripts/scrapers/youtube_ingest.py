@@ -42,7 +42,7 @@ from db.client import fetch_all, supabase
 # ---------------------------------------------------------------------------
 
 _USTA_SOURCE       = "USTA"
-_TOP_N             = 100       # only process the top N USTA-ranked players
+_TOP_N             = 500       # only process the top N USTA-ranked players
 _MAX_RESULTS       = 3         # YouTube results per player
 _QUOTA_DELAY_S     = 0.25      # polite pause between API calls (seconds)
 _YT_WATCH_BASE     = "https://www.youtube.com/watch?v="
@@ -108,13 +108,9 @@ def _fetch_top_usta_player_ids(top_n: int) -> list[str]:
 
 
 def _fetch_players_by_ids(player_ids: list[str]) -> list[dict]:
-    """
-    Fetch canonical.players rows for the given UUIDs.
-    Uses fetch_all's chunked .in_() to stay under PostgREST URL limits.
-    """
     return fetch_all(
         "canonical", "players",
-        "id, full_name, video_urls",
+        "id, full_name, video_urls, committed_to",
         ("id", player_ids),
     )
 
@@ -143,8 +139,14 @@ def ingest_youtube_videos() -> int:
     players.sort(key=lambda p: order_index.get(p["id"], 9999))
 
     # Filter out players who already have video_urls
-    to_enrich = [p for p in players if not p.get("video_urls")]
-    skipped   = len(players) - len(to_enrich)
+    # Filter out commited players
+    to_enrich = [
+        p for p in players
+        if not p.get("video_urls")
+        and p.get("committed_to") is None
+    ]
+
+    skipped = len(players) - len(to_enrich)
 
     print(
         f"  [youtube] {len(players)} players fetched, "
