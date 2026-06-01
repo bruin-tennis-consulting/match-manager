@@ -37,3 +37,5 @@ yarn-error.log*
 .firebase/
 
 .vscode/launch.json
+# Claude Code local settings
+.claude/settings.local.json
