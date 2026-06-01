@@ -59,8 +59,14 @@ const Navbar = () => {
               </>
             )}
           </nav>
-          <div className={styles.buttonBox}>
-            <button onClick={handleSignOut}>Sign Out</button>
+          <div className={styles.rightNav}>
+            <Link href="/recruitment-portal" className={styles.recruitingLink}>
+              Recruiting Portal{' '}
+              <span className={styles.navBetaBadge}>Beta</span>
+            </Link>
+            <div className={styles.buttonBox}>
+              <button onClick={handleSignOut}>Sign Out</button>
+            </div>
           </div>
         </div>
       </header>

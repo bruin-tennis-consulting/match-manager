@@ -18,6 +18,10 @@
 # misc
 .DS_Store
 
+# Python
+__pycache__/
+*.pyc
+
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -33,3 +37,5 @@ yarn-error.log*
 .firebase/
 
 .vscode/launch.json
+# Claude Code local settings
+.claude/settings.local.json

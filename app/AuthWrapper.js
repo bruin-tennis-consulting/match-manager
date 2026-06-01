@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth } from '@/app/services/initializeFirebase'
 import { getUserProfile } from '@/app/services/userInfo'
+import { upsertCoach } from '@/app/services/coaches'
 import LandingPage from '@/app/components/LandingPage'
 import Loading from './components/Loading'
 import styles from '@/app/styles/Navbar.module.css'
@@ -13,20 +14,25 @@ const AuthContext = createContext()
 export const AuthProvider = ({ children }) => {
   const [authUser, setAuthUser] = useState(null)
   const [userProfile, setUserProfile] = useState(null)
+  const [coachRecord, setCoachRecord] = useState(null) // new state for coach record
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setAuthUser(user)
       if (user) {
-        const userProfile = await getUserProfile(user.uid)
+        const [userProfile, coachRecord] = await Promise.all([
+          getUserProfile(user.uid),
+          upsertCoach(user) // runs in parallel with getUserProfile
+        ])
         setUserProfile(userProfile)
+        setCoachRecord(coachRecord) // add useState for this
       } else {
         setUserProfile(null)
+        setCoachRecord(null)
       }
       setLoading(false)
     })
-
     return () => unsubscribe()
   }, [])
 
@@ -61,7 +67,12 @@ export const AuthProvider = ({ children }) => {
   return (
     <div style={{ width: '100%' }}>
       <AuthContext.Provider
-        value={{ authUser, userProfile: memoizedUserProfile, handleSignOut }}
+        value={{
+          authUser,
+          userProfile: memoizedUserProfile,
+          handleSignOut,
+          coachRecord
+        }}
       >
         {authUser ? children : <LandingPage />}
       </AuthContext.Provider>
