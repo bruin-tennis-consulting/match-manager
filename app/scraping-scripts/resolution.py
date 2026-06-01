@@ -51,6 +51,8 @@ from db.client import supabase, fetch_all
 
 ALL_SOURCES = ["tennisrecruiting.net", "USTA", "UTR"]
 
+_BATCH_SIZE = 500  # Max rows per upsert batch (Supabase/PostgREST safe limit)
+
 # Schema-scoped table accessors
 _raw        = lambda t: supabase.schema("raw").table(t)
 _resolution = lambda t: supabase.schema("resolution").table(t)
@@ -65,16 +67,35 @@ def _similarity(a: str, b: str) -> float:
     return SequenceMatcher(None, a.lower().strip(), b.lower().strip()).ratio()
 
 
+def _batch_upsert(table_fn, rows: list[dict], on_conflict: str) -> list[dict]:
+    """Upsert rows in chunks; return all inserted/updated records."""
+    results = []
+    for i in range(0, len(rows), _BATCH_SIZE):
+        chunk = rows[i : i + _BATCH_SIZE]
+        res = table_fn().upsert(chunk, on_conflict=on_conflict).execute()
+        results.extend(res.data or [])
+    return results
+
+
+def _batch_insert(table_fn, rows: list[dict]) -> list[dict]:
+    """Insert rows in chunks; return all inserted records (with server-assigned IDs)."""
+    results = []
+    for i in range(0, len(rows), _BATCH_SIZE):
+        chunk = rows[i : i + _BATCH_SIZE]
+        res = table_fn().insert(chunk).execute()
+        results.extend(res.data or [])
+    return results
+
+
 # ---------------------------------------------------------------------------
 # External ID extraction — per-source mapping
 # ---------------------------------------------------------------------------
 
-_TR_BASE_URL    = "https://www.tennisrecruiting.net"
-_TR_NO_PHOTO    = "/img/nophoto.gif"
+_TR_BASE_URL = "https://www.tennisrecruiting.net"
+_TR_NO_PHOTO = "/img/nophoto.gif"
 
 
 def _extract_image_url(source: str, raw_json: dict) -> str | None:
-    """Return a full image URL for a player, or None if no real photo is available."""
     if source != "tennisrecruiting.net":
         return None
     photo = (raw_json.get("player_extra") or {}).get("photo_path")
@@ -84,10 +105,6 @@ def _extract_image_url(source: str, raw_json: dict) -> str | None:
 
 
 def _extract_external_ids(source: str, raw_json: dict) -> dict[str, str | None]:
-    """
-    Pull cross-source-matchable external IDs from a raw_json blob.
-    Each source stores them in a different location.
-    """
     extra  = raw_json.get("player_extra", {})
     player = raw_json.get("player", {})
 
@@ -97,13 +114,11 @@ def _extract_external_ids(source: str, raw_json: dict) -> dict[str, str | None]:
             "usta_id": str(extra["usta_uaid"]) if extra.get("usta_uaid") else None,
         }
     if source == "UTR":
-        # The UTR source_id IS the utr_id
         return {
             "utr_id":  str(player["_source_id"]) if player.get("_source_id") else None,
             "usta_id": None,
         }
     if source == "USTA":
-        # The USTA source_id IS the usta uaid
         return {
             "utr_id":  None,
             "usta_id": str(player["_source_id"]) if player.get("_source_id") else None,
@@ -129,74 +144,16 @@ def _load_existing_player_mappings(sources: list[str]) -> dict[tuple[str, str], 
     return {(r["source"], r["source_id"]): r["canonical_id"] for r in (result.data or [])}
 
 
-def _upsert_player_mapping(
-    source: str, source_id: str, canonical_id: str,
-    alias_name: str | None, confidence: float, method: str,
-) -> None:
-    _resolution("player_mappings").upsert(
-        {
-            "canonical_id": canonical_id,
-            "source":       source,
-            "source_id":    str(source_id),
-            "alias_name":   alias_name,
-            "confidence":   confidence,
-            "match_method": method,
-            "created_at":   _now(),
-        },
-        on_conflict="source,source_id",
-    ).execute()
-
-
-def _create_canonical_player(source: str, raw_json: dict) -> str:
-    """Insert a new canonical.players row. Returns UUID."""
-    p   = raw_json.get("player", {})
-    extra = raw_json.get("player_extra", {})
-    ids = _extract_external_ids(source, raw_json)
-    result = _canonical("players").insert(
-        {
-            "full_name":     p.get("full_name"),
-            "first_name":    p.get("first_name"),
-            "last_name":     p.get("last_name"),
-            "date_of_birth": p.get("date_of_birth"),
-            "grad_year":     p.get("grad_year"),
-            "gender":        p.get("gender"),
-            "region":        p.get("region"),
-            "country_code":  p.get("country_code"),
-            "height":        p.get("height"),
-            "dominant_hand": p.get("dominant_hand"),
-            "play_style":    p.get("play_style"),
-            "utr_id":        ids.get("utr_id"),
-            "usta_id":       ids.get("usta_id"),
-            # enriched fields from player_extra
-            "city":              extra.get("city"),
-            "state":             extra.get("state_code"),
-            "high_school":       extra.get("highschool"),
-            "committed_to":      extra.get("committed_to"),
-            "stars":             extra.get("stars"),
-            "academy":       extra.get("academy"),
-            "international": extra.get("international"),
-            "video_urls":    extra.get("video_urls") or None,
-            "image_url":     _extract_image_url(source, raw_json),
-            "created_at":    _now(),
-            "updated_at":    _now(),
-        }
-    ).execute()
-    return result.data[0]["id"]
-
-
-def _backfill_canonical_player_ids(canonical_id: str, ids: dict[str, str | None]) -> None:
-    """Write back any external IDs we learned from a new source without overwriting existing ones."""
-    updates = {k: v for k, v in ids.items() if v is not None}
-    if updates:
-        updates["updated_at"] = _now()
-        _canonical("players").update(updates).eq("id", canonical_id).execute()
-
-
 def _match_player(
     source: str, raw_json: dict, canonical_players: list[dict],
+    utr_index: dict[str, dict],
+    usta_index: dict[str, dict],
+    name_gender_index: dict[tuple[str, str], dict],
+    name_gender_year_index: dict[tuple[str, str, str | None], dict],
 ) -> tuple[str | None, float, str]:
     """
     Try to find an existing canonical player for a raw record.
+    Uses pre-built indexes for O(1) lookups instead of O(n) scans.
     Returns (canonical_id | None, confidence, method).
     """
     p         = raw_json.get("player", {})
@@ -207,40 +164,34 @@ def _match_player(
     utr_id    = ids.get("utr_id")
     usta_id   = ids.get("usta_id")
 
-    # 1. External ID — strongest cross-source signal
-    for canon in canonical_players:
-        if utr_id  and canon.get("utr_id")  == utr_id:
-            return canon["id"], 1.0, "exact_external_id"
-        if usta_id and canon.get("usta_id") == usta_id:
-            return canon["id"], 1.0, "exact_external_id"
+    # 1. External ID — O(1)
+    if utr_id and utr_id in utr_index:
+        return utr_index[utr_id]["id"], 1.0, "exact_external_id"
+    if usta_id and usta_id in usta_index:
+        return usta_index[usta_id]["id"], 1.0, "exact_external_id"
 
     if not name:
         return None, 0.0, "no_name"
 
-    # 2. Exact name + grad_year + gender  (TR and UTR always have grad_year)
+    name_lower = name.lower()
+
+    # 2. Exact name + grad_year + gender — O(1)
     if grad_year:
-        for canon in canonical_players:
-            if (
-                canon.get("full_name", "").strip().lower() == name.lower()
-                and canon.get("grad_year") == grad_year
-                and canon.get("gender")    == gender
-            ):
-                return canon["id"], 0.95, "exact_name_grad_year"
+        canon = name_gender_year_index.get((name_lower, gender, str(grad_year)))
+        if canon:
+            return canon["id"], 0.95, "exact_name_grad_year"
 
-    # 3. Exact name + gender  (USTA doesn't expose grad_year)
-    for canon in canonical_players:
-        if (
-            canon.get("full_name", "").strip().lower() == name.lower()
-            and canon.get("gender") == gender
-        ):
-            return canon["id"], 0.85, "exact_name_gender"
+    # 3. Exact name + gender — O(1)
+    canon = name_gender_index.get((name_lower, gender))
+    if canon:
+        return canon["id"], 0.85, "exact_name_gender"
 
-    # 4. Fuzzy name — same gender bucket, same grad_year bucket when available
+    # 4. Fuzzy name — still O(n) within same gender/year bucket, unavoidable
     best_score, best_id = 0.0, None
     for canon in canonical_players:
         if canon.get("gender") != gender:
             continue
-        if grad_year and canon.get("grad_year") and canon.get("grad_year") != grad_year:
+        if grad_year and canon.get("grad_year") and str(canon.get("grad_year")) != str(grad_year):
             continue
         sim = _similarity(name, canon.get("full_name") or "")
         if sim > best_score:
@@ -252,6 +203,30 @@ def _match_player(
     return None, 0.0, "no_match"
 
 
+def _build_player_indexes(
+    canonical_players: list[dict],
+) -> tuple[dict, dict, dict, dict]:
+    """Build O(1) lookup indexes over canonical players."""
+    utr_index:             dict[str, dict] = {}
+    usta_index:            dict[str, dict] = {}
+    name_gender_index:     dict[tuple[str, str], dict] = {}
+    name_gender_year_index: dict[tuple[str, str, str | None], dict] = {}
+
+    for c in canonical_players:
+        if c.get("utr_id"):
+            utr_index[str(c["utr_id"])] = c
+        if c.get("usta_id"):
+            usta_index[str(c["usta_id"])] = c
+        name_lower = (c.get("full_name") or "").strip().lower()
+        gender     = c.get("gender")
+        if name_lower:
+            name_gender_index[(name_lower, gender)] = c
+            grad_year = str(c["grad_year"]) if c.get("grad_year") else None
+            name_gender_year_index[(name_lower, gender, grad_year)] = c
+
+    return utr_index, usta_index, name_gender_index, name_gender_year_index
+
+
 def resolve_players(sources: list[str] | None = None) -> dict[tuple[str, str], str]:
     """
     Resolve all unresolved raw.players rows for the given sources.
@@ -260,7 +235,7 @@ def resolve_players(sources: list[str] | None = None) -> dict[tuple[str, str], s
     sources  = sources or ALL_SOURCES
     existing = _load_existing_player_mappings(sources)
 
-    raw_rows = fetch_all("raw", "players", "source,source_id,raw_json", ("source", sources))
+    raw_rows   = fetch_all("raw", "players", "source,source_id,raw_json", ("source", sources))
     unresolved = [r for r in raw_rows if (r["source"], r["source_id"]) not in existing]
 
     if not unresolved:
@@ -268,28 +243,101 @@ def resolve_players(sources: list[str] | None = None) -> dict[tuple[str, str], s
         return existing
 
     canonical_players = _load_canonical_players()
-    resolved = dict(existing)
-    counts   = {"matched": 0, "new": 0}
+    indexes           = _build_player_indexes(canonical_players)
+    resolved          = dict(existing)
+    counts            = {"matched": 0, "new": 0}
+
+    # --- Phase 1: match all rows against existing canonical players ---
+    to_create:   list[dict] = []   # rows that need a new canonical player
+    to_create_meta: list[dict] = []  # parallel metadata for mapping construction
+    mapping_rows: list[dict] = []  # rows ready to upsert into resolution.player_mappings
 
     for row in unresolved:
         source, source_id, raw_json = row["source"], row["source_id"], row["raw_json"]
         alias = raw_json.get("player", {}).get("full_name")
 
-        canonical_id, confidence, method = _match_player(source, raw_json, canonical_players)
+        canonical_id, confidence, method = _match_player(source, raw_json, canonical_players, *indexes)
 
-        if canonical_id is None:
-            canonical_id = _create_canonical_player(source, raw_json)
-            confidence, method = 1.0, "new"
-            new_row = _canonical("players").select("*").eq("id", canonical_id).execute()
-            if new_row.data:
-                canonical_players.append(new_row.data[0])
-            counts["new"] += 1
-        else:
-            _backfill_canonical_player_ids(canonical_id, _extract_external_ids(source, raw_json))
+        if canonical_id is not None:
+            # Collect external ID backfills (one update per matched canonical)
+            ids = _extract_external_ids(source, raw_json)
+            updates = {k: v for k, v in ids.items() if v is not None}
+            if updates:
+                updates["updated_at"] = _now()
+                _canonical("players").update(updates).eq("id", canonical_id).execute()
             counts["matched"] += 1
+            mapping_rows.append({
+                "canonical_id": canonical_id,
+                "source":       source,
+                "source_id":    str(source_id),
+                "alias_name":   alias,
+                "confidence":   confidence,
+                "match_method": method,
+                "created_at":   _now(),
+            })
+            resolved[(source, source_id)] = canonical_id
+        else:
+            to_create.append(raw_json)
+            to_create_meta.append({"source": source, "source_id": source_id, "alias": alias})
 
-        _upsert_player_mapping(source, source_id, canonical_id, alias, confidence, method)
-        resolved[(source, source_id)] = canonical_id
+    # --- Phase 2: batch-insert new canonical players ---
+    if to_create:
+        insert_payloads = []
+        for raw_json, meta in zip(to_create, to_create_meta):
+            source = meta["source"]
+            p      = raw_json.get("player", {})
+            extra  = raw_json.get("player_extra", {})
+            ids    = _extract_external_ids(source, raw_json)
+            insert_payloads.append({
+                "full_name":     p.get("full_name"),
+                "first_name":    p.get("first_name"),
+                "last_name":     p.get("last_name"),
+                "date_of_birth": p.get("date_of_birth"),
+                "grad_year":     p.get("grad_year"),
+                "gender":        p.get("gender"),
+                "region":        p.get("region"),
+                "country_code":  p.get("country_code"),
+                "height":        p.get("height"),
+                "dominant_hand": p.get("dominant_hand"),
+                "play_style":    p.get("play_style"),
+                "utr_id":        ids.get("utr_id"),
+                "usta_id":       ids.get("usta_id"),
+                "city":          extra.get("city"),
+                "state":         extra.get("state_code"),
+                "high_school":   extra.get("highschool"),
+                "committed_to":  extra.get("committed_to"),
+                "stars":         extra.get("stars"),
+                "academy":       extra.get("academy"),
+                "international": extra.get("international"),
+                "video_urls":    extra.get("video_urls") or None,
+                "image_url":     _extract_image_url(source, raw_json),
+                "created_at":    _now(),
+                "updated_at":    _now(),
+            })
+
+        inserted = _batch_insert(lambda: _canonical("players"), insert_payloads)
+        counts["new"] = len(inserted)
+
+        # Re-index with newly inserted rows
+        canonical_players.extend(inserted)
+        indexes = _build_player_indexes(canonical_players)
+
+        for new_row, meta in zip(inserted, to_create_meta):
+            canonical_id = new_row["id"]
+            mapping_rows.append({
+                "canonical_id": canonical_id,
+                "source":       meta["source"],
+                "source_id":    str(meta["source_id"]),
+                "alias_name":   meta["alias"],
+                "confidence":   1.0,
+                "match_method": "new",
+                "created_at":   _now(),
+            })
+            resolved[(meta["source"], meta["source_id"])] = canonical_id
+
+    # --- Phase 3: batch-upsert all mappings in one go ---
+    if mapping_rows:
+        _batch_upsert(lambda: _resolution("player_mappings"), mapping_rows, "source,source_id")
 
     print(
         f"  [resolution] Players: {counts['matched']} matched, "
@@ -327,37 +375,6 @@ def _load_existing_tournament_mappings(sources: list[str]) -> dict[tuple[str, st
     return {(r["source"], r["source_id"]): r["canonical_id"] for r in (result.data or [])}
 
 
-def _upsert_tournament_mapping(
-    source: str, source_id: str, canonical_id: str, confidence: float, method: str,
-) -> None:
-    _resolution("tournament_mappings").upsert(
-        {
-            "canonical_id": canonical_id,
-            "source":       source,
-            "source_id":    source_id,
-            "confidence":   confidence,
-            "match_method": method,
-            "created_at":   _now(),
-        },
-        on_conflict="source,source_id",
-    ).execute()
-
-
-def _create_canonical_tournament(source: str, raw_json: dict) -> str:
-    result = _canonical("tournaments").insert(
-        {
-            "name":       raw_json.get("name"),
-            "start_date": raw_json.get("start"),
-            "end_date":   raw_json.get("end"),
-            "location":   raw_json.get("location"),
-            "level":      _infer_tournament_level(raw_json.get("name")),
-            "source":     source,
-            "created_at": _now(),
-        }
-    ).execute()
-    return result.data[0]["id"]
-
-
 def resolve_tournaments(sources: list[str] | None = None) -> dict[tuple[str, str], str]:
     """
     Resolve all unresolved raw.tournaments rows for the given sources.
@@ -366,7 +383,7 @@ def resolve_tournaments(sources: list[str] | None = None) -> dict[tuple[str, str
     sources  = sources or ALL_SOURCES
     existing = _load_existing_tournament_mappings(sources)
 
-    raw_rows = fetch_all("raw", "tournaments", "source,source_tournament_id,raw_json", ("source", sources))
+    raw_rows   = fetch_all("raw", "tournaments", "source,source_tournament_id,raw_json", ("source", sources))
     unresolved = [
         r for r in raw_rows
         if (r["source"], r["source_tournament_id"]) not in existing
@@ -377,38 +394,74 @@ def resolve_tournaments(sources: list[str] | None = None) -> dict[tuple[str, str
         return existing
 
     canonical_tournaments = fetch_all("canonical", "tournaments")
-    resolved = dict(existing)
-    counts   = {"matched": 0, "new": 0}
+    # Build O(1) index: (name_lower, start_date) -> canonical row
+    canon_t_index: dict[tuple[str, str], dict] = {
+        ((c.get("name") or "").strip().lower(), c.get("start_date") or ""): c
+        for c in canonical_tournaments
+    }
+
+    resolved     = dict(existing)
+    counts       = {"matched": 0, "new": 0}
+    to_create:   list[dict] = []
+    to_create_meta: list[dict] = []
+    mapping_rows: list[dict] = []
 
     for row in unresolved:
         source    = row["source"]
         source_id = row["source_tournament_id"]
         raw_json  = row["raw_json"]
         name      = (raw_json.get("name") or "").strip()
-        start     = raw_json.get("start")
+        start     = raw_json.get("start") or ""
 
-        canonical_id = next(
-            (
-                c["id"] for c in canonical_tournaments
-                if (c.get("name") or "").strip().lower() == name.lower()
-                and c.get("start_date") == start
-            ),
-            None,
-        )
-
-        if canonical_id is None:
-            canonical_id = _create_canonical_tournament(source, raw_json)
-            new_t = _canonical("tournaments").select("*").eq("id", canonical_id).execute()
-            if new_t.data:
-                canonical_tournaments.append(new_t.data[0])
-            counts["new"] += 1
-            method = "new"
-        else:
+        canon = canon_t_index.get((name.lower(), start))
+        if canon:
+            canonical_id = canon["id"]
             counts["matched"] += 1
-            method = "exact"
+            mapping_rows.append({
+                "canonical_id": canonical_id,
+                "source":       source,
+                "source_id":    source_id,
+                "confidence":   1.0,
+                "match_method": "exact",
+                "created_at":   _now(),
+            })
+            resolved[(source, source_id)] = canonical_id
+        else:
+            to_create.append(raw_json)
+            to_create_meta.append({"source": source, "source_id": source_id})
 
-        _upsert_tournament_mapping(source, source_id, canonical_id, 1.0, method)
-        resolved[(source, source_id)] = canonical_id
+    if to_create:
+        insert_payloads = [
+            {
+                "name":       rj.get("name"),
+                "start_date": rj.get("start"),
+                "end_date":   rj.get("end"),
+                "location":   rj.get("location"),
+                "level":      _infer_tournament_level(rj.get("name")),
+                "source":     meta["source"],
+                "created_at": _now(),
+            }
+            for rj, meta in zip(to_create, to_create_meta)
+        ]
+        inserted = _batch_insert(lambda: _canonical("tournaments"), insert_payloads)
+        counts["new"] = len(inserted)
+
+        for new_t, meta in zip(inserted, to_create_meta):
+            canonical_id = new_t["id"]
+            mapping_rows.append({
+                "canonical_id": canonical_id,
+                "source":       meta["source"],
+                "source_id":    meta["source_id"],
+                "confidence":   1.0,
+                "match_method": "new",
+                "created_at":   _now(),
+            })
+            resolved[(meta["source"], meta["source_id"])] = canonical_id
+            # Keep index fresh for any duplicate names within the same batch
+            canon_t_index[((new_t.get("name") or "").strip().lower(), new_t.get("start_date") or "")] = new_t
+
+    if mapping_rows:
+        _batch_upsert(lambda: _resolution("tournament_mappings"), mapping_rows, "source,source_id")
 
     print(
         f"  [resolution] Tournaments: {counts['matched']} matched, "
@@ -422,12 +475,6 @@ def resolve_tournaments(sources: list[str] | None = None) -> dict[tuple[str, str
 # ===========================================================================
 
 def _scores_compatible(a: str | None, b: str | None) -> bool:
-    """
-    Return True if two score strings are plausibly the same match.
-    Normalises separators and strips tiebreak detail before comparing.
-    e.g. "6-4 6-2" == "6-4;6-2" == "6-4, 6-2"
-         "7-6(4) 6-2" == "7-6 6-2"
-    """
     if not a or not b:
         return False
     def _strip(s: str) -> str:
@@ -438,7 +485,6 @@ def _scores_compatible(a: str | None, b: str | None) -> bool:
 
 
 def _parse_sets(score: str | None) -> list[dict] | None:
-    """Parse "6-4;3-6;7-5(4)" -> [{"p":6,"o":4}, {"p":3,"o":6}, {"p":7,"o":5,"tb":4}]."""
     if not score:
         return None
     sets = []
@@ -460,16 +506,6 @@ def _parse_sets(score: str | None) -> list[dict] | None:
 
 
 def _make_match_key(pid: str, oid: str, date: str | None) -> tuple:
-    """
-    Build an order-independent match index key.
-
-    TennisRecruiting reports each match from both players' perspectives,
-    producing two raw rows with the player pair in opposite order.
-    Sorting the pair and truncating the date to YYYY-MM-DD ensures both
-    rows hash to the same key regardless of who is listed as player vs
-    opponent and regardless of time-of-day / timezone differences in
-    played_at values.
-    """
     return (min(pid, oid), max(pid, oid), (date or "")[:10])
 
 
@@ -483,147 +519,102 @@ def _load_existing_match_mappings(sources: list[str]) -> dict[tuple[str, str], s
     return {(r["source"], r["source_match_id"]): r["canonical_id"] for r in (result.data or [])}
 
 
-def _upsert_match_mapping(
-    source: str, source_match_id: str, canonical_id: str, confidence: float, method: str,
+def _resolve_stubs_batch(
+    stub_requests: list[dict],
+    player_map: dict[tuple[str, str], str],
 ) -> None:
-    _resolution("match_mappings").upsert(
-        {
-            "canonical_id":    canonical_id,
-            "source":          source,
-            "source_match_id": source_match_id,
-            "confidence":      confidence,
-            "match_method":    method,
-            "created_at":      _now(),
-        },
-        on_conflict="source,source_match_id",
-    ).execute()
-
-
-def _get_or_create_stub_player(
-    source: str,
-    source_id: str | int | None,
-    name: str | None,
-    player_map: dict[tuple[str, str], str],
-) -> str | None:
     """
-    Return a canonical player UUID for an opponent we've seen in match data
-    but haven't scraped a full profile for yet.
-
-    Resolution order:
-      1. Already in player_map from this run — return immediately.
-      2. Already in resolution.player_mappings in the DB — load and return.
-      3. Create a minimal canonical.players stub (name only) and add a
-         player_mapping with method="stub" so a future profile scrape will
-         find and enrich it via the normal exact_external_id / name matching
-         path rather than creating a duplicate.
-
-    Returns None only when we have neither a source_id nor a name to work with.
+    Batch-create canonical player stubs for unknown opponents and update player_map in-place.
+    stub_requests: list of {"source", "source_id", "name"} dicts (source_id may be None).
     """
-    if not source_id and not name:
-        return None
+    # De-duplicate by (source, source_id) — multiple matches may reference the same unknown opponent
+    seen:    dict[tuple, dict] = {}
+    no_sid:  list[dict] = []
 
-    sid_str = str(source_id) if source_id else None
+    for req in stub_requests:
+        source, sid, name = req["source"], req["source_id"], req["name"]
+        sid_str = str(sid) if sid else None
+        if sid_str:
+            key = (source, sid_str)
+            if key not in player_map and key not in seen:
+                seen[key] = req
+        elif name:
+            no_sid.append(req)
 
-    # 1. Already resolved in this run
-    if sid_str:
-        existing = player_map.get((source, sid_str))
-        if existing:
-            return existing
+    # DB lookup for those with a source_id — one query per source
+    by_source: dict[str, list[str]] = defaultdict(list)
+    for (source, sid_str) in seen:
+        by_source[source].append(sid_str)
 
-    # 2. Already in the DB mapping table
-    if sid_str:
-        db_result = (
-            _resolution("player_mappings")
-            .select("canonical_id")
-            .eq("source", source)
-            .eq("source_id", sid_str)
-            .execute()
-        )
-        if db_result.data:
-            canonical_id = db_result.data[0]["canonical_id"]
-            if sid_str:
-                player_map[(source, sid_str)] = canonical_id
-            return canonical_id
+    # This query needs both .eq("source") AND .in_("source_id"), which fetch_all
+    # can't express. Do it directly, chunking source_id to stay under PostgREST's
+    # URL length limit (same _IN_CHUNK logic that lives in fetch_all).
+    _IN_CHUNK = 50
+    already_in_db: dict[tuple[str, str], str] = {}
+    for source, sid_list in by_source.items():
+        for i in range(0, len(sid_list), _IN_CHUNK):
+            chunk = sid_list[i : i + _IN_CHUNK]
+            res = (
+                _resolution("player_mappings")
+                .select("source_id,canonical_id")
+                .eq("source", source)
+                .in_("source_id", chunk)
+                .execute()
+            )
+            for r in res.data or []:
+                already_in_db[(source, r["source_id"])] = r["canonical_id"]
 
-    # 3. Create a minimal stub — name only, no profile data yet
-    parts     = (name or "").strip().split(None, 1)
-    stub_row  = {
-        "full_name":  name,
-        "first_name": parts[0] if parts else None,
-        "last_name":  parts[1] if len(parts) > 1 else None,
-        "created_at": _now(),
-        "updated_at": _now(),
-    }
-    insert_result = _canonical("players").insert(stub_row).execute()
-    canonical_id  = insert_result.data[0]["id"]
+    to_insert_stubs: list[dict] = []
+    to_insert_meta:  list[dict] = []
 
-    # Register the mapping so future profile scrapes enrich this stub
-    # instead of creating a duplicate
-    if sid_str:
-        _upsert_player_mapping(
-            source      = source,
-            source_id   = sid_str,
-            canonical_id= canonical_id,
-            alias_name  = name,
-            confidence  = 0.7,          # lower confidence — name-only stub
-            method      = "stub",
-        )
-        player_map[(source, sid_str)] = canonical_id
+    for (source, sid_str), req in seen.items():
+        if (source, sid_str) in already_in_db:
+            player_map[(source, sid_str)] = already_in_db[(source, sid_str)]
+        else:
+            parts = (req["name"] or "").strip().split(None, 1)
+            to_insert_stubs.append({
+                "full_name":  req["name"],
+                "first_name": parts[0] if parts else None,
+                "last_name":  parts[1] if len(parts) > 1 else None,
+                "created_at": _now(),
+                "updated_at": _now(),
+            })
+            to_insert_meta.append({"source": source, "source_id": sid_str, "name": req["name"]})
 
-    return canonical_id
+    # Name-only stubs (no source_id) — always insert
+    for req in no_sid:
+        parts = (req["name"] or "").strip().split(None, 1)
+        to_insert_stubs.append({
+            "full_name":  req["name"],
+            "first_name": parts[0] if parts else None,
+            "last_name":  parts[1] if len(parts) > 1 else None,
+            "created_at": _now(),
+            "updated_at": _now(),
+        })
+        to_insert_meta.append({"source": req["source"], "source_id": None, "name": req["name"]})
 
+    if not to_insert_stubs:
+        return
 
-def _create_canonical_match(
-    rj: dict,
-    source: str,
-    player_map: dict[tuple[str, str], str],
-    tournament_map: dict[tuple[str, str], str],
-) -> str | None:
-    """
-    Insert a new canonical.matches stub from a raw_json blob.
-    If the opponent has no canonical player yet, creates a name-only stub
-    so opponent_id is never null.
-    Returns UUID or None if the primary player can't be resolved.
-    """
-    player_id = player_map.get((source, str(rj.get("player_source_id", ""))))
-    if not player_id:
-        return None
+    inserted = _batch_insert(lambda: _canonical("players"), to_insert_stubs)
 
-    opp_raw     = rj.get("opponent_source_id")
-    opp_name    = rj.get("opponent_name")
-    opponent_id = player_map.get((source, str(opp_raw))) if opp_raw else None
+    mapping_rows: list[dict] = []
+    for new_p, meta in zip(inserted, to_insert_meta):
+        canonical_id = new_p["id"]
+        if meta["source_id"]:
+            player_map[(meta["source"], meta["source_id"])] = canonical_id
+            mapping_rows.append({
+                "canonical_id": canonical_id,
+                "source":       meta["source"],
+                "source_id":    meta["source_id"],
+                "alias_name":   meta["name"],
+                "confidence":   0.7,
+                "match_method": "stub",
+                "created_at":   _now(),
+            })
 
-    # Create a stub if we know who the opponent is but haven't scraped them yet
-    if opponent_id is None:
-        opponent_id = _get_or_create_stub_player(
-            source, opp_raw, opp_name, player_map
-        )
-
-    outcome   = rj.get("outcome")
-    winner_id = player_id if outcome == "win" else (opponent_id or None)
-
-    t_name        = (rj.get("tournament_name") or "").strip().upper()
-    t_start       = rj.get("tournament_start") or ""
-    tournament_id = tournament_map.get((source, f"{t_name}|{t_start}"))
-
-    result = _canonical("matches").insert(
-        {
-            "player_id":     player_id,
-            "opponent_id":   opponent_id,
-            "winner_id":     winner_id,
-            "tournament_id": tournament_id,
-            "outcome":       outcome,
-            "score":         rj.get("score"),
-            "sets":          _parse_sets(rj.get("score")),
-            "round":         rj.get("round"),
-            "best_of":       rj.get("best_of"),
-            "status":        rj.get("status", "completed"),
-            "source":        source,
-            "played_at":     rj.get("played_at"),
-            "ingested_at":   _now(),
-        }
-    ).execute()
-    return result.data[0]["id"]
+    if mapping_rows:
+        _batch_upsert(lambda: _resolution("player_mappings"), mapping_rows, "source,source_id")
 
 
 def resolve_matches(
@@ -639,7 +630,7 @@ def resolve_matches(
     sources  = sources or ALL_SOURCES
     existing = _load_existing_match_mappings(sources)
 
-    raw_rows = fetch_all("raw", "matches", "source,source_match_id,raw_json", ("source", sources))
+    raw_rows   = fetch_all("raw", "matches", "source,source_match_id,raw_json", ("source", sources))
     unresolved = [
         r for r in raw_rows
         if (r["source"], r["source_match_id"]) not in existing
@@ -649,13 +640,7 @@ def resolve_matches(
         print(f"  [resolution] Matches: nothing new  ({len(existing)} already mapped)")
         return existing
 
-    # Load all canonical matches and index by a normalised, order-independent key:
-    #   (min(player_id, opponent_id), max(player_id, opponent_id), played_at[:10])
-    #
-    # TennisRecruiting reports each match from both players' perspectives, so the
-    # same match arrives as two raw rows with the player pair in reverse order.
-    # Using _make_match_key collapses both orderings to a single entry, preventing
-    # the second perspective from being inserted as a new canonical match.
+    # Build canonical match index
     canon_rows = fetch_all("canonical", "matches")
     canon_index: dict[tuple, list[dict]] = defaultdict(list)
     for c in canon_rows:
@@ -666,6 +651,32 @@ def resolve_matches(
     resolved = dict(existing)
     counts   = {"exact": 0, "date_only": 0, "new": 0, "skipped": 0, "stubs": 0}
 
+    # --- Pass 1: collect all rows needing opponent stubs ---
+    stub_requests: list[dict] = []
+    for row in unresolved:
+        rj       = row["raw_json"]
+        source   = row["source"]
+        opp_raw  = rj.get("opponent_source_id")
+        opp_name = rj.get("opponent_name")
+        player_id = player_map.get((source, str(rj.get("player_source_id", ""))))
+
+        if not player_id:
+            continue  # will be skipped in pass 2
+        if opp_raw and not player_map.get((source, str(opp_raw))):
+            stub_requests.append({"source": source, "source_id": opp_raw, "name": opp_name})
+        elif not opp_raw and opp_name:
+            stub_requests.append({"source": source, "source_id": None, "name": opp_name})
+
+    # Batch-create all missing opponent stubs in one round-trip cluster
+    if stub_requests:
+        _resolve_stubs_batch(stub_requests, player_map)
+        counts["stubs"] = len(stub_requests)
+
+    # --- Pass 2: classify each row as matched / new ---
+    to_insert_matches: list[dict] = []
+    to_insert_meta:    list[dict] = []
+    mapping_rows:      list[dict] = []
+
     for row in unresolved:
         source          = row["source"]
         source_match_id = row["source_match_id"]
@@ -673,33 +684,21 @@ def resolve_matches(
 
         player_id   = player_map.get((source, str(rj.get("player_source_id", ""))))
         opp_raw     = rj.get("opponent_source_id")
-        opp_name    = rj.get("opponent_name")
         opponent_id = player_map.get((source, str(opp_raw))) if opp_raw else None
 
         if not player_id:
             counts["skipped"] += 1
             continue
 
-        # If the opponent isn't resolved yet, create a name-only stub now so
-        # the canon_index lookup and the eventual match insert both have a
-        # valid opponent UUID. A full profile scrape will enrich the stub later.
-        if opponent_id is None and (opp_raw or opp_name):
-            opponent_id = _get_or_create_stub_player(
-                source, opp_raw, opp_name, player_map
-            )
-            if opponent_id:
-                counts["stubs"] += 1
-
-        played_at    = rj.get("played_at")
-        raw_score    = rj.get("score")
-        lookup_key   = _make_match_key(player_id, opponent_id, played_at) if opponent_id else None
+        played_at  = rj.get("played_at")
+        raw_score  = rj.get("score")
+        lookup_key = _make_match_key(player_id, opponent_id, played_at) if opponent_id else None
         canonical_id = None
         confidence   = 1.0
         method       = "new"
 
         if lookup_key:
             candidates = canon_index.get(lookup_key, [])
-            # Prefer score-matching candidate first
             for candidate in candidates:
                 if _scores_compatible(raw_score, candidate.get("score")):
                     canonical_id = candidate["id"]
@@ -707,31 +706,79 @@ def resolve_matches(
                     method       = "same_players_date_score"
                     counts["exact"] += 1
                     break
-            # Fall back to date-only match
             if canonical_id is None and candidates:
                 canonical_id = candidates[0]["id"]
                 confidence   = 0.9
                 method       = "same_players_date"
                 counts["date_only"] += 1
 
-        if canonical_id is None:
-            canonical_id = _create_canonical_match(rj, source, player_map, tournament_map)
-            if canonical_id is None:
-                counts["skipped"] += 1
-                continue
-            # Add to in-memory index so later rows in this batch can match against it
-            new_c = _canonical("matches").select("*").eq("id", canonical_id).execute()
-            if new_c.data:
-                c    = new_c.data[0]
-                pid  = c.get("player_id")
-                oid  = c.get("opponent_id")
-                date = c.get("played_at")
-                if pid and oid and date:
-                    canon_index[_make_match_key(pid, oid, date)].append(c)
-            counts["new"] += 1
+        if canonical_id is not None:
+            mapping_rows.append({
+                "canonical_id":    canonical_id,
+                "source":          source,
+                "source_match_id": source_match_id,
+                "confidence":      confidence,
+                "match_method":    method,
+                "created_at":      _now(),
+            })
+            resolved[(source, source_match_id)] = canonical_id
+        else:
+            # Needs a new canonical match — collect for batch insert
+            outcome   = rj.get("outcome")
+            winner_id = player_id if outcome == "win" else (opponent_id or None)
+            t_name    = (rj.get("tournament_name") or "").strip().upper()
+            t_start   = rj.get("tournament_start") or ""
+            tournament_id = tournament_map.get((source, f"{t_name}|{t_start}"))
 
-        _upsert_match_mapping(source, source_match_id, canonical_id, confidence, method)
-        resolved[(source, source_match_id)] = canonical_id
+            to_insert_matches.append({
+                "player_id":     player_id,
+                "opponent_id":   opponent_id,
+                "winner_id":     winner_id,
+                "tournament_id": tournament_id,
+                "outcome":       outcome,
+                "score":         raw_score,
+                "sets":          _parse_sets(raw_score),
+                "round":         rj.get("round"),
+                "best_of":       rj.get("best_of"),
+                "status":        rj.get("status", "completed"),
+                "source":        source,
+                "played_at":     played_at,
+                "ingested_at":   _now(),
+            })
+            to_insert_meta.append({
+                "source":          source,
+                "source_match_id": source_match_id,
+                "player_id":       player_id,
+                "opponent_id":     opponent_id,
+                "played_at":       played_at,
+            })
+
+    # --- Pass 3: batch-insert new canonical matches ---
+    if to_insert_matches:
+        inserted = _batch_insert(lambda: _canonical("matches"), to_insert_matches)
+        counts["new"] = len(inserted)
+
+        for new_m, meta in zip(inserted, to_insert_meta):
+            canonical_id = new_m["id"]
+            mapping_rows.append({
+                "canonical_id":    canonical_id,
+                "source":          meta["source"],
+                "source_match_id": meta["source_match_id"],
+                "confidence":      1.0,
+                "match_method":    "new",
+                "created_at":      _now(),
+            })
+            resolved[(meta["source"], meta["source_match_id"])] = canonical_id
+            # Keep canon_index up-to-date for intra-batch deduplication
+            pid  = meta["player_id"]
+            oid  = meta["opponent_id"]
+            date = meta["played_at"]
+            if pid and oid and date:
+                canon_index[_make_match_key(pid, oid, date)].append(new_m)
+
+    # --- Pass 4: batch-upsert all mappings ---
+    if mapping_rows:
+        _batch_upsert(lambda: _resolution("match_mappings"), mapping_rows, "source,source_match_id")
 
     print(
         f"  [resolution] Matches: {counts['exact']} exact, "
