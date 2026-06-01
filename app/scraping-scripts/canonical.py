@@ -4,6 +4,7 @@ def promote_players(player_map: dict[tuple[str, str], str]) -> int:
     Fills in any fields that are currently null — never overwrites populated fields.
     """
     if not player_map:
+        print("  [canonical] Players: no player_map — skipping")
         return 0
 
     raw_rows = fetch_all("raw", "players")
@@ -15,6 +16,7 @@ def promote_players(player_map: dict[tuple[str, str], str]) -> int:
     }
 
     if not canonical_ids_needed:
+        print("  [canonical] Players: no mapped rows to enrich")
         return 0
 
     existing_rows = _fetch_in_batches("players", "id", list(canonical_ids_needed), "*")
@@ -22,7 +24,7 @@ def promote_players(player_map: dict[tuple[str, str], str]) -> int:
 
     ENRICHABLE_EXTRA = {
         "city", "state", "high_school", "high_school_state",
-        "committed_to", "stars", "image_url",
+        "committed_to", "nli_signed", "stars", "image_url",
         "academy", "international", "video_urls",
     }
 
@@ -46,7 +48,7 @@ def promote_players(player_map: dict[tuple[str, str], str]) -> int:
         src   = r["source"]
         updates = {}
 
-        # Core player fields — source-agnostic
+        # Core player fields — source-agnostic, fill nulls only
         for field in ["date_of_birth", "grad_year", "gender", "region",
                       "country_code", "height", "dominant_hand", "play_style"]:
             if current.get(field) is None and p.get(field) is not None:
@@ -59,6 +61,11 @@ def promote_players(player_map: dict[tuple[str, str], str]) -> int:
                 "state":         extra.get("state_code"),
                 "high_school":   extra.get("highschool"),
                 "committed_to":  extra.get("committed_to"),
+                "nli_signed":    next(
+                    (s.get("nli_signed") for s in (extra.get("school_interests") or [])
+                     if s.get("nli_signed")),
+                    None,
+                ),
                 "stars":         extra.get("stars"),
                 "image_url": (
                     "https://www.tennisrecruiting.net" + extra["photo_path"]
