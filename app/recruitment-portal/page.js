@@ -400,6 +400,24 @@ export default function RecruitmentPortal() {
             </div>
 
             <div className={styles.modalBody}>
+              {/* Player info */}
+              <div className={styles.section}>
+                <div className={styles.sectionTitle}>Player Info</div>
+                <div className={styles.grid}>
+                  <Stat
+                    label="Grad Year"
+                    value={(() => {
+                      const c = getClassInfo(selected)
+                      return c
+                        ? `${c.full}${c.estimated ? ' (est.)' : ''}`
+                        : null
+                    })()}
+                  />
+                  <Stat label="Country" value={selected.country_code} />
+                  <Stat label="Region" value={selected.region} />
+                </div>
+              </div>
+
               {/* USTA */}
               {selected.usta_rank != null && (
                 <div className={styles.section}>
@@ -488,24 +506,6 @@ export default function RecruitmentPortal() {
                   </div>
                 </div>
               )}
-
-              {/* Player info */}
-              <div className={styles.section}>
-                <div className={styles.sectionTitle}>Player Info</div>
-                <div className={styles.grid}>
-                  <Stat
-                    label="Grad Year"
-                    value={(() => {
-                      const c = getClassInfo(selected)
-                      return c
-                        ? `${c.full}${c.estimated ? ' (est.)' : ''}`
-                        : null
-                    })()}
-                  />
-                  <Stat label="Country" value={selected.country_code} />
-                  <Stat label="Region" value={selected.region} />
-                </div>
-              </div>
             </div>
           </div>
         </div>
