@@ -15,6 +15,7 @@ export async function GET() {
       country_code,
       grad_year,
       region,
+      image_url,
       player_rankings (
         source,
         ranking,
@@ -65,6 +66,7 @@ export async function GET() {
       country_code: p.country_code,
       grad_year: p.grad_year,
       region: p.region,
+      image_url: p.image_url ?? null,
       // USTA
       usta_rank: usta?.ranking ?? null,
       usta_points: usta?.points ?? null,

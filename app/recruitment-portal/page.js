@@ -300,17 +300,30 @@ export default function RecruitmentPortal() {
         <div className={styles.modalOverlay} onClick={() => setSelected(null)}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <div>
-                <h3 className={styles.modalName}>{selected.full_name}</h3>
-                <div className={styles.modalMeta}>
-                  {selected.gender === 'male' ? 'Boys' : 'Girls'}
-                  {selected.usta_age_division
-                    ? ` · ${selected.usta_age_division}`
-                    : ''}
-                  {selected.grad_year
-                    ? ` · Class of ${selected.grad_year}`
-                    : ''}
-                  {selected.country_code ? ` · ${selected.country_code}` : ''}
+              <div className={styles.modalHeaderLeft}>
+                {selected.image_url ? (
+                  <img
+                    src={selected.image_url}
+                    alt={selected.full_name}
+                    className={styles.modalAvatar}
+                  />
+                ) : (
+                  <div className={styles.modalAvatarFallback}>
+                    {selected.first_name?.[0] ?? selected.full_name?.[0] ?? '?'}
+                  </div>
+                )}
+                <div>
+                  <h3 className={styles.modalName}>{selected.full_name}</h3>
+                  <div className={styles.modalMeta}>
+                    {selected.gender === 'male' ? 'Boys' : 'Girls'}
+                    {selected.usta_age_division
+                      ? ` · ${selected.usta_age_division}`
+                      : ''}
+                    {selected.grad_year
+                      ? ` · Class of ${selected.grad_year}`
+                      : ''}
+                    {selected.country_code ? ` · ${selected.country_code}` : ''}
+                  </div>
                 </div>
               </div>
               <button
