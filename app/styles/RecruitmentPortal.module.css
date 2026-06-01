@@ -408,6 +408,12 @@
   color: #111827;
 }
 
+.videoGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 /* States */
 .loading {
   padding: 60px 40px;

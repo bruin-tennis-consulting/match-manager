@@ -104,6 +104,7 @@ export default function RecruitmentPortal() {
 
   // Build state options from actual data
   const currentYear = new Date().getFullYear()
+  const videos = selected?.video_urls ?? []
 
   const classes = useMemo(() => {
     const s = new Set()
@@ -220,6 +221,8 @@ export default function RecruitmentPortal() {
     return <div className={styles.error}>Error loading players: {error}</div>
 
   const pageNums = getPageNumbers(page, totalPages)
+
+  console.log(selected)
 
   return (
     <div className={styles.container}>
@@ -585,10 +588,61 @@ export default function RecruitmentPortal() {
                   </div>
                 </div>
               )}
+
+              {/* Videos */}
+              {videos.length > 0 && (
+                <div className={styles.section}>
+                  <div className={styles.sectionTitle}>Videos</div>
+
+                  <div className={styles.videoGrid}>
+                    {selected.video_urls.map((url, i) => {
+                      const id = getYouTubeId(url)
+                      if (!id) return null
+
+                      return (
+                        <div key={i} className={styles.videoItem}>
+                          <iframe
+                            className={styles.videoEmbed}
+                            src={`https://www.youtube.com/embed/${id}`}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
     </div>
   )
+}
+
+function getYouTubeId(url) {
+  try {
+    const u = new URL(url)
+
+    // youtu.be/VIDEO_ID
+    if (u.hostname.includes('youtu.be')) {
+      return u.pathname.slice(1)
+    }
+
+    // youtube.com/watch?v=VIDEO_ID
+    if (u.searchParams.get('v')) {
+      return u.searchParams.get('v')
+    }
+
+    // youtube.com/embed/VIDEO_ID
+    if (u.pathname.includes('/embed/')) {
+      return u.pathname.split('/embed/')[1]
+    }
+
+    return null
+  } catch {
+    return null
+  }
 }

@@ -7,11 +7,12 @@ Usage
 -----
     python ingest_pipeline.py
     python ingest_pipeline.py --sources tennisrecruiting usta utr
+    python ingest_pipeline.py --sources youtube
     python ingest_pipeline.py --scrape-only
     python ingest_pipeline.py --resolve-only
     python ingest_pipeline.py --promote-only
 
-    Tennis Recruiting Backfill (50)
+    Tennis Recruiting Backfill (100)
     python ingest_pipeline.py --backfill-stubs
 """
 
@@ -31,23 +32,34 @@ def _get_sources(requested: list[str], backfill_stubs: bool = False) -> dict:
 
     if "tennisrecruiting" in requested or "all" in requested:
         registry["tennisrecruiting"] = {
-            "label":  "TennisRecruiting",
-            "db_key": "tennisrecruiting.net",
-            "run": lambda: _run_tennisrecruiting(backfill_stubs=backfill_stubs),
+            "label":       "TennisRecruiting",
+            "db_key":      "tennisrecruiting.net",
+            "run":         lambda: _run_tennisrecruiting(backfill_stubs=backfill_stubs),
+            "scrape_only": False,
         }
 
     if "usta" in requested or "all" in requested:
         registry["usta"] = {
-            "label":  "USTA",
-            "db_key": "USTA",
-            "run":    _run_usta,
+            "label":       "USTA",
+            "db_key":      "USTA",
+            "run":         _run_usta,
+            "scrape_only": False,
         }
 
     if "utr" in requested or "all" in requested:
         registry["utr"] = {
-            "label":  "UTR",
-            "db_key": "UTR",
-            "run":    _run_utr,
+            "label":       "UTR",
+            "db_key":      "UTR",
+            "run":         _run_utr,
+            "scrape_only": False,
+        }
+
+    if "youtube" in requested or "all" in requested:
+        registry["youtube"] = {
+            "label":       "YouTube",
+            "db_key":      None,   # writes directly to canonical — no raw/resolution tables
+            "run":         _run_youtube,
+            "scrape_only": True,   # skip resolve + promote phases for this source
         }
 
     return registry
@@ -101,17 +113,14 @@ def _run_tennisrecruiting(backfill_stubs: bool = False) -> int:
 
     manual_ids = [pid for pid, _ in _TR_SEED_PLAYERS]
     ids = list(dict.fromkeys(manual_ids + list(homepage_ids)))
-    print(
-        # f"  {len(homepage_ids)} homepage seeds + {len(manual_ids)} manual seeds"
-        f" = {len(ids)} unique profiles"
-    )
+    print(f" = {len(ids)} unique profiles")
 
-    # --- Append backfill stub opponents (capped at 50) ---
+    # --- Append backfill stub opponents (capped at 100) ---
     if backfill_stubs:
         stub_ids = _collect_tr_stub_opponents()
         if stub_ids:
             new_stubs = [sid for sid in stub_ids if sid not in ids][:100]
-            print(f"  Adding {len(new_stubs)} stub opponents (capped at 50) ...")
+            print(f"  Adding {len(new_stubs)} stub opponents (capped at 100) ...")
             ids = ids + new_stubs
 
     # --- Batch ingest with staleness filtering + concurrency ---
@@ -149,9 +158,14 @@ def _run_utr() -> int:
     return ingest_utr_rankings()
 
 
+def _run_youtube() -> int:
+    from scrapers.youtube_ingest import ingest_youtube_videos
+    print("  Searching YouTube for top 100 USTA players ...")
+    return ingest_youtube_videos()
+
+
 def _collect_tr_stub_opponents() -> list[int]:
     """Opponents seen in raw.matches but not yet in raw.players."""
-    # fetch_all paginates past the 1000-row cap on both queries
     match_rows = fetch_all(
         "raw", "matches",
         "raw_json",
@@ -170,7 +184,7 @@ def _collect_tr_stub_opponents() -> list[int]:
     existing_rows = fetch_all(
         "raw", "players",
         "source_id",
-        ("source_id", list(all_opp_ids)),  # fetch_all chunks this automatically
+        ("source_id", list(all_opp_ids)),
     )
     existing_ids = {r["source_id"] for r in existing_rows}
     return sorted(int(s) for s in all_opp_ids - existing_ids if s.isdigit())
@@ -184,14 +198,14 @@ def main():
     parser = argparse.ArgumentParser(description="Tennis data ingest pipeline")
     parser.add_argument(
         "--sources", nargs="+",
-        choices=["tennisrecruiting", "usta", "utr", "all"],
+        choices=["tennisrecruiting", "usta", "utr", "youtube", "all"],
         default=["all"],
     )
     parser.add_argument("--scrape-only",  action="store_true")
     parser.add_argument("--resolve-only", action="store_true")
     parser.add_argument("--promote-only", action="store_true")
     parser.add_argument("--backfill-stubs", action="store_true",
-                    help="Scrape up to 50 unseen stub opponents from raw.matches (tennisrecruiting only)")
+                    help="Scrape up to 100 unseen stub opponents from raw.matches (tennisrecruiting only)")
     args = parser.parse_args()
 
     run_all    = not any([args.scrape_only, args.resolve_only, args.promote_only])
@@ -202,7 +216,12 @@ def main():
     requested  = args.sources
     source_reg = _get_sources(requested, backfill_stubs=args.backfill_stubs)
 
-    db_keys    = [s["db_key"] for s in source_reg.values()]
+    # Sources that participate in resolution/promotion (youtube writes directly to canonical)
+    pipeline_sources = [
+        s["db_key"]
+        for s in source_reg.values()
+        if s["db_key"] is not None
+    ]
 
     job = create_job(
         "tennis_pipeline",
@@ -229,24 +248,24 @@ def main():
                 print(f"  [!] {spec['label']} scrape failed: {e}")
                 all_failed.append(key)
 
-    # Phase 2 — Resolution
+    # Phase 2 — Resolution (skipped for scrape-only sources like youtube)
     player_map     = {}
     tournament_map = {}
     match_map      = {}
 
-    if do_resolve:
+    if do_resolve and pipeline_sources:
         print(f"\n{'='*60}")
-        print(f"  PHASE 2 — RESOLVE  ({', '.join(db_keys)})")
+        print(f"  PHASE 2 — RESOLVE  ({', '.join(pipeline_sources)})")
         print(f"{'='*60}")
         try:
-            player_map, tournament_map, match_map = resolve_all(sources=db_keys)
+            player_map, tournament_map, match_map = resolve_all(sources=pipeline_sources)
         except Exception as e:
             print(f"  [!] Resolution failed: {e}")
             finish_job(job["id"], "failed", total_records, str(e))
             raise
 
-    # Phase 3 — Canonical promotion
-    if do_promote:
+    # Phase 3 — Canonical promotion (skipped for scrape-only sources like youtube)
+    if do_promote and pipeline_sources:
         print(f"\n{'='*60}")
         print(f"  PHASE 3 — PROMOTE TO CANONICAL")
         print(f"{'='*60}")
@@ -257,9 +276,9 @@ def main():
                 _load_existing_tournament_mappings,
                 _load_existing_match_mappings,
             )
-            player_map     = _load_existing_player_mappings(db_keys)
-            tournament_map = _load_existing_tournament_mappings(db_keys)
-            match_map      = _load_existing_match_mappings(db_keys)
+            player_map     = _load_existing_player_mappings(pipeline_sources)
+            tournament_map = _load_existing_tournament_mappings(pipeline_sources)
+            match_map      = _load_existing_match_mappings(pipeline_sources)
             print(
                 f"  Loaded {len(player_map)} player, "
                 f"{len(tournament_map)} tournament, "
