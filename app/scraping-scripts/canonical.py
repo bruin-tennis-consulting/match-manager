@@ -96,7 +96,7 @@ def promote_players(player_map: dict[tuple[str, str], str]) -> int:
     ENRICHABLE_EXTRA = {
         "city", "state", "high_school", "high_school_state",
         "committed_to", "nli_signed", "stars", "image_url",
-        "academy", "international", "video_urls",
+        "academy", "international", "video_urls", "wtn_id",
     }
 
     enriched = 0
@@ -146,6 +146,7 @@ def promote_players(player_map: dict[tuple[str, str], str]) -> int:
                 "academy":       extra.get("academy"),
                 "international": extra.get("international"),
                 "video_urls":    extra.get("video_urls") or None,
+                "wtn_id": str(extra["wtn_uaid"]) if extra.get("wtn_uaid") else None,
             }
         elif src == "UTR":
             candidates = {
@@ -156,6 +157,7 @@ def promote_players(player_map: dict[tuple[str, str], str]) -> int:
             candidates = {
                 "city":  extra.get("city"),
                 "state": extra.get("state"),
+                "wtn_id": str(extra["wtn_uaid"]) if extra.get("wtn_uaid") else None,
             }
         else:
             candidates = {}

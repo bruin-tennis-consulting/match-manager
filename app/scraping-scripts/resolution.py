@@ -111,19 +111,22 @@ def _extract_external_ids(source: str, raw_json: dict) -> dict[str, str | None]:
     if source == "tennisrecruiting.net":
         return {
             "utr_id":  str(extra["utr_id"])    if extra.get("utr_id")    else None,
-            "usta_id": str(extra["usta_uaid"]) if extra.get("usta_uaid") else None,
+            "usta_id": None,  # TR's usta_uaid is WTN namespace — don't conflate
+            "wtn_id":  str(extra["wtn_uaid"])  if extra.get("wtn_uaid")  else None,
         }
     if source == "UTR":
         return {
             "utr_id":  str(player["_source_id"]) if player.get("_source_id") else None,
             "usta_id": None,
+            "wtn_id":  None,
         }
     if source == "USTA":
         return {
             "utr_id":  None,
             "usta_id": str(player["_source_id"]) if player.get("_source_id") else None,
+            "wtn_id":  str(extra["wtn_uaid"])    if extra.get("wtn_uaid")    else None,
         }
-    return {"utr_id": None, "usta_id": None}
+    return {"utr_id": None, "usta_id": None, "wtn_id": None}
 
 
 # ===========================================================================
@@ -143,6 +146,7 @@ def _match_player(
     source: str, raw_json: dict, canonical_players: list[dict],
     utr_index: dict[str, dict],
     usta_index: dict[str, dict],
+    wtn_index: dict[str, dict],
     name_gender_index: dict[tuple[str, str], dict],
     name_gender_year_index: dict[tuple[str, str, str | None], dict],
 ) -> tuple[str | None, float, str]:
@@ -158,12 +162,15 @@ def _match_player(
     ids       = _extract_external_ids(source, raw_json)
     utr_id    = ids.get("utr_id")
     usta_id   = ids.get("usta_id")
+    wtn_id    = ids.get("wtn_id")
 
     # 1. External ID — O(1)
     if utr_id and utr_id in utr_index:
         return utr_index[utr_id]["id"], 1.0, "exact_external_id"
     if usta_id and usta_id in usta_index:
         return usta_index[usta_id]["id"], 1.0, "exact_external_id"
+    if wtn_id and wtn_id in wtn_index:
+        return wtn_index[wtn_id]["id"], 1.0, "exact_external_id"
 
     if not name:
         return None, 0.0, "no_name"
@@ -180,6 +187,18 @@ def _match_player(
     canon = name_gender_index.get((name_lower, gender))
     if canon:
         return canon["id"], 0.85, "exact_name_gender"
+    if not canon:
+        city = (p.get("city") or (raw_json.get("player_extra") or {}).get("city") or "").strip().lower()
+        if city:
+            canon = next(
+                (c for c in canonical_players
+                if (c.get("full_name") or "").strip().lower() == name_lower
+                and c.get("gender") == gender
+                and (c.get("city") or "").strip().lower() == city),
+                None,
+            )
+            if canon:
+                return canon["id"], 0.82, "exact_name_gender_city"
 
     # 4. Fuzzy name — still O(n) within same gender/year bucket, unavoidable
     best_score, best_id = 0.0, None
@@ -198,20 +217,20 @@ def _match_player(
     return None, 0.0, "no_match"
 
 
-def _build_player_indexes(
-    canonical_players: list[dict],
-) -> tuple[dict, dict, dict, dict]:
-    """Build O(1) lookup indexes over canonical players."""
-    utr_index:             dict[str, dict] = {}
-    usta_index:            dict[str, dict] = {}
-    name_gender_index:     dict[tuple[str, str], dict] = {}
-    name_gender_year_index: dict[tuple[str, str, str | None], dict] = {}
+def _build_player_indexes(canonical_players):
+    utr_index              = {}
+    usta_index             = {}
+    wtn_index              = {}
+    name_gender_index      = {}
+    name_gender_year_index = {}
 
     for c in canonical_players:
         if c.get("utr_id"):
             utr_index[str(c["utr_id"])] = c
         if c.get("usta_id"):
             usta_index[str(c["usta_id"])] = c
+        if c.get("wtn_id"):
+            wtn_index[str(c["wtn_id"])] = c
         name_lower = (c.get("full_name") or "").strip().lower()
         gender     = c.get("gender")
         if name_lower:
@@ -219,7 +238,7 @@ def _build_player_indexes(
             grad_year = str(c["grad_year"]) if c.get("grad_year") else None
             name_gender_year_index[(name_lower, gender, grad_year)] = c
 
-    return utr_index, usta_index, name_gender_index, name_gender_year_index
+    return utr_index, usta_index, wtn_index, name_gender_index, name_gender_year_index
 
 
 def resolve_players(sources: list[str] | None = None) -> dict[tuple[str, str], str]:
@@ -297,6 +316,7 @@ def resolve_players(sources: list[str] | None = None) -> dict[tuple[str, str], s
                 "play_style":    p.get("play_style"),
                 "utr_id":        ids.get("utr_id"),
                 "usta_id":       ids.get("usta_id"),
+                "wtn_id":        ids.get("wtn_id"),
                 "city":          extra.get("city"),
                 "state":         extra.get("state_code"),
                 "high_school":   extra.get("highschool"),
