@@ -79,7 +79,7 @@ export default function RecruitmentPortal() {
 
   const [searchName, setSearchName] = useState('')
   const [filterGender, setFilterGender] = useState('male')
-  const [filterAge, setFilterAge] = useState('18s')
+  const [filterClass, setFilterClass] = useState('all')
   const [filterUncommitted, setFilterUncommitted] = useState(true)
   const [filterState, setFilterState] = useState('all')
   const [sortBy, setSortBy] = useState('usta')
@@ -93,7 +93,7 @@ export default function RecruitmentPortal() {
           setLoading(false)
           return
         }
-        setPlayers(data)
+        setPlayers(data.map((p) => ({ ...p, _classInfo: getClassInfo(p) })))
         setLoading(false)
       })
       .catch((e) => {
@@ -103,6 +103,11 @@ export default function RecruitmentPortal() {
   }, [])
 
   // Build state options from actual data
+  const classes = useMemo(() => {
+    const s = new Set(players.map((p) => p._classInfo?.full).filter(Boolean))
+    return Array.from(s).sort()
+  }, [players])
+
   const states = useMemo(() => {
     const s = new Set(
       [
@@ -123,7 +128,8 @@ export default function RecruitmentPortal() {
       )
         return false
       if (filterGender !== 'all' && p.gender !== filterGender) return false
-      if (filterAge !== 'all' && inferAgeDivision(p) !== filterAge) return false
+      if (filterClass !== 'all' && p._classInfo?.full !== filterClass)
+        return false
       if (
         filterState !== 'all' &&
         p.usta_state !== filterState &&
@@ -157,7 +163,7 @@ export default function RecruitmentPortal() {
     sortBy,
     searchName,
     filterGender,
-    filterAge,
+    filterClass,
     filterState,
     filterUncommitted
   ])
@@ -173,7 +179,7 @@ export default function RecruitmentPortal() {
   }, [
     searchName,
     filterGender,
-    filterAge,
+    filterClass,
     filterState,
     sortBy,
     filterUncommitted
@@ -182,7 +188,7 @@ export default function RecruitmentPortal() {
   function resetFilters() {
     setSearchName('')
     setFilterGender('male')
-    setFilterAge('18s')
+    setFilterClass('all')
     setFilterState('all')
     setSortBy('usta')
     setFilterUncommitted(true)
@@ -222,14 +228,15 @@ export default function RecruitmentPortal() {
         </select>
         <select
           className={styles.select}
-          value={filterAge}
-          onChange={(e) => setFilterAge(e.target.value)}
+          value={filterClass}
+          onChange={(e) => setFilterClass(e.target.value)}
         >
-          <option value="all">All Ages</option>
-          <option value="18s">18U</option>
-          <option value="16s">16U</option>
-          <option value="14s">14U</option>
-          <option value="12s">12U</option>
+          <option value="all">All Classes</option>
+          {classes.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
         </select>
         <select
           className={styles.select}
@@ -294,12 +301,14 @@ export default function RecruitmentPortal() {
               </th>
               <th>Name</th>
               <th>Gender</th>
-              <th>Age</th>
+              <th>Division</th>
               <th>Class</th>
               <th>State</th>
               <th>Section</th>
               <th>USTA Pts</th>
               <th>UTR Rating</th>
+              <th>UTR Trend</th>
+              <th>Committed</th>
             </tr>
           </thead>
           <tbody>
@@ -349,6 +358,24 @@ export default function RecruitmentPortal() {
                   {p.usta_points != null ? p.usta_points.toLocaleString() : '—'}
                 </td>
                 <td>{p.utr_rating ?? '—'}</td>
+                <td
+                  style={{
+                    color:
+                      p.utr_trend === 'up'
+                        ? 'green'
+                        : p.utr_trend === 'down'
+                          ? 'red'
+                          : 'inherit',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {p.utr_trend === 'up'
+                    ? '↑'
+                    : p.utr_trend === 'down'
+                      ? '↓'
+                      : '—'}
+                </td>
+                <td>{p.tr_committed_to ?? '—'}</td>
               </tr>
             ))}
           </tbody>
