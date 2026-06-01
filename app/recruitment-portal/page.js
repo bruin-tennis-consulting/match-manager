@@ -79,7 +79,7 @@ export default function RecruitmentPortal() {
 
   const [searchName, setSearchName] = useState('')
   const [filterGender, setFilterGender] = useState('male')
-  const [filterClass, setFilterClass] = useState('all')
+  const [filterClass, setFilterClass] = useState('2026')
   const [filterUncommitted, setFilterUncommitted] = useState(true)
   const [filterState, setFilterState] = useState('all')
   const [sortBy, setSortBy] = useState('usta')
@@ -103,6 +103,8 @@ export default function RecruitmentPortal() {
   }, [])
 
   // Build state options from actual data
+  const currentYear = new Date().getFullYear()
+
   const classes = useMemo(() => {
     const s = new Set()
     players.forEach((p) => {
@@ -110,10 +112,10 @@ export default function RecruitmentPortal() {
       if (!info) return
       if (info.estimated) {
         const [a, b] = info.full.split('–').map(Number)
-        s.add(String(a))
-        s.add(String(b))
+        if (a >= currentYear) s.add(String(a))
+        if (b >= currentYear) s.add(String(b))
       } else {
-        s.add(info.full)
+        if (Number(info.full) >= currentYear) s.add(info.full)
       }
     })
     return Array.from(s).sort()
@@ -129,8 +131,7 @@ export default function RecruitmentPortal() {
     return Array.from(s).sort()
   }, [players])
 
-  console.log(players)
-  console.log(players.filter((player) => player.first_name === 'Jack'))
+  console.log(players.filter((player) => player.first_name === 'Jesse'))
   const filtered = useMemo(() => {
     let result = players.filter((p) => {
       if (
@@ -208,7 +209,7 @@ export default function RecruitmentPortal() {
   function resetFilters() {
     setSearchName('')
     setFilterGender('male')
-    setFilterClass('all')
+    setFilterClass('2026')
     setFilterState('all')
     setSortBy('usta')
     setFilterUncommitted(true)

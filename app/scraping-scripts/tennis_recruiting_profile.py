@@ -153,6 +153,17 @@ def _gender_full(code: str) -> str:
     return {"M": "male", "F": "female"}.get(code, code.lower())
 
 
+def _extract_title_name(soup) -> str | None:
+    """Return the player name from the page title fallback."""
+    if soup.title is None:
+        return None
+    title_text = _clean(soup.title.string)
+    if not title_text:
+        return None
+    m = re.search(r"Player Overview\s*[-–]\s*(.+)$", title_text)
+    return _clean(m.group(1)) if m else None
+
+
 # ---------------------------------------------------------------------------
 # Extract the embedded page JSON
 # ---------------------------------------------------------------------------
@@ -720,6 +731,16 @@ def parse_profile(soup) -> dict[str, Any]:
     """
     page   = _extract_page_json(soup)
     parsed = _parse_player(page)   # {"player": {...}, "player_extra": {...}}
+
+    if not parsed["player"].get("full_name"):
+        title_name = _extract_title_name(soup)
+        if title_name:
+            parsed["player"]["full_name"] = title_name
+            if not parsed["player"].get("first_name"):
+                parsed["player"]["first_name"] = title_name.split()[0]
+            if not parsed["player"].get("last_name"):
+                parts = title_name.split()
+                parsed["player"]["last_name"] = " ".join(parts[1:]) if len(parts) > 1 else None
 
     return {
         "player":        parsed["player"],

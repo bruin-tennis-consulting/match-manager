@@ -99,9 +99,8 @@ def _run_tennisrecruiting(backfill_stubs: bool = False) -> int:
                     if m:
                         homepage_ids.add(int(m.group(1)))
 
-    # manual_ids = [pid for pid, _ in _TR_SEED_PLAYERS]
-    # ids = list(dict.fromkeys(manual_ids + list(homepage_ids)))
-    ids = [909186,940597,895507,946432,973824,943155,955762,932045]
+    manual_ids = [pid for pid, _ in _TR_SEED_PLAYERS]
+    ids = list(dict.fromkeys(manual_ids + list(homepage_ids)))
     print(
         # f"  {len(homepage_ids)} homepage seeds + {len(manual_ids)} manual seeds"
         f" = {len(ids)} unique profiles"
@@ -111,7 +110,7 @@ def _run_tennisrecruiting(backfill_stubs: bool = False) -> int:
     if backfill_stubs:
         stub_ids = _collect_tr_stub_opponents()
         if stub_ids:
-            new_stubs = [sid for sid in stub_ids if sid not in ids][:50]
+            new_stubs = [sid for sid in stub_ids if sid not in ids][:100]
             print(f"  Adding {len(new_stubs)} stub opponents (capped at 50) ...")
             ids = ids + new_stubs
 
