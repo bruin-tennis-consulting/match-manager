@@ -39,3 +39,7 @@ yarn-error.log*
 .vscode/launch.json
 # Claude Code local settings
 .claude/settings.local.json
+
+# local env files (copy .env.example to .env and fill in)
+.env
+.env*.local
