@@ -187,6 +187,13 @@ export default function MatchList() {
               value={searchTerm}
               onChange={handleSearchChange}
             />
+            <button
+              type="button"
+              onClick={() => setSearchTerm('')}
+              disabled={!searchTerm}
+            >
+              Clear search
+            </button>
           </div>
 
           {filteredMatches.length > 0 ? (
