@@ -6,6 +6,7 @@ import { useTeamLogos } from '@/app/hooks/useTeamLogos'
 const PointsList = ({
   pointsData,
   onBookmark,
+  onAddToPlaylist,
   onPointSelect,
   clientTeam,
   opponentTeam
@@ -29,8 +30,10 @@ const PointsList = ({
             <th>Game</th>
             <th>Point</th>
             <th></th>
+            {onAddToPlaylist && <th>Playlist</th>}
           </tr>
         </thead>
+
         <tbody>
           {pointsData.map((point, index) => (
             <tr
@@ -67,12 +70,15 @@ const PointsList = ({
                   </div>
                 </div>
               </td>
+
               <td>
                 <b style={{ fontSize: '1em' }}>{point.setNum}</b>
               </td>
+
               <td>
                 <b style={{ fontSize: '1em' }}>{point.gameScore}</b>
               </td>
+
               <td>
                 <b
                   style={{
@@ -86,6 +92,7 @@ const PointsList = ({
                     : point.pointScore}
                 </b>
               </td>
+
               <td
                 onClick={(e) => {
                   e.stopPropagation()
@@ -116,6 +123,21 @@ const PointsList = ({
                   </svg>
                 )}
               </td>
+
+              {onAddToPlaylist && (
+                <td>
+                  <button
+                    type="button"
+                    aria-label="Add point to playlist"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onAddToPlaylist(point)
+                    }}
+                  >
+                    + Playlist
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
