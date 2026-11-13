@@ -19,23 +19,37 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setLoading(true)
       setAuthUser(user)
-      if (user) {
-        const [userProfile, coachRecord] = await Promise.all([
+      setUserProfile(null)
+      setCoachRecord(null)
+
+      try {
+        if (!user) return
+
+        const [profileResult, coachResult] = await Promise.allSettled([
           getUserProfile(user.uid),
-          upsertCoach(user) // runs in parallel with getUserProfile
+          upsertCoach(user)
         ])
-        setUserProfile(userProfile)
-        setCoachRecord(coachRecord) // add useState for this
-      } else {
-        setUserProfile(null)
-        setCoachRecord(null)
+
+        if (profileResult.status === 'fulfilled') {
+          setUserProfile(profileResult.value)
+        } else {
+          console.error('Could not load user profile:', profileResult.reason)
+        }
+
+        if (coachResult.status === 'fulfilled') {
+          setCoachRecord(coachResult.value)
+        } else {
+          console.error('Could not load coach record:', coachResult.reason)
+        }
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     })
+
     return () => unsubscribe()
   }, [])
-
   const memoizedUserProfile = useMemo(() => userProfile, [userProfile])
 
   const handleSignOut = () => {

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation' // Updated import for usePathname
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { useData } from '@/app/DataProvider'
 import { useAuth } from '@/app/AuthWrapper'
@@ -9,6 +9,7 @@ import { filterGroups } from '@/app/services/filterGroups'
 import filterListStyles from '@/app/styles/FilterList.module.css'
 import styles from '@/app/styles/Match.module.css'
 
+import PlaylistPicker from '@/app/components/PlaylistPicker'
 import VideoPlayer from '@/app/components/VideoPlayer'
 import FilterList from '@/app/components/FilterList'
 import PointsList from '@/app/components/PointsList'
@@ -18,14 +19,11 @@ import Notes from '@/app/components/Notes'
 import HtmlCarousel from '@/app/components/HtmlCarousel'
 
 const findDisplayName = (key) => {
-  // Search through all sections of filterGroups
   for (const section of Object.values(filterGroups)) {
-    // Check in subCategories
     if (section.subCategories && section.subCategories[key]) {
       return section.subCategories[key].title
     }
 
-    // Check in players
     if (section.players) {
       for (const player of Object.values(section.players)) {
         if (player.categories && player.categories[key]) {
@@ -35,12 +33,13 @@ const findDisplayName = (key) => {
     }
   }
 
-  return key // Fallback to key if no display name found
+  return key
 }
 
 const MatchPage = ({ params }) => {
   const { matches, fetchMatchDetails, updateMatch } = useData()
   const { authUser } = useAuth()
+
   const [matchData, setMatchData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -52,55 +51,63 @@ const MatchPage = ({ params }) => {
   const [showHTML, setShowHTML] = useState(false)
   const [showPDF, setShowPDF] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [sidebarTab, setSidebarTab] = useState('points') // 'points' | 'saved'
+  const [sidebarTab, setSidebarTab] = useState('points')
+  const [playlistPoint, setPlaylistPoint] = useState(null)
   const [bookmarks, setBookmarks] = useState([])
   const [triggerScroll, setTriggerScroll] = useState(false)
   const [autoplayEnabled, setAutoplayEnabled] = useState(true)
+
   const autoplaySuppressedRef = useRef(false)
   const tableRef = useRef(null)
   const iframeRef = useRef(null)
   const filterSubmitRef = useRef(null)
 
-  const pathname = usePathname() // usePathname now imported from next/navigation
+  const pathname = usePathname()
   const docId = pathname.substring(pathname.lastIndexOf('/') + 1)
 
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // Read filter parameters from URL on initial load
+  // Read filter parameters from the URL.
   useEffect(() => {
     const params = new URLSearchParams(searchParams)
     const initialFilters = []
+
     for (const [key, value] of params.entries()) {
       initialFilters.push([key, value])
     }
+
     setFilterList(initialFilters)
   }, [searchParams])
 
-  // Update URL whenever filterList changes
+  // Update the URL when filters change.
   useEffect(() => {
     if (filterList) {
       const params = new URLSearchParams()
+
       filterList.forEach(([key, value]) => {
         params.append(key, value)
       })
+
       router.replace(`?${params.toString()}`, { scroll: false })
     }
   }, [filterList, router])
 
-  // Check validity of match by user access
+  // Load match details.
   useEffect(() => {
     const loadMatchData = async () => {
       try {
         setLoading(true)
+
         const match = matches.find((m) => m.id === params.slug)
+
         if (!match) {
           setError('Match not found')
           return
         }
 
-        // Fetch detailed match data including points
         const detailedData = await fetchMatchDetails(match.id, match.collection)
+
         if (!detailedData) {
           setError('Failed to load match details')
           return
@@ -119,7 +126,7 @@ const MatchPage = ({ params }) => {
     }
   }, [matches, params.slug, fetchMatchDetails])
 
-  // Set showHTML/showPDF based on available files (prioritize HTML, fallback to PDF)
+  // Prefer HTML statistics, then PDF.
   useEffect(() => {
     if (matchData?.htmlFile != null) {
       setShowHTML(true)
@@ -148,6 +155,7 @@ const MatchPage = ({ params }) => {
 
     filterList.forEach((filter) => {
       const [key, value] = filter
+
       if (filterMap.has(key)) {
         filterMap.get(key).push(value)
       } else {
@@ -166,12 +174,16 @@ const MatchPage = ({ params }) => {
     return filteredPoints
   }, [matchData, filterList])
 
+  // Skip between points when autoplay is enabled.
   useEffect(() => {
     if (!videoObject || !autoplayEnabled) return
+
     const interval = setInterval(() => {
       if (autoplaySuppressedRef.current) return
+
       if (videoObject && typeof videoObject.getCurrentTime === 'function') {
-        const currentTime = videoObject.getCurrentTime() * 1000 // Convert to ms
+        const currentTime = videoObject.getCurrentTime() * 1000
+
         const filteredPoints = returnFilteredPoints().sort(
           (a, b) => a.Position - b.Position
         )
@@ -188,6 +200,7 @@ const MatchPage = ({ params }) => {
           const nextPoint = filteredPoints.find(
             (point) => currentTime < point.Position
           )
+
           if (nextPoint) {
             videoObject.seekTo(nextPoint.Position / 1000, true)
           }
@@ -203,13 +216,21 @@ const MatchPage = ({ params }) => {
       if (p.Name === point.Name) {
         return { ...p, bookmarked: !p.bookmarked }
       }
+
       return p
     })
 
-    setMatchData((prev) => ({ ...prev, pointsJson: updatedPoints }))
+    setMatchData((prev) => ({
+      ...prev,
+      pointsJson: updatedPoints
+    }))
+
     const newBookmarks = updatedPoints.filter((p) => p.bookmarked)
     setBookmarks(newBookmarks)
-    if (newBookmarks.length === 0) setSidebarTab('points')
+
+    if (newBookmarks.length === 0) {
+      setSidebarTab('points')
+    }
 
     try {
       await fetchMatchDetails(docId, updatedPoints)
@@ -218,15 +239,18 @@ const MatchPage = ({ params }) => {
     }
   }
 
+  // Update the displayed score as the video plays.
   useEffect(() => {
     if (matchData) {
       const points = returnFilteredPoints()
+
       const sortedPoints = [...points].sort((a, b) => b.Position - a.Position)
 
       const updateScoreboardWithTime = (time) => {
         const currentPoint = sortedPoints.find(
           (point) => point.Position <= time
         )
+
         if (currentPoint) {
           setPlayingPoint(currentPoint)
         }
@@ -246,14 +270,18 @@ const MatchPage = ({ params }) => {
   useEffect(() => {
     if (triggerScroll && !showHTML && !showPDF) {
       if (tableRef.current) {
-        tableRef.current.scrollIntoView({ behavior: 'smooth' })
+        tableRef.current.scrollIntoView({
+          behavior: 'smooth'
+        })
       }
+
       setTriggerScroll(false)
     }
   }, [triggerScroll, showHTML, showPDF])
 
   const suppressAutoplay = useCallback(() => {
     autoplaySuppressedRef.current = true
+
     setTimeout(() => {
       autoplaySuppressedRef.current = false
     }, 3000)
@@ -261,19 +289,22 @@ const MatchPage = ({ params }) => {
 
   const handlePrevPoint = useCallback(() => {
     if (!videoObject) return
+
     const currentTime = videoObject.getCurrentTime() * 1000
+
     const points = returnFilteredPoints().sort(
       (a, b) => a.Position - b.Position
     )
-    // Find the index of the current/most-recent point
+
     let currentIndex = -1
+
     for (let i = points.length - 1; i >= 0; i--) {
       if (points[i].Position <= currentTime + 500) {
         currentIndex = i
         break
       }
     }
-    // If we're very close to the start of the current point, go to the one before it
+
     if (
       currentIndex >= 0 &&
       currentTime - points[currentIndex].Position < 2000 &&
@@ -281,6 +312,7 @@ const MatchPage = ({ params }) => {
     ) {
       currentIndex -= 1
     }
+
     if (currentIndex >= 0) {
       suppressAutoplay()
       handleJumpToTime(points[currentIndex].Position)
@@ -289,19 +321,24 @@ const MatchPage = ({ params }) => {
 
   const handleNextPoint = useCallback(() => {
     if (!videoObject) return
+
     const currentTime = videoObject.getCurrentTime() * 1000
+
     const points = returnFilteredPoints().sort(
       (a, b) => a.Position - b.Position
     )
-    // Find the index of the current/most-recent point
+
     let currentIndex = -1
+
     for (let i = points.length - 1; i >= 0; i--) {
       if (points[i].Position <= currentTime + 500) {
         currentIndex = i
         break
       }
     }
+
     const nextIndex = currentIndex + 1
+
     if (nextIndex < points.length) {
       suppressAutoplay()
       handleJumpToTime(points[nextIndex].Position)
@@ -313,6 +350,7 @@ const MatchPage = ({ params }) => {
       ([filterKey, filterValue]) =>
         !(filterKey === key && filterValue === value)
     )
+
     setFilterList(updatedFilterList)
   }
 
@@ -326,6 +364,7 @@ const MatchPage = ({ params }) => {
 
   function addBorderRadius() {
     const anyIframe = document.getElementById('player')
+
     if (anyIframe) {
       anyIframe.style.borderRadius = '10px'
     }
@@ -337,6 +376,7 @@ const MatchPage = ({ params }) => {
 
   const player1Name =
     matchData.players.client.firstName + ' ' + matchData.players.client.lastName
+
   const player2Name =
     matchData.players.opponent.firstName +
     ' ' +
@@ -387,11 +427,13 @@ const MatchPage = ({ params }) => {
               setVideoObject={setVideoObject}
               onReady={addBorderRadius}
             />
+
             {isTagged && (
               <div className={styles.prevNextOverlay}>
                 <button className={styles.navBtn} onClick={handlePrevPoint}>
                   ◀ Prev
                 </button>
+
                 <button className={styles.navBtn} onClick={handleNextPoint}>
                   Next ▶
                 </button>
@@ -399,33 +441,40 @@ const MatchPage = ({ params }) => {
             )}
           </div>
 
-          {/* Thin live score bar replacing the full ScoreBoard */}
           {playingPoint && (
             <div className={styles.liveScoreBar}>
               <span className={styles.liveLabel}>LIVE</span>
+
               <span className={styles.livePlayerName}>
                 {player1Name}
+
                 {playingPoint.serverName === player1Name && (
                   <span className={styles.servingDot}> ●</span>
                 )}
               </span>
+
               <span className={styles.liveScore}>
                 {playingPoint.pointScore
                   ? playingPoint.player1PointScore
                   : playingPoint.player1TiebreakScore}
               </span>
+
               <span className={styles.liveScoreDivider}> – </span>
+
               <span className={styles.liveScore}>
                 {playingPoint.pointScore
                   ? playingPoint.player2PointScore
                   : playingPoint.player2TiebreakScore}
               </span>
+
               <span className={styles.livePlayerName}>
                 {player2Name}
+
                 {playingPoint.serverName === player2Name && (
                   <span className={styles.servingDot}> ●</span>
                 )}
               </span>
+
               {playingPoint.gameScore && (
                 <span className={styles.liveGameScore}>
                   Game {playingPoint.gameScore}
@@ -451,7 +500,6 @@ const MatchPage = ({ params }) => {
 
         {/* Sidebar */}
         <div className={styles.sidebar}>
-          {/* Top controls: Filters toggle + Autoplay */}
           <div className={styles.sidebarControls}>
             <button
               onClick={() => setFiltersOpen((prev) => !prev)}
@@ -465,6 +513,7 @@ const MatchPage = ({ params }) => {
               {filtersOpen ? '▼' : '▶'} Filters
               {sortedFilterList.length > 0 && ` (${sortedFilterList.length})`}
             </button>
+
             <button
               onClick={() => setAutoplayEnabled((prev) => !prev)}
               className={
@@ -477,11 +526,12 @@ const MatchPage = ({ params }) => {
             </button>
           </div>
 
-          {/* Active filters — only rendered when filters are set */}
+          {/* Active filters */}
           {sortedFilterList.length > 0 && (
             <div className={filterListStyles.activeFilterListContainer}>
               <div className={filterListStyles.activeFilterHeader}>
                 <span>Active Filters:</span>
+
                 <button
                   className={filterListStyles.clearAllButton}
                   onClick={() => setFilterList([])}
@@ -490,6 +540,7 @@ const MatchPage = ({ params }) => {
                   Clear All
                 </button>
               </div>
+
               <ul className={filterListStyles.activeFilterList}>
                 {sortedFilterList.map(([key, value]) => (
                   <li
@@ -499,10 +550,11 @@ const MatchPage = ({ params }) => {
                     <span>
                       {findDisplayName(key)}: {value}
                     </span>
+
                     <button
                       className={filterListStyles.closeButton}
-                      onClick={(e) => {
-                        e.stopPropagation()
+                      onClick={(event) => {
+                        event.stopPropagation()
                         removeFilter(key, value)
                       }}
                       aria-label="Remove filter"
@@ -531,8 +583,10 @@ const MatchPage = ({ params }) => {
                           setShowCount(false)
                         }}
                       />
+
                       <label htmlFor="defaultRadio">Default</label>
                     </div>
+
                     <div>
                       <input
                         type="radio"
@@ -543,8 +597,10 @@ const MatchPage = ({ params }) => {
                           setShowCount(false)
                         }}
                       />
+
                       <label htmlFor="percentRadio">Show Percent</label>
                     </div>
+
                     <div>
                       <input
                         type="radio"
@@ -555,9 +611,11 @@ const MatchPage = ({ params }) => {
                           setShowCount(true)
                         }}
                       />
+
                       <label htmlFor="countRadio">Show Count</label>
                     </div>
                   </div>
+
                   <div
                     style={{
                       border: '0.1vh solid #ccd0d4',
@@ -580,6 +638,7 @@ const MatchPage = ({ params }) => {
                   </div>
                 </div>
               </div>
+
               <div
                 style={{
                   display: 'flex',
@@ -622,6 +681,7 @@ const MatchPage = ({ params }) => {
             >
               Points
             </button>
+
             <button
               onClick={() => setSidebarTab('saved')}
               className={
@@ -634,7 +694,7 @@ const MatchPage = ({ params }) => {
             </button>
           </div>
 
-          {/* Points list / Saved bookmarks */}
+          {/* Points list */}
           <div className={styles.sidebox}>
             <div className={styles.sidecontent}>
               <PointsList
@@ -643,11 +703,18 @@ const MatchPage = ({ params }) => {
                 }
                 onPointSelect={handleJumpToTime}
                 onBookmark={handleBookmark}
+                onAddToPlaylist={setPlaylistPoint}
                 clientTeam={matchData.teams.clientTeam}
                 opponentTeam={matchData.teams.opponentTeam}
               />
             </div>
-            <div style={{ padding: '0.5vw', textAlign: 'center' }}>
+
+            <div
+              style={{
+                padding: '0.5vw',
+                textAlign: 'center'
+              }}
+            >
               <button
                 className={styles.viewDetailedListButton}
                 onClick={scrollToDetailedList}
@@ -658,6 +725,16 @@ const MatchPage = ({ params }) => {
           </div>
         </div>
       </div>
+
+      {playlistPoint && (
+        <PlaylistPicker
+          matchId={params.slug}
+          match={matchData}
+          point={playlistPoint}
+          onClose={() => setPlaylistPoint(null)}
+        />
+      )}
+
       <div className={styles.toggle}>
         <button
           onClick={() => {
@@ -677,6 +754,7 @@ const MatchPage = ({ params }) => {
         >
           Key Stats & Visuals
         </button>
+
         <button
           onClick={() => {
             setShowHTML(false)
@@ -690,6 +768,7 @@ const MatchPage = ({ params }) => {
         >
           Detailed Point List
         </button>
+
         {showHTML ? (
           <HtmlCarousel htmlUrl={matchData?.htmlFile} />
         ) : showPDF ? (
