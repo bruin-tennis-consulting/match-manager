@@ -4,7 +4,7 @@
   padding-left: 40px;
   padding-right: 40px;
   font-family: 'DM Sans', sans-serif;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .header {
@@ -173,7 +173,7 @@
   padding-right: 40px;
   padding-top: 25px;
   font-family: 'DM Sans', sans-serif;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .mobileContainer .searchContainer {
@@ -232,6 +232,7 @@
   max-width: 700px; /* YouTube-like width */
   min-width: 250px;
   display: flex;
+  flex-direction: column;
   align-items: center;
 }
 
@@ -330,4 +331,48 @@
   align-items: center;
   flex: 1;
   width: 100%;
+}
+
+.searchSuggestions {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 30;
+  width: 100%;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid #d3d3d3;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+}
+
+.suggestionButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 0;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  text-align: left;
+}
+
+.suggestionButton:hover,
+.suggestionButton:focus-visible {
+  background: #f0f4fa;
+  outline: none;
+}
+
+.suggestionType {
+  min-width: 48px;
+  color: #666;
+  font-size: 11px;
+  text-transform: uppercase;
 }
